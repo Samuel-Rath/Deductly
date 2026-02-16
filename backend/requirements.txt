@@ -1,0 +1,25 @@
+# Core FastAPI dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Data processing
+pandas>=2.1.0
+python-multipart>=0.0.6
+
+# Fuzzy matching
+rapidfuzz>=3.6.0
+
+# PDF generation (ReportLab is more Windows-friendly than WeasyPrint)
+reportlab>=4.0.0
+# Alternative: weasyprint>=60.0 (requires GTK+ on Windows - see README for setup)
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+hypothesis>=6.98.0
+pytest-cov>=4.1.0
+
+# Utilities
+python-dateutil>=2.8.0
