@@ -17,8 +17,8 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
   - Create requirements.txt and package.json
   - _Requirements: All (foundational)_
 
-- [ ] 2. Implement data models and validation
-  - [ ] 2.1 Create Pydantic models for core data structures
+- [x] 2. Implement data models and validation
+  - [x] 2.1 Create Pydantic models for core data structures
     - Implement NormalisedTransaction model with validation
     - Implement ClassifiedTransaction model
     - Implement ExcludedTransaction model
@@ -27,60 +27,60 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Implement API request/response models (UploadRequest, UploadResponse, JobStatusResponse)
     - _Requirements: 1.3, 4.1, 3.1-3.4, 10.3_
   
-  - [ ]* 2.2 Write property test for amount normalisation
+  - [x] 2.2 Write property test for amount normalisation
     - **Property 1: CSV Amount Normalisation Consistency**
     - **Validates: Requirements 1.3**
   
-  - [ ]* 2.3 Write unit tests for data model validation
+  - [x] 2.3 Write unit tests for data model validation
     - Test confidence score bounds (0.0 to 1.0)
     - Test enum validations
     - Test required field validations
     - _Requirements: 4.1_
 
-- [ ] 3. Implement CSV Parser and Normaliser
-  - [ ] 3.1 Create CSV format detection and column mapping
+- [x] 3. Implement CSV Parser and Normaliser
+  - [x] 3.1 Create CSV format detection and column mapping
     - Implement column header normalisation (lowercase, remove spaces)
     - Create pattern matching for common Australian bank formats (CommBank, NAB, Westpac, ANZ, ING)
     - Implement flexible column mapping for date, description, amount, debit/credit
     - Handle both single amount column and separate debit/credit columns
     - _Requirements: 1.2, 1.3_
   
-  - [ ] 3.2 Implement merchant extraction logic
+  - [x] 3.2 Implement merchant extraction logic
     - Create regex patterns to remove common prefixes (PAYPAL *, VISA, MASTERCARD, EFTPOS)
     - Remove reference numbers and transaction IDs
     - Implement fallback to original description if extraction fails
     - _Requirements: 2.2, 2.3_
   
-  - [ ] 3.3 Implement payment rail detection
+  - [x] 3.3 Implement payment rail detection
     - Create keyword matching for card, PayPal, BPAY, Osko, PayID
     - Populate payment_rail field in NormalisedTransaction
     - _Requirements: 2.5_
   
-  - [ ] 3.4 Implement recurring transaction detection
+  - [x] 3.4 Implement recurring transaction detection
     - Group transactions by similar merchant names
     - Detect regular periodicity (weekly, monthly, yearly)
     - Set recurring_flag on matching transactions
     - _Requirements: 2.4_
   
-  - [ ]* 3.5 Write property test for merchant extraction fallback
+  - [x] 3.5 Write property test for merchant extraction fallback
     - **Property 4: Merchant Extraction Fallback**
     - **Validates: Requirements 2.3**
   
-  - [ ]* 3.6 Write property test for payment rail detection
+  - [x] 3.6 Write property test for payment rail detection
     - **Property 5: Payment Rail Detection**
     - **Validates: Requirements 2.5**
   
-  - [ ]* 3.7 Write unit tests for CSV parser
+  - [x] 3.7 Write unit tests for CSV parser
     - Test parsing of sample Australian bank CSV formats
     - Test error handling for missing required columns
     - Test edge cases (empty descriptions, special characters, zero amounts)
     - _Requirements: 1.1, 1.2, 1.4_
 
-- [ ] 4. Checkpoint - Ensure CSV parsing tests pass
+- [x] 4. Checkpoint - Ensure CSV parsing tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement Exclusion Engine
-  - [ ] 5.1 Create exclusion rule patterns
+- [x] 5. Implement Exclusion Engine
+  - [x] 5.1 Create exclusion rule patterns
     - Define patterns for transfers (TRANSFER TO/FROM, OSKO, PAYID, BPAY)
     - Define patterns for cash withdrawals (ATM, CASH OUT, EFTPOS CASH)
     - Define patterns for loan repayments (LOAN, MORTGAGE, HOME LOAN)
@@ -88,46 +88,46 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Define patterns for salary income (SALARY, WAGES, PAYROLL on credit transactions)
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
   
-  - [ ] 5.2 Implement ExclusionEngine class
+  - [x] 5.2 Implement ExclusionEngine class
     - Create filter method that applies all exclusion rules
     - Return tuple of (candidates, excluded_transactions)
     - Assign appropriate ExclusionReason to each excluded transaction
     - Generate human-readable explanation for each exclusion
     - _Requirements: 3.1-3.6_
   
-  - [ ]* 5.3 Write property test for exclusion rules completeness
+  - [x] 5.3 Write property test for exclusion rules completeness
     - **Property 6: Exclusion Rules Completeness**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
   
-  - [ ]* 5.4 Write unit tests for exclusion engine
+  - [x] 5.4 Write unit tests for exclusion engine
     - Test each exclusion pattern with specific examples
     - Test that excluded transactions have correct reasons
     - Test that non-matching transactions pass through
     - _Requirements: 3.1-3.6_
 
-- [ ] 6. Implement Rules Engine and Classification
-  - [ ] 6.1 Create rules configuration system
+- [-] 6. Implement Rules Engine and Classification
+  - [x] 6.1 Create rules configuration system
     - Define JSON/YAML schema for rules
     - Implement rule loading from configuration file
     - Support rule versioning (rule_id, version, enabled flag)
     - Create sample rules for Australian deduction categories
     - _Requirements: 10.1, 10.2, 10.3_
   
-  - [ ] 6.2 Implement RulesEngine class
+  - [x] 6.2 Implement RulesEngine class
     - Create keyword matching logic (case-insensitive substring)
     - Create merchant list matching logic
     - Implement rule priority sorting
     - Return matched rule with confidence score
     - _Requirements: 4.1, 4.3, 10.4_
   
-  - [ ] 6.3 Implement FuzzyMatcher class
+  - [x] 6.3 Implement FuzzyMatcher class
     - Use rapidfuzz for fuzzy string matching
     - Implement merchant name normalisation (remove prefixes, reference numbers)
     - Match against canonical merchant list with configurable threshold (default 0.85)
     - Return canonical merchant name and similarity score
     - _Requirements: 4.2, 11.1-11.5_
   
-  - [ ] 6.4 Implement ClassificationEngine class
+  - [x] 6.4 Implement ClassificationEngine class
     - Integrate RulesEngine and FuzzyMatcher
     - Apply rules to each transaction
     - Handle multiple rule matches (select highest confidence)
@@ -136,71 +136,71 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Add method-required flags for car, WFH, and travel categories
     - _Requirements: 4.1-4.5, 5.1-5.4, 6.1-6.3_
   
-  - [ ]* 6.5 Write property test for confidence score bounds
+  - [x] 6.5 Write property test for confidence score bounds
     - **Property 8: Confidence Score Bounds**
     - **Validates: Requirements 4.1**
   
-  - [ ]* 6.6 Write property test for highest confidence rule selection
+  - [x] 6.6 Write property test for highest confidence rule selection
     - **Property 9: Highest Confidence Rule Selection**
     - **Validates: Requirements 4.3**
   
-  - [ ]* 6.7 Write property test for needs review flagging
+  - [x] 6.7 Write property test for needs review flagging
     - **Property 10: Needs Review Flagging**
     - **Validates: Requirements 4.4**
   
-  - [ ]* 6.8 Write property test for evidence checklist presence
+  - [x] 6.8 Write property test for evidence checklist presence
     - **Property 12: Evidence Checklist Presence**
     - **Validates: Requirements 5.1, 5.2**
   
-  - [ ]* 6.9 Write property test for donation eligibility requirement
+  - [x] 6.9 Write property test for donation eligibility requirement
     - **Property 13: Donation Eligibility Requirement**
     - **Validates: Requirements 5.4**
   
-  - [ ]* 6.10 Write unit tests for classification engine
+  - [x] 6.10 Write unit tests for classification engine
     - Test classification with sample rules
     - Test fuzzy merchant matching with variations
     - Test evidence checklist generation for each category
     - Test method-required flagging
     - _Requirements: 4.1-4.5, 5.1-5.4, 6.1-6.3_
 
-- [ ] 7. Checkpoint - Ensure classification tests pass
+- [x] 7. Checkpoint - Ensure classification tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement Audit Trail system
-  - [ ] 8.1 Create AuditEntry model and audit trail builder
+- [x] 8. Implement Audit Trail system
+  - [x] 8.1 Create AuditEntry model and audit trail builder
     - Define AuditEntry structure (normalisation, exclusion_checks, classification_attempts, final_result)
     - Implement audit trail builder that records each processing step
     - Ensure all processing components write to audit trail
     - _Requirements: 3.5, 4.5, 10.5_
   
-  - [ ]* 8.2 Write property test for audit trail completeness
+  - [x] 8.2 Write property test for audit trail completeness
     - **Property 7: Audit Trail Completeness**
     - **Validates: Requirements 3.5, 4.5, 10.5**
   
-  - [ ]* 8.3 Write property test for audit trail determinism
+  - [x] 8.3 Write property test for audit trail determinism
     - **Property 17: Audit Trail Determinism**
     - **Validates: Requirements 9.3**
 
-- [ ] 9. Implement Report Generator
-  - [ ] 9.1 Create report data aggregation
+- [x] 9. Implement Report Generator
+  - [x] 9.1 Create report data aggregation
     - Implement ReportSummary calculation (category totals, grand total)
     - Calculate confidence distribution (high/medium/low)
     - Separate transactions into candidates, needs_review, and excluded lists
     - _Requirements: 8.2, 8.3_
   
-  - [ ] 9.2 Implement CSV export
+  - [x] 9.2 Implement CSV export
     - Create CSV writer with all required columns
     - Format dates, amounts, and categories consistently
     - Include all deduction candidates with classification data
     - _Requirements: 9.1_
   
-  - [ ] 9.3 Implement JSON audit trail export
+  - [x] 9.3 Implement JSON audit trail export
     - Serialize audit trail to JSON format
     - Include all processing steps for each transaction
     - Ensure deterministic output (same input = same output)
     - _Requirements: 9.2, 9.3_
   
-  - [ ] 9.4 Implement PDF generation
+  - [x] 9.4 Implement PDF generation
     - Choose PDF library (WeasyPrint or ReportLab)
     - Create HTML template with design system styles
     - Include header with income year and generated date
@@ -212,15 +212,15 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Use "likely deductible" language throughout
     - _Requirements: 8.1-8.8_
   
-  - [ ]* 9.5 Write property test for CSV export completeness
+  - [x] 9.5 Write property test for CSV export completeness
     - **Property 16: CSV Export Completeness**
     - **Validates: Requirements 9.1**
   
-  - [ ]* 9.6 Write property test for PDF content completeness
+  - [x] 9.6 Write property test for PDF content completeness
     - **Property 15: PDF Content Completeness**
     - **Validates: Requirements 8.2, 8.3, 8.4, 8.7**
   
-  - [ ]* 9.7 Write unit tests for report generator
+  - [x] 9.7 Write unit tests for report generator
     - Test PDF generation with sample data
     - Test CSV formatting
     - Test JSON audit trail structure
@@ -242,11 +242,11 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Ensure raw CSV data is never stored
     - _Requirements: 12.1, 12.2_
   
-  - [ ]* 10.3 Write property test for derived fields only storage
+  - [ ] 10.3 Write property test for derived fields only storage
     - **Property 22: Derived Fields Only Storage**
     - **Validates: Requirements 12.1**
   
-  - [ ]* 10.4 Write property test for ephemeral mode data isolation
+  - [ ] 10.4 Write property test for ephemeral mode data isolation
     - **Property 21: Ephemeral Mode Data Isolation**
     - **Validates: Requirements 12.2**
 
@@ -283,19 +283,19 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Add request validation using Pydantic
     - _Requirements: 11.5_
   
-  - [ ]* 11.5 Write property test for API job identifier response
+  - [ ] 11.5 Write property test for API job identifier response
     - **Property 18: API Job Identifier Response**
     - **Validates: Requirements 11.2**
   
-  - [ ]* 11.6 Write property test for report download availability
+  - [ ] 11.6 Write property test for report download availability
     - **Property 19: Report Download Availability**
     - **Validates: Requirements 11.4**
   
-  - [ ]* 11.7 Write property test for HTTP error status codes
+  - [ ] 11.7 Write property test for HTTP error status codes
     - **Property 20: HTTP Error Status Codes**
     - **Validates: Requirements 11.5**
   
-  - [ ]* 11.8 Write integration tests for API endpoints
+  - [ ] 11.8 Write integration tests for API endpoints
     - Test upload endpoint with valid and invalid files
     - Test job status polling
     - Test report downloads
@@ -313,7 +313,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Handle errors gracefully with fallbacks
     - _Requirements: All backend requirements_
   
-  - [ ]* 13.2 Write integration test for full pipeline
+  - [ ] 13.2 Write integration test for full pipeline
     - Test complete flow from CSV upload to report generation
     - Use sample Australian bank CSV files
     - Verify all outputs (PDF, CSV, JSON) are generated
@@ -337,7 +337,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Implement Modal/Drawer component for transaction details
     - _Requirements: Frontend design system_
   
-  - [ ]* 14.3 Write unit tests for UI components
+  - [ ] 14.3 Write unit tests for UI components
     - Test button variants and interactions
     - Test input validation and error states
     - Test keyboard navigation
@@ -407,7 +407,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Provide redaction recommendations
     - _Requirements: 12.1-12.4_
   
-  - [ ]* 15.9 Write integration tests for frontend pages
+  - [ ] 15.9 Write integration tests for frontend pages
     - Test upload flow
     - Test report viewing and interaction
     - Test export functionality
@@ -438,7 +438,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Make redaction configurable
     - _Requirements: 12.3_
   
-  - [ ]* 17.2 Write property test for sensitive data redaction
+  - [ ] 17.2 Write property test for sensitive data redaction
     - **Property 23: Sensitive Data Redaction**
     - **Validates: Requirements 12.3**
 
@@ -464,7 +464,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Add caching where appropriate
     - _Requirements: NFR 2_
   
-  - [ ]* 18.4 Write end-to-end tests
+  - [ ] 18.4 Write end-to-end tests
     - Test complete user journey from landing to export
     - Test with various Australian bank CSV formats
     - Test error scenarios
