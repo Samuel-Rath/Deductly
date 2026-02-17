@@ -96,8 +96,13 @@ class ExclusionEngine:
     Validates: Requirements 3.1-3.6
     """
     
-    def __init__(self):
-        """Initialize the exclusion engine with compiled regex patterns."""
+    def __init__(self, audit_builder=None):
+        """
+        Initialize the exclusion engine with compiled regex patterns.
+        
+        Args:
+            audit_builder: Optional AuditTrailBuilder for recording exclusion checks
+        """
         # Compile patterns for performance
         self.transfer_patterns = [
             re.compile(pattern, re.IGNORECASE) 
@@ -119,6 +124,7 @@ class ExclusionEngine:
             re.compile(pattern, re.IGNORECASE) 
             for pattern in ExclusionPatterns.SALARY_INCOME_PATTERNS
         ]
+        self.audit_builder = audit_builder
     
     def filter(
         self, 
@@ -173,6 +179,14 @@ class ExclusionEngine:
         # Check transfer patterns (Requirement 3.1)
         for pattern in self.transfer_patterns:
             if pattern.search(description):
+                if self.audit_builder:
+                    self.audit_builder.record_exclusion_check(
+                        transaction.transaction_id,
+                        "transfer_check",
+                        pattern.pattern,
+                        True,
+                        ExclusionReason.TRANSFER_BETWEEN_ACCOUNTS
+                    )
                 return (
                     ExclusionReason.TRANSFER_BETWEEN_ACCOUNTS,
                     "Transaction appears to be a transfer between accounts"
@@ -181,6 +195,14 @@ class ExclusionEngine:
         # Check cash withdrawal patterns (Requirement 3.2)
         for pattern in self.cash_withdrawal_patterns:
             if pattern.search(description):
+                if self.audit_builder:
+                    self.audit_builder.record_exclusion_check(
+                        transaction.transaction_id,
+                        "cash_withdrawal_check",
+                        pattern.pattern,
+                        True,
+                        ExclusionReason.CASH_WITHDRAWAL
+                    )
                 return (
                     ExclusionReason.CASH_WITHDRAWAL,
                     "Transaction is a cash withdrawal or ATM transaction"
@@ -189,6 +211,14 @@ class ExclusionEngine:
         # Check loan repayment patterns (Requirement 3.3)
         for pattern in self.loan_repayment_patterns:
             if pattern.search(description):
+                if self.audit_builder:
+                    self.audit_builder.record_exclusion_check(
+                        transaction.transaction_id,
+                        "loan_repayment_check",
+                        pattern.pattern,
+                        True,
+                        ExclusionReason.LOAN_REPAYMENT
+                    )
                 return (
                     ExclusionReason.LOAN_REPAYMENT,
                     "Transaction is a loan or mortgage repayment"
@@ -197,6 +227,14 @@ class ExclusionEngine:
         # Check tax settlement patterns (Requirement 3.4)
         for pattern in self.tax_settlement_patterns:
             if pattern.search(description):
+                if self.audit_builder:
+                    self.audit_builder.record_exclusion_check(
+                        transaction.transaction_id,
+                        "tax_settlement_check",
+                        pattern.pattern,
+                        True,
+                        ExclusionReason.TAX_SETTLEMENT
+                    )
                 return (
                     ExclusionReason.TAX_SETTLEMENT,
                     "Transaction is a tax payment or refund"
@@ -207,9 +245,26 @@ class ExclusionEngine:
         if transaction.direction == TransactionDirection.CREDIT:
             for pattern in self.salary_income_patterns:
                 if pattern.search(description):
+                    if self.audit_builder:
+                        self.audit_builder.record_exclusion_check(
+                            transaction.transaction_id,
+                            "salary_income_check",
+                            pattern.pattern,
+                            True,
+                            ExclusionReason.SALARY_INCOME
+                        )
                     return (
                         ExclusionReason.SALARY_INCOME,
                         "Transaction is salary or wage income"
                     )
+        
+        # No exclusion matched - record that checks passed
+        if self.audit_builder:
+            self.audit_builder.record_exclusion_check(
+                transaction.transaction_id,
+                "all_exclusion_checks",
+                "none",
+                False
+            )
         
         return None

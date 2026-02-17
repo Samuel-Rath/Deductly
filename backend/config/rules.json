@@ -1,0 +1,124 @@
+{
+  "rules": [
+    {
+      "rule_id": "R001",
+      "version": "1.0",
+      "category": "work_software",
+      "priority": 100,
+      "confidence": 0.95,
+      "keywords": ["adobe", "microsoft 365", "github", "jetbrains", "slack", "zoom", "dropbox", "google workspace", "office 365", "creative cloud"],
+      "merchants": ["Adobe", "Microsoft", "GitHub", "JetBrains", "Slack", "Zoom", "Dropbox", "Google"],
+      "evidence_checklist": ["receipt"],
+      "flags": [],
+      "enabled": true
+    },
+    {
+      "rule_id": "R002",
+      "version": "1.0",
+      "category": "professional_memberships",
+      "priority": 95,
+      "confidence": 0.90,
+      "keywords": ["professional association", "membership", "registration", "licence fee", "cpd", "continuing professional"],
+      "merchants": ["CPA Australia", "Chartered Accountants", "Engineers Australia", "Law Society"],
+      "evidence_checklist": ["receipt", "invoice"],
+      "flags": [],
+      "enabled": true
+    },
+    {
+      "rule_id": "R003",
+      "version": "1.0",
+      "category": "training_education",
+      "priority": 90,
+      "confidence": 0.85,
+      "keywords": ["course", "training", "workshop", "seminar", "conference", "udemy", "coursera", "linkedin learning"],
+      "merchants": ["Udemy", "Coursera", "LinkedIn", "Pluralsight"],
+      "evidence_checklist": ["receipt", "invoice"],
+      "flags": [],
+      "enabled": true
+    },
+    {
+      "rule_id": "R004",
+      "version": "1.0",
+      "category": "work_equipment",
+      "priority": 85,
+      "confidence": 0.80,
+      "keywords": ["laptop", "computer", "monitor", "keyboard", "mouse", "desk", "chair", "office supplies", "stationery", "printer"],
+      "merchants": ["JB Hi-Fi", "Harvey Norman", "Officeworks", "Apple", "Dell"],
+      "evidence_checklist": ["receipt"],
+      "flags": [],
+      "enabled": true
+    },
+    {
+      "rule_id": "R005",
+      "version": "1.0",
+      "category": "phone_internet",
+      "priority": 80,
+      "confidence": 0.70,
+      "keywords": ["telstra", "optus", "vodafone", "nbn", "internet", "mobile", "phone plan"],
+      "merchants": ["Telstra", "Optus", "Vodafone", "TPG"],
+      "evidence_checklist": ["receipt", "percentage_record"],
+      "flags": ["percentage_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R006",
+      "version": "1.0",
+      "category": "working_from_home",
+      "priority": 75,
+      "confidence": 0.65,
+      "keywords": ["electricity", "gas", "utilities", "home office"],
+      "merchants": ["AGL", "Origin Energy", "Energy Australia"],
+      "evidence_checklist": ["receipt", "diary"],
+      "flags": ["method_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R007",
+      "version": "1.0",
+      "category": "travel",
+      "priority": 70,
+      "confidence": 0.75,
+      "keywords": ["qantas", "virgin", "jetstar", "flight", "hotel", "accommodation", "uber", "taxi"],
+      "merchants": ["Qantas", "Virgin Australia", "Jetstar", "Uber", "Booking.com"],
+      "evidence_checklist": ["receipt", "diary"],
+      "flags": ["method_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R008",
+      "version": "1.0",
+      "category": "donations",
+      "priority": 90,
+      "confidence": 0.85,
+      "keywords": ["donation", "charity", "red cross", "salvos", "salvation army", "cancer council", "rspca"],
+      "merchants": ["Red Cross", "Salvation Army", "Cancer Council", "RSPCA"],
+      "evidence_checklist": ["receipt", "eligibility_check"],
+      "flags": [],
+      "enabled": true
+    },
+    {
+      "rule_id": "R009",
+      "version": "1.0",
+      "category": "bank_fees",
+      "priority": 60,
+      "confidence": 0.70,
+      "keywords": ["account fee", "bank fee", "transaction fee", "monthly fee"],
+      "merchants": [],
+      "evidence_checklist": ["receipt"],
+      "flags": ["needs_review"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R010",
+      "version": "1.0",
+      "category": "work_software",
+      "priority": 95,
+      "confidence": 0.90,
+      "keywords": ["aws", "azure", "digital ocean", "heroku", "hosting", "domain"],
+      "merchants": ["Amazon Web Services", "Microsoft Azure", "DigitalOcean", "Heroku", "GoDaddy"],
+      "evidence_checklist": ["receipt"],
+      "flags": [],
+      "enabled": true
+    }
+  ]
+}

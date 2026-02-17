@@ -1,0 +1,242 @@
+"""
+Classification Engine for Tax Deduction Analyzer.
+
+This module implements the main classification system that integrates
+the rules engine and fuzzy matcher to classify transactions into
+deduction categories with confidence scores and evidence requirements.
+
+Validates: Requirements 4.1-4.5, 5.1-5.4, 6.1-6.3
+"""
+
+from typing import List, Optional
+from backend.models.schemas import (
+    NormalisedTransaction,
+    ClassifiedTransaction,
+    DeductionCategory,
+    EvidenceType
+)
+from backend.processing.rules_engine import RulesEngine
+from backend.processing.fuzzy_matcher import FuzzyMatcher
+
+
+class ClassificationEngine:
+    """
+    Main classification engine that integrates rules and fuzzy matching.
+    
+    Classifies transactions into deduction categories, assigns confidence scores,
+    attaches evidence checklists, and flags items requiring review or additional methods.
+    """
+    
+    def __init__(
+        self,
+        rules_engine: RulesEngine,
+        fuzzy_matcher: Optional[FuzzyMatcher] = None,
+        confidence_threshold: float = 0.60,
+        audit_builder=None
+    ):
+        """
+        Initialize the classification engine.
+        
+        Args:
+            rules_engine: RulesEngine instance for rule-based matching
+            fuzzy_matcher: Optional FuzzyMatcher for merchant canonicalisation
+            confidence_threshold: Minimum confidence for automatic classification (default 0.60)
+            audit_builder: Optional AuditTrailBuilder for recording classification attempts
+        """
+        self.rules_engine = rules_engine
+        self.fuzzy_matcher = fuzzy_matcher
+        self.confidence_threshold = confidence_threshold
+        self.audit_builder = audit_builder
+    
+    def classify(self, transactions: List[NormalisedTransaction]) -> List[ClassifiedTransaction]:
+        """
+        Classify a list of transactions.
+        
+        For each transaction:
+        1. Attempt fuzzy merchant matching (if fuzzy_matcher available)
+        2. Apply rules engine to find matching rule
+        3. Assign category and confidence score
+        4. Attach evidence checklist from matched rule
+        5. Add flags (needs_review, method_required, percentage_required)
+        
+        Args:
+            transactions: List of normalised transactions to classify
+            
+        Returns:
+            List of classified transactions
+            
+        Validates: Requirements 4.1-4.5, 5.1-5.4, 6.1-6.3
+        """
+        classified = []
+        
+        for transaction in transactions:
+            classified_transaction = self._classify_single(transaction)
+            classified.append(classified_transaction)
+        
+        return classified
+    
+    def _classify_single(self, transaction: NormalisedTransaction) -> ClassifiedTransaction:
+        """
+        Classify a single transaction.
+        
+        Args:
+            transaction: Normalised transaction to classify
+            
+        Returns:
+            Classified transaction with category, confidence, and evidence
+        """
+        # Step 1: Try fuzzy merchant matching to canonicalise merchant name
+        canonical_merchant = transaction.merchant
+        fuzzy_score = None
+        
+        if self.fuzzy_matcher:
+            fuzzy_match = self.fuzzy_matcher.match(transaction.merchant)
+            if fuzzy_match:
+                canonical_merchant, fuzzy_score = fuzzy_match
+                # Create updated transaction with canonical merchant for better rule matching
+                transaction = transaction.model_copy(update={"merchant": canonical_merchant})
+        
+        # Step 2: Apply rules engine
+        rule_match = self.rules_engine.match(transaction)
+        
+        if not rule_match:
+            # No rule matched - record attempt and return unclassified transaction
+            if self.audit_builder:
+                self.audit_builder.record_classification_attempt(
+                    transaction.transaction_id,
+                    "none",
+                    "none",
+                    "none",
+                    0.0,
+                    False,
+                    "no_rule_matched"
+                )
+            
+            classified_txn = ClassifiedTransaction(
+                transaction=transaction,
+                category=None,
+                confidence=0.0,
+                matched_rule_id=None,
+                matched_rule_version=None,
+                reason="no_rule_matched",
+                evidence_checklist=[],
+                flags=["needs_review"]
+            )
+            
+            # Record final result
+            if self.audit_builder:
+                self.audit_builder.record_final_result(
+                    transaction.transaction_id,
+                    None,
+                    0.0,
+                    None,
+                    None,
+                    "no_rule_matched",
+                    [],
+                    ["needs_review"]
+                )
+            
+            return classified_txn
+        
+        matched_rule, confidence = rule_match
+        
+        # Record classification attempt
+        if self.audit_builder:
+            self.audit_builder.record_classification_attempt(
+                transaction.transaction_id,
+                matched_rule.rule_id,
+                matched_rule.version,
+                matched_rule.category.value,
+                confidence,
+                True,
+                f"rule_matched: {matched_rule.rule_id}"
+            )
+        
+        # Step 3: Build reason string
+        reason_parts = []
+        if fuzzy_score:
+            reason_parts.append(f"merchant_match: {canonical_merchant} (similarity: {fuzzy_score:.2f})")
+        
+        # Check which keywords matched
+        matched_keywords = []
+        description_lower = transaction.description.lower()
+        merchant_lower = transaction.merchant.lower()
+        
+        for keyword in matched_rule.keywords:
+            if keyword.lower() in description_lower or keyword.lower() in merchant_lower:
+                matched_keywords.append(keyword)
+        
+        if matched_keywords:
+            reason_parts.append(f"keyword_match: {', '.join(matched_keywords[:3])}")  # Limit to 3 keywords
+        
+        reason = "; ".join(reason_parts) if reason_parts else "rule_matched"
+        
+        # Step 4: Collect flags
+        flags = list(matched_rule.flags)  # Copy flags from rule
+        
+        # Add needs_review flag if confidence below threshold
+        if confidence < self.confidence_threshold:
+            if "needs_review" not in flags:
+                flags.append("needs_review")
+        
+        # Add method_required flag for specific categories
+        method_required_categories = [
+            DeductionCategory.WORKING_FROM_HOME,
+            DeductionCategory.TRAVEL
+        ]
+        
+        if matched_rule.category in method_required_categories:
+            if "method_required" not in flags:
+                flags.append("method_required")
+        
+        # Add percentage_required flag for phone/internet
+        if matched_rule.category == DeductionCategory.PHONE_INTERNET:
+            if "percentage_required" not in flags:
+                flags.append("percentage_required")
+        
+        # Step 5: Ensure donations have eligibility check
+        evidence_checklist = list(matched_rule.evidence_checklist)
+        if matched_rule.category == DeductionCategory.DONATIONS:
+            if EvidenceType.ELIGIBILITY_CHECK not in evidence_checklist:
+                evidence_checklist.append(EvidenceType.ELIGIBILITY_CHECK)
+        
+        # Step 6: Create classified transaction
+        classified_txn = ClassifiedTransaction(
+            transaction=transaction,
+            category=matched_rule.category,
+            confidence=confidence,
+            matched_rule_id=matched_rule.rule_id,
+            matched_rule_version=matched_rule.version,
+            reason=reason,
+            evidence_checklist=evidence_checklist,
+            flags=flags
+        )
+        
+        # Record final result
+        if self.audit_builder:
+            self.audit_builder.record_final_result(
+                transaction.transaction_id,
+                matched_rule.category.value,
+                confidence,
+                matched_rule.rule_id,
+                matched_rule.version,
+                reason,
+                [e.value for e in evidence_checklist],
+                flags
+            )
+        
+        return classified_txn
+    
+    def set_confidence_threshold(self, threshold: float) -> None:
+        """
+        Update the confidence threshold for needs_review flagging.
+        
+        Args:
+            threshold: New threshold value (0.0 to 1.0)
+            
+        Raises:
+            ValueError: If threshold is not between 0.0 and 1.0
+        """
+        if not 0.0 <= threshold <= 1.0:
+            raise ValueError("Confidence threshold must be between 0.0 and 1.0")
+        self.confidence_threshold = threshold
