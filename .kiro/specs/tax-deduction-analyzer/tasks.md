@@ -320,15 +320,15 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Verify audit trail completeness
     - _Requirements: All backend requirements_
 
-- [ ] 14. Implement React frontend - Design system and components
-  - [ ] 14.1 Set up Tailwind CSS with design tokens
+- [x] 14. Implement React frontend - Design system and components
+  - [x] 14.1 Set up Tailwind CSS with design tokens
     - Configure Tailwind with custom colour palette (Ink, Slate, Accent)
     - Configure typography scale (Inter font, size scale)
     - Configure spacing scale (base 8px)
     - Configure border radius values (16px cards, 12px inputs, 999px pills)
     - _Requirements: Frontend design system_
   
-  - [ ] 14.2 Create core UI components
+  - [x] 14.2 Create core UI components
     - Implement Button component (primary, secondary, tertiary variants)
     - Implement Input component with focus states and error handling
     - Implement Card component with elevation and borders
@@ -337,15 +337,15 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Implement Modal/Drawer component for transaction details
     - _Requirements: Frontend design system_
   
-  - [ ] 14.3 Write unit tests for UI components
+  - [x] 14.3 Write unit tests for UI components
     - Test button variants and interactions
     - Test input validation and error states
     - Test keyboard navigation
     - Test accessibility (ARIA labels, focus management)
     - _Requirements: NFR 4_
 
-- [ ] 15. Implement React frontend - Pages
-  - [ ] 15.1 Create Landing page
+- [x] 15. Implement React frontend - Pages
+  - [x] 15.1 Create Landing page
     - Implement hero section with headline and CTA
     - Implement trust strip (Privacy, Explainability, Australian income year)
     - Implement "How it works" section
@@ -353,7 +353,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Add navigation to Upload page
     - _Requirements: Frontend design_
   
-  - [ ] 15.2 Create Upload page
+  - [x] 15.2 Create Upload page
     - Implement drag-and-drop upload zone
     - Implement income year selector (default to current year)
     - Implement privacy toggle (ephemeral mode, default on)
@@ -362,14 +362,14 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Navigate to Report page on successful upload
     - _Requirements: 1.1, 1.4, 12.2_
   
-  - [ ] 15.3 Create Report page - Summary section
+  - [x] 15.3 Create Report page - Summary section
     - Implement summary cards (total deductible, needs review, excluded, confidence distribution)
     - Implement confidence distribution chart (histogram)
     - Implement category totals chart (bar chart)
     - Use monochrome design with accent highlights
     - _Requirements: 8.2, 8.3_
   
-  - [ ] 15.4 Create Report page - Table and tabs
+  - [x] 15.4 Create Report page - Table and tabs
     - Implement tabs (Candidates, Needs Review, Excluded, Audit Trail)
     - Implement transaction table with all columns
     - Implement row selection and highlighting
@@ -377,7 +377,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Implement category chips
     - _Requirements: 8.4_
   
-  - [ ] 15.5 Create Report page - Detail panel
+  - [x] 15.5 Create Report page - Detail panel
     - Implement transaction detail drawer/panel
     - Show matched rule and reason
     - Show evidence checklist
@@ -385,13 +385,13 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Include "More detail" expansion for explanations
     - _Requirements: 8.4_
   
-  - [ ] 15.6 Create Report page - Export functionality
+  - [x] 15.6 Create Report page - Export functionality
     - Implement download buttons for PDF, CSV, JSON
     - Show download progress
     - Handle download errors
     - _Requirements: 8.1, 9.1, 9.2_
   
-  - [ ] 15.7 Create Rules page
+  - [x] 15.7 Create Rules page
     - Display rule sets by category
     - Show merchant matching examples
     - Explain confidence computation
@@ -399,7 +399,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Show rule version history
     - _Requirements: 10.1-10.5_
   
-  - [ ] 15.8 Create Privacy page
+  - [x] 15.8 Create Privacy page
     - Explain what data is processed
     - Explain what is stored by default
     - Explain ephemeral mode
@@ -407,22 +407,22 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Provide redaction recommendations
     - _Requirements: 12.1-12.4_
   
-  - [ ] 15.9 Write integration tests for frontend pages
+  - [x] 15.9 Write integration tests for frontend pages
     - Test upload flow
     - Test report viewing and interaction
     - Test export functionality
     - Test navigation between pages
     - _Requirements: All frontend requirements_
 
-- [ ] 16. Implement API client and state management
-  - [ ] 16.1 Create API client functions
+- [x] 16. Implement API client and state management
+  - [x] 16.1 Create API client functions
     - Implement uploadCSV function
     - Implement getJobStatus function
     - Implement downloadReport function
     - Handle API errors and retries
     - _Requirements: 11.1-11.5_
   
-  - [ ] 16.2 Set up React Query for state management
+  - [x] 16.2 Set up React Query for state management
     - Configure React Query client
     - Create upload mutation
     - Create job status query with polling

@@ -1,0 +1,5 @@
+export { default as Landing } from './Landing'
+export { default as Upload } from './Upload'
+export { default as Report } from './Report'
+export { default as Rules } from './Rules'
+export { default as Privacy } from './Privacy'
