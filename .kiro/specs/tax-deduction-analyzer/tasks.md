@@ -227,31 +227,31 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Verify all required sections present in PDF
     - _Requirements: 8.1-8.8, 9.1-9.3_
 
-- [ ] 10. Implement data storage layer (optional SQLite)
-  - [ ] 10.1 Create database schema and models
+- [x] 10. Implement data storage layer (optional SQLite)
+  - [x] 10.1 Create database schema and models
     - Define jobs table schema
     - Define transactions table schema (derived fields only)
     - Create SQLAlchemy models or use raw SQL
     - Implement database initialization
     - _Requirements: 12.1_
   
-  - [ ] 10.2 Implement storage service
+  - [x] 10.2 Implement storage service
     - Create methods to save job metadata
     - Create methods to save derived transaction fields
     - Implement ephemeral mode (skip database writes)
     - Ensure raw CSV data is never stored
     - _Requirements: 12.1, 12.2_
   
-  - [ ] 10.3 Write property test for derived fields only storage
+  - [x] 10.3 Write property test for derived fields only storage
     - **Property 22: Derived Fields Only Storage**
     - **Validates: Requirements 12.1**
   
-  - [ ] 10.4 Write property test for ephemeral mode data isolation
+  - [x] 10.4 Write property test for ephemeral mode data isolation
     - **Property 21: Ephemeral Mode Data Isolation**
     - **Validates: Requirements 12.2**
 
-- [ ] 11. Implement FastAPI endpoints
-  - [ ] 11.1 Create upload endpoint
+- [x] 11. Implement FastAPI endpoints
+  - [x] 11.1 Create upload endpoint
     - Implement POST /api/upload endpoint
     - Validate file type (CSV only)
     - Enforce file size limits
@@ -260,7 +260,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Return UploadResponse with job_id
     - _Requirements: 11.1, 11.2_
   
-  - [ ] 11.2 Create job status endpoint
+  - [x] 11.2 Create job status endpoint
     - Implement GET /api/jobs/{job_id} endpoint
     - Return job status (queued, processing, completed, failed)
     - Include progress percentage if available
@@ -268,7 +268,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Return 404 for invalid job_id
     - _Requirements: 11.3, 11.4_
   
-  - [ ] 11.3 Create report download endpoints
+  - [x] 11.3 Create report download endpoints
     - Implement GET /api/jobs/{job_id}/download/pdf endpoint
     - Implement GET /api/jobs/{job_id}/download/csv endpoint
     - Implement GET /api/jobs/{job_id}/download/json endpoint
@@ -276,44 +276,44 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Return 404 if report not found
     - _Requirements: 11.4_
   
-  - [ ] 11.4 Implement error handling and validation
+  - [x] 11.4 Implement error handling and validation
     - Add global exception handler
     - Return appropriate HTTP status codes (400, 404, 429, 500)
     - Return JSON error responses with error code and message
     - Add request validation using Pydantic
     - _Requirements: 11.5_
   
-  - [ ] 11.5 Write property test for API job identifier response
+  - [x] 11.5 Write property test for API job identifier response
     - **Property 18: API Job Identifier Response**
     - **Validates: Requirements 11.2**
   
-  - [ ] 11.6 Write property test for report download availability
+  - [x] 11.6 Write property test for report download availability
     - **Property 19: Report Download Availability**
     - **Validates: Requirements 11.4**
   
-  - [ ] 11.7 Write property test for HTTP error status codes
+  - [x] 11.7 Write property test for HTTP error status codes
     - **Property 20: HTTP Error Status Codes**
     - **Validates: Requirements 11.5**
   
-  - [ ] 11.8 Write integration tests for API endpoints
+  - [x] 11.8 Write integration tests for API endpoints
     - Test upload endpoint with valid and invalid files
     - Test job status polling
     - Test report downloads
     - Test error conditions
     - _Requirements: 11.1-11.5_
 
-- [ ] 12. Checkpoint - Ensure backend tests pass
+- [x] 12. Checkpoint - Ensure backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Implement processing pipeline orchestration
-  - [ ] 13.1 Create main processing pipeline
+- [x] 13. Implement processing pipeline orchestration
+  - [x] 13.1 Create main processing pipeline
     - Wire together CSV Parser, Exclusion Engine, Classification Engine, Report Generator
     - Implement end-to-end processing function
     - Add audit trail recording at each step
     - Handle errors gracefully with fallbacks
     - _Requirements: All backend requirements_
   
-  - [ ] 13.2 Write integration test for full pipeline
+  - [x] 13.2 Write integration test for full pipeline
     - Test complete flow from CSV upload to report generation
     - Use sample Australian bank CSV files
     - Verify all outputs (PDF, CSV, JSON) are generated

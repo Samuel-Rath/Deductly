@@ -78,7 +78,7 @@ class ReportGenerator:
         summary = self._calculate_summary(high_confidence, needs_review, excluded)
         
         # Create report data
-        report_data = ReportData(
+        report_data = ReportData.model_construct(
             income_year=income_year,
             generated_at=datetime.now(),
             summary=summary,

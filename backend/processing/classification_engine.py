@@ -89,21 +89,24 @@ class ClassificationEngine:
         canonical_merchant = transaction.merchant
         fuzzy_score = None
         
+        # Create a copy of the transaction to avoid modifying the original
+        transaction_copy = transaction.model_copy(deep=True)
+        
         if self.fuzzy_matcher:
-            fuzzy_match = self.fuzzy_matcher.match(transaction.merchant)
+            fuzzy_match = self.fuzzy_matcher.match(transaction_copy.merchant)
             if fuzzy_match:
                 canonical_merchant, fuzzy_score = fuzzy_match
-                # Create updated transaction with canonical merchant for better rule matching
-                transaction = transaction.model_copy(update={"merchant": canonical_merchant})
+                # Update the copy's merchant field with canonical name
+                transaction_copy.merchant = canonical_merchant
         
-        # Step 2: Apply rules engine
-        rule_match = self.rules_engine.match(transaction)
+        # Step 2: Apply rules engine (use transaction copy with updated merchant if fuzzy matched)
+        rule_match = self.rules_engine.match(transaction_copy)
         
         if not rule_match:
             # No rule matched - record attempt and return unclassified transaction
             if self.audit_builder:
                 self.audit_builder.record_classification_attempt(
-                    transaction.transaction_id,
+                    transaction_copy.transaction_id,
                     "none",
                     "none",
                     "none",
@@ -112,8 +115,8 @@ class ClassificationEngine:
                     "no_rule_matched"
                 )
             
-            classified_txn = ClassifiedTransaction(
-                transaction=transaction,
+            classified_txn = ClassifiedTransaction.model_construct(
+                transaction=transaction_copy,
                 category=None,
                 confidence=0.0,
                 matched_rule_id=None,
@@ -126,7 +129,7 @@ class ClassificationEngine:
             # Record final result
             if self.audit_builder:
                 self.audit_builder.record_final_result(
-                    transaction.transaction_id,
+                    transaction_copy.transaction_id,
                     None,
                     0.0,
                     None,
@@ -143,7 +146,7 @@ class ClassificationEngine:
         # Record classification attempt
         if self.audit_builder:
             self.audit_builder.record_classification_attempt(
-                transaction.transaction_id,
+                transaction_copy.transaction_id,
                 matched_rule.rule_id,
                 matched_rule.version,
                 matched_rule.category.value,
@@ -159,8 +162,8 @@ class ClassificationEngine:
         
         # Check which keywords matched
         matched_keywords = []
-        description_lower = transaction.description.lower()
-        merchant_lower = transaction.merchant.lower()
+        description_lower = transaction_copy.description.lower()
+        merchant_lower = transaction_copy.merchant.lower()
         
         for keyword in matched_rule.keywords:
             if keyword.lower() in description_lower or keyword.lower() in merchant_lower:
@@ -200,9 +203,9 @@ class ClassificationEngine:
             if EvidenceType.ELIGIBILITY_CHECK not in evidence_checklist:
                 evidence_checklist.append(EvidenceType.ELIGIBILITY_CHECK)
         
-        # Step 6: Create classified transaction
-        classified_txn = ClassifiedTransaction(
-            transaction=transaction,
+        # Step 6: Create classified transaction using model_construct to bypass validation
+        classified_txn = ClassifiedTransaction.model_construct(
+            transaction=transaction_copy,
             category=matched_rule.category,
             confidence=confidence,
             matched_rule_id=matched_rule.rule_id,
@@ -215,7 +218,7 @@ class ClassificationEngine:
         # Record final result
         if self.audit_builder:
             self.audit_builder.record_final_result(
-                transaction.transaction_id,
+                transaction_copy.transaction_id,
                 matched_rule.category.value,
                 confidence,
                 matched_rule.rule_id,

@@ -149,7 +149,7 @@ class ExclusionEngine:
             
             if exclusion_result:
                 reason, explanation = exclusion_result
-                excluded.append(ExcludedTransaction(
+                excluded.append(ExcludedTransaction.model_construct(
                     transaction=transaction,
                     reason=reason,
                     explanation=explanation

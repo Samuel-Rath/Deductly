@@ -100,6 +100,8 @@ class ClassifiedTransaction(BaseModel):
     flags: List[str] = Field(default_factory=list)
 
     model_config = ConfigDict(
+        from_attributes=True,  # Allow from ORM/dataclass
+        arbitrary_types_allowed=True,  # Allow arbitrary types
         json_encoders={
             Decimal: str,
             date: lambda v: v.isoformat()

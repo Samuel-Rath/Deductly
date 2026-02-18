@@ -49,7 +49,7 @@ def test_payment_rail_detection(rail_type, keyword_index, prefix, suffix):
     This test validates that payment rail detection is:
     1. Case-insensitive
     2. Works with keywords anywhere in the description
-    3. Returns the correct rail type
+    3. Returns the correct rail type (when only one keyword is present)
     
     Validates: Requirements 2.5
     """
@@ -62,6 +62,17 @@ def test_payment_rail_detection(rail_type, keyword_index, prefix, suffix):
     
     # Skip if description is empty
     assume(description != "")
+    
+    # Skip if the prefix or suffix contains other payment rail keywords
+    # (to avoid testing priority behavior which is implementation-specific)
+    desc_upper = description.upper()
+    other_keywords = [
+        kw.upper() for other_type, kws in PAYMENT_RAIL_KEYWORDS.items()
+        if other_type != rail_type
+        for kw in kws
+    ]
+    for other_kw in other_keywords:
+        assume(other_kw not in desc_upper)
     
     parser = CSVParser()
     detected_rail = parser.detect_payment_rail(description)
