@@ -1,0 +1,64 @@
+# Docker Compose for Tax Deduction Analyzer
+# For local development and testing
+
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tax-analyzer-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-development-secret-key-change-in-production-min-32-chars}
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - ENVIRONMENT=development
+      - RATE_LIMIT_ENABLED=true
+      - EPHEMERAL_MODE=true
+      - ENABLE_REDACTION=true
+      - ENABLE_SWAGGER_UI=true
+      - DATABASE_URL=sqlite:///./deductions.db
+    volumes:
+      - ./backend:/app
+      - backend-data:/app/data
+    networks:
+      - tax-analyzer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Frontend (for local testing)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: tax-analyzer-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_MAX_FILE_SIZE_MB=10
+      - VITE_ENABLE_ANALYTICS=false
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - tax-analyzer-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+    driver: local
+
+networks:
+  tax-analyzer-network:
+    driver: bridge

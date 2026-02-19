@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import Report from './Report'
 
@@ -13,15 +14,25 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+
 describe('Report Page', () => {
   const renderReport = () => {
+    const queryClient = createTestQueryClient()
     return render(
-      <BrowserRouter>
-        <Routes>
-          <Route path="/report/:jobId" element={<Report />} />
-        </Routes>
-      </BrowserRouter>,
-      { initialEntries: ['/report/test-job-id'] }
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/report/test-job-id']}>
+          <Routes>
+            <Route path="/report/:jobId" element={<Report />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     )
   }
 

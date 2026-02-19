@@ -60,3 +60,7 @@ audit_trail.json
 *.db
 *.sqlite
 *.sqlite3
+
+# Logs
+logs/
+*.log

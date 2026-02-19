@@ -1,0 +1,150 @@
+# Netlify Configuration for Tax Deduction Analyzer
+# Security-hardened configuration for production deployment
+
+[build]
+  # Build settings
+  command = "npm run build"
+  publish = "dist"
+  
+  # Environment variables (set in Netlify UI)
+  # VITE_API_BASE_URL - Backend API URL
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# SPA routing - redirect all requests to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Content Security Policy - Strict policy to prevent XSS
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self' data:;
+      connect-src 'self' https://*.netlify.app https://api.yourdomain.com;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
+    """
+    
+    # Force HTTPS
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    
+    # Prevent MIME type sniffing
+    X-Content-Type-Options = "nosniff"
+    
+    # Prevent clickjacking
+    X-Frame-Options = "DENY"
+    
+    # XSS Protection (legacy browsers)
+    X-XSS-Protection = "1; mode=block"
+    
+    # Referrer policy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Permissions policy - disable unnecessary features
+    Permissions-Policy = """
+      geolocation=(),
+      microphone=(),
+      camera=(),
+      payment=(),
+      usb=(),
+      magnetometer=(),
+      gyroscope=(),
+      accelerometer=(),
+      ambient-light-sensor=()
+    """
+    
+    # Cache control for HTML (no cache)
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Cache static assets aggressively
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache fonts
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Prevent caching of service worker
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Block access to sensitive files
+[[redirects]]
+  from = "/.env"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.env.*"
+  to = "/404"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/config/*"
+  to = "/404"
+  status = 404
+  force = true
+
+# Rate limiting (Netlify Pro feature)
+# Uncomment if you have Netlify Pro
+# [[plugins]]
+#   package = "@netlify/plugin-rate-limit"
+#   [plugins.inputs]
+#     windowSize = 60
+#     maxRequests = 100
+
+# Security scanning
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+  
+  [[plugins.inputs.audits]]
+    path = "/"
+    
+    [plugins.inputs.audits.thresholds]
+      performance = 0.9
+      accessibility = 0.9
+      best-practices = 0.9
+      seo = 0.9
+
+# Deploy contexts
+[context.production]
+  environment = { NODE_ENV = "production" }
+
+[context.deploy-preview]
+  environment = { NODE_ENV = "staging" }
+
+[context.branch-deploy]
+  environment = { NODE_ENV = "development" }
+
+# Functions configuration (if using Netlify Functions)
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Dev server settings
+[dev]
+  command = "npm run dev"
+  port = 5173
+  targetPort = 5173
+  autoLaunch = false

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Chip, Table, Drawer } from '../components'
+import { Card, Button, Chip, Drawer } from '../components'
+import { useJobStatus, useDownloadReportFile } from '../api/hooks'
 
 // Mock data - will be replaced with API data
 const mockReportData = {
@@ -96,9 +97,29 @@ export default function Report() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'candidates' | 'needs-review' | 'excluded' | 'audit'>('candidates')
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
-  const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
+  // Fetch job status with polling
+  const { data: jobStatus, isLoading, error: jobError } = useJobStatus(jobId || '', {
+    enabled: !!jobId,
+    refetchInterval: (data) => {
+      // Stop polling when job is complete or failed
+      if (!data) return 2000
+      return data.status === 'completed' || data.status === 'failed' ? false : 2000
+    },
+  })
+
+  // Download mutation
+  const downloadMutation = useDownloadReportFile({
+    onSuccess: () => {
+      setDownloadError(null)
+    },
+    onError: (error) => {
+      setDownloadError(error.message || 'Failed to download report')
+    },
+  })
+
+  // Use mock data for now - will be replaced with actual report data from API
   const { summary, candidates, needsReview, excluded } = mockReportData
 
   const formatCurrency = (amount: number) => {
@@ -128,34 +149,125 @@ export default function Report() {
                            summary.confidenceDistribution.low
 
   const handleDownload = async (format: 'pdf' | 'csv' | 'json') => {
-    setDownloadingFormat(format)
+    if (!jobId) return
+    
     setDownloadError(null)
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await downloadReport(jobId, format)
-      // const blob = new Blob([response.data], { type: getContentType(format) })
-      // const url = window.URL.createObjectURL(blob)
-      // const link = document.createElement('a')
-      // link.href = url
-      // link.download = `deduction_report_${mockReportData.incomeYear}.${format}`
-      // link.click()
-      // window.URL.revokeObjectURL(url)
-
-      // Simulate download
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // For demo purposes, show success message
-      console.log(`Downloaded ${format} report`)
+      await downloadMutation.mutateAsync({
+        jobId,
+        format,
+        filename: `deduction_report_${mockReportData.incomeYear}.${format}`,
+      })
     } catch (err) {
-      setDownloadError(err instanceof Error ? err.message : `Failed to download ${format} report`)
-    } finally {
-      setDownloadingFormat(null)
+      // Error handled by onError callback
+      console.error('Download error:', err)
     }
   }
 
   return (
     <div className="container mx-auto px-6 py-12">
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+          <div className="text-center">
+            <svg className="animate-spin h-12 w-12 text-accent mx-auto mb-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <p className="text-body text-slate-300">Loading report...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {jobError && (
+        <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
+          <Card>
+            <div className="text-center py-8">
+              <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h2 className="text-h2 font-semibold text-white mb-2">
+                Failed to load report
+              </h2>
+              <p className="text-body text-slate-300 mb-6">
+                {jobError.message || 'An error occurred while loading the report.'}
+              </p>
+              <Button variant="primary" onClick={() => navigate('/upload')}>
+                Upload New File
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Processing State */}
+      {jobStatus && (jobStatus.status === 'queued' || jobStatus.status === 'processing') && (
+        <div className="max-w-2xl mx-auto" role="status" aria-live="polite">
+          <Card>
+            <div className="text-center py-8">
+              <svg className="animate-spin h-12 w-12 text-accent mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <h2 className="text-h2 font-semibold text-white mb-2">
+                Processing your file
+              </h2>
+              <p className="text-body text-slate-300 mb-4">
+                Analyzing transactions and generating report...
+              </p>
+              {jobStatus.progress !== undefined && (
+                <div className="max-w-md mx-auto">
+                  <div className="flex justify-between text-small text-slate-300 mb-2">
+                    <span>Progress</span>
+                    <span>{jobStatus.progress}%</span>
+                  </div>
+                  <div 
+                    className="w-full h-2 bg-ink-800 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={jobStatus.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Processing progress: ${jobStatus.progress}%`}
+                  >
+                    <div
+                      className="h-full bg-accent transition-all duration-300"
+                      style={{ width: `${jobStatus.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Failed State */}
+      {jobStatus && jobStatus.status === 'failed' && (
+        <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
+          <Card>
+            <div className="text-center py-8">
+              <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h2 className="text-h2 font-semibold text-white mb-2">
+                Processing failed
+              </h2>
+              <p className="text-body text-slate-300 mb-6">
+                {jobStatus.error || 'An error occurred while processing your file.'}
+              </p>
+              <Button variant="primary" onClick={() => navigate('/upload')}>
+                Try Again
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Report Content - Only show when completed */}
+      {jobStatus && jobStatus.status === 'completed' && (
+      <div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -182,9 +294,9 @@ export default function Report() {
             <Button
               variant="secondary"
               onClick={() => handleDownload('pdf')}
-              disabled={downloadingFormat !== null}
+              disabled={downloadMutation.isPending}
             >
-              {downloadingFormat === 'pdf' ? (
+              {downloadMutation.isPending && downloadMutation.variables?.format === 'pdf' ? (
                 <span className="flex items-center space-x-2">
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -199,9 +311,9 @@ export default function Report() {
             <Button
               variant="secondary"
               onClick={() => handleDownload('csv')}
-              disabled={downloadingFormat !== null}
+              disabled={downloadMutation.isPending}
             >
-              {downloadingFormat === 'csv' ? (
+              {downloadMutation.isPending && downloadMutation.variables?.format === 'csv' ? (
                 <span className="flex items-center space-x-2">
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -216,9 +328,9 @@ export default function Report() {
             <Button
               variant="secondary"
               onClick={() => handleDownload('json')}
-              disabled={downloadingFormat !== null}
+              disabled={downloadMutation.isPending}
             >
-              {downloadingFormat === 'json' ? (
+              {downloadMutation.isPending && downloadMutation.variables?.format === 'json' ? (
                 <span className="flex items-center space-x-2">
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -392,10 +504,13 @@ export default function Report() {
         {/* Placeholder for tabs and table - will be implemented in next subtask */}
         <Card>
           {/* Tabs */}
-          <div className="border-b border-line-700 mb-6">
+          <div className="border-b border-line-700 mb-6" role="tablist" aria-label="Report sections">
             <div className="flex space-x-8">
               <button
                 onClick={() => setActiveTab('candidates')}
+                role="tab"
+                aria-selected={activeTab === 'candidates'}
+                aria-controls="candidates-panel"
                 className={`
                   pb-4 text-small font-medium transition-colors relative
                   ${activeTab === 'candidates' 
@@ -411,6 +526,9 @@ export default function Report() {
               </button>
               <button
                 onClick={() => setActiveTab('needs-review')}
+                role="tab"
+                aria-selected={activeTab === 'needs-review'}
+                aria-controls="needs-review-panel"
                 className={`
                   pb-4 text-small font-medium transition-colors relative
                   ${activeTab === 'needs-review' 
@@ -426,6 +544,9 @@ export default function Report() {
               </button>
               <button
                 onClick={() => setActiveTab('excluded')}
+                role="tab"
+                aria-selected={activeTab === 'excluded'}
+                aria-controls="excluded-panel"
                 className={`
                   pb-4 text-small font-medium transition-colors relative
                   ${activeTab === 'excluded' 
@@ -441,6 +562,9 @@ export default function Report() {
               </button>
               <button
                 onClick={() => setActiveTab('audit')}
+                role="tab"
+                aria-selected={activeTab === 'audit'}
+                aria-controls="audit-panel"
                 className={`
                   pb-4 text-small font-medium transition-colors relative
                   ${activeTab === 'audit' 
@@ -459,8 +583,13 @@ export default function Report() {
 
           {/* Candidates Table */}
           {activeTab === 'candidates' && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div 
+              role="tabpanel" 
+              id="candidates-panel" 
+              aria-labelledby="candidates-tab"
+              className="overflow-x-auto"
+            >
+              <table className="w-full" aria-label="Deduction candidates">
                 <thead>
                   <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
                     <th className="pb-3 pr-4">DATE</th>
@@ -500,9 +629,7 @@ export default function Report() {
                           {formatCurrency(transaction.amount)}
                         </td>
                         <td className="py-4 pr-4">
-                          <Chip variant="neutral" size="small">
-                            {transaction.category}
-                          </Chip>
+                          <Chip label={transaction.category} variant="category" size="sm" />
                         </td>
                         <td className="py-4 pr-4">
                           <div className="flex items-center space-x-2">
@@ -520,9 +647,7 @@ export default function Report() {
                         <td className="py-4">
                           <div className="flex flex-wrap gap-1">
                             {transaction.evidence.map((ev, idx) => (
-                              <Chip key={idx} variant="neutral" size="small">
-                                {ev}
-                              </Chip>
+                              <Chip key={idx} label={ev} variant="category" size="sm" />
                             ))}
                           </div>
                         </td>
@@ -536,8 +661,13 @@ export default function Report() {
 
           {/* Needs Review Table */}
           {activeTab === 'needs-review' && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div 
+              role="tabpanel" 
+              id="needs-review-panel" 
+              aria-labelledby="needs-review-tab"
+              className="overflow-x-auto"
+            >
+              <table className="w-full" aria-label="Transactions needing review">
                 <thead>
                   <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
                     <th className="pb-3 pr-4">DATE</th>
@@ -601,8 +731,13 @@ export default function Report() {
 
           {/* Excluded Table */}
           {activeTab === 'excluded' && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div 
+              role="tabpanel" 
+              id="excluded-panel" 
+              aria-labelledby="excluded-tab"
+              className="overflow-x-auto"
+            >
+              <table className="w-full" aria-label="Excluded transactions">
                 <thead>
                   <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
                     <th className="pb-3 pr-4">DATE</th>
@@ -642,7 +777,12 @@ export default function Report() {
 
           {/* Audit Trail */}
           {activeTab === 'audit' && (
-            <div className="text-center py-12 text-slate-300">
+            <div 
+              role="tabpanel" 
+              id="audit-panel" 
+              aria-labelledby="audit-tab"
+              className="text-center py-12 text-slate-300"
+            >
               <p className="mb-4">Audit trail view will show detailed processing steps for each transaction.</p>
               <p className="text-small text-slate-500">
                 This includes normalisation, exclusion checks, classification attempts, and final results.
@@ -711,9 +851,7 @@ export default function Report() {
                       <div className="text-micro font-medium text-slate-500 mb-2">
                         CATEGORY
                       </div>
-                      <Chip variant="neutral" size="medium">
-                        {transaction.category}
-                      </Chip>
+                      <Chip label={transaction.category} variant="category" size="md" />
                     </div>
                   )}
                   
@@ -858,6 +996,7 @@ export default function Report() {
           })()}
         </Drawer>
       </div>
+      )}
     </div>
   )
 }

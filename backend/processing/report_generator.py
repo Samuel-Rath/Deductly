@@ -22,6 +22,7 @@ from models.schemas import (
     AuditEntry,
     DeductionCategory,
 )
+from processing.redaction_service import RedactionService, RedactionConfig
 
 
 class ReportGenerator:
@@ -31,14 +32,16 @@ class ReportGenerator:
     Validates: Requirements 8.1-8.8, 9.1-9.3
     """
     
-    def __init__(self, confidence_threshold: float = 0.60):
+    def __init__(self, confidence_threshold: float = 0.60, redaction_config: RedactionConfig = None):
         """
         Initialize report generator.
         
         Args:
             confidence_threshold: Threshold for flagging items as needs_review
+            redaction_config: Configuration for sensitive data redaction
         """
         self.confidence_threshold = confidence_threshold
+        self.redaction_service = RedactionService(redaction_config)
     
     def aggregate_report_data(
         self,
@@ -173,18 +176,22 @@ class ReportGenerator:
         
         Creates a CSV file with all required columns including date, merchant,
         description, amount, category, confidence, reason, evidence, and flags.
+        Applies redaction to sensitive data before export.
         
-        Validates: Requirements 9.1
+        Validates: Requirements 9.1, 12.3
         
         Args:
             report_data: Complete report data
             output_path: Path where CSV file should be written
         """
+        # Apply redaction to report data
+        redacted_data = self.redaction_service.redact_report_data(report_data)
+        
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Combine candidates and needs_review for CSV export
-        all_candidates = report_data.candidates + report_data.needs_review
+        all_candidates = redacted_data.candidates + redacted_data.needs_review
         
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
             fieldnames = [
@@ -232,25 +239,29 @@ class ReportGenerator:
         
         Serializes the complete audit trail to JSON format with all processing
         steps for each transaction. Output is deterministic (same input = same output).
+        Applies redaction to sensitive data before export.
         
-        Validates: Requirements 9.2, 9.3
+        Validates: Requirements 9.2, 9.3, 12.3
         
         Args:
             report_data: Complete report data
             output_path: Path where JSON file should be written
         """
+        # Apply redaction to report data
+        redacted_data = self.redaction_service.redact_report_data(report_data)
+        
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Build audit trail structure
         audit_data = {
-            "income_year": report_data.income_year,
-            "generated_at": report_data.generated_at.isoformat(),
+            "income_year": redacted_data.income_year,
+            "generated_at": redacted_data.generated_at.isoformat(),
             "transactions": []
         }
         
         # Sort audit entries by transaction_id for deterministic output
-        sorted_entries = sorted(report_data.audit_trail, key=lambda e: e.transaction_id)
+        sorted_entries = sorted(redacted_data.audit_trail, key=lambda e: e.transaction_id)
         
         for entry in sorted_entries:
             transaction_audit = {
@@ -273,8 +284,9 @@ class ReportGenerator:
         Creates a formatted PDF with header, summary section, line item tables,
         needs review section, excluded items, and footer with guidance.
         Uses "likely deductible" language throughout.
+        Applies redaction to sensitive data before export.
         
-        Validates: Requirements 8.1-8.8
+        Validates: Requirements 8.1-8.8, 12.3
         
         Args:
             report_data: Complete report data
@@ -288,11 +300,14 @@ class ReportGenerator:
                 "Install it with: pip install weasyprint"
             )
         
+        # Apply redaction to report data
+        redacted_data = self.redaction_service.redact_report_data(report_data)
+        
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Generate HTML content
-        html_content = self._generate_html_report(report_data)
+        html_content = self._generate_html_report(redacted_data)
         
         # Generate PDF from HTML
         HTML(string=html_content).write_pdf(output_file)

@@ -1,10 +1,22 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Card, Input } from '../components'
+import { Button, Card } from '../components'
+import { useUploadCSV } from '../api/hooks'
 
 export default function Upload() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const uploadMutation = useUploadCSV({
+    onSuccess: (data) => {
+      navigate(`/report/${data.job_id}`)
+    },
+    onError: (error) => {
+      setError(error.message || 'Upload failed. Please try again.')
+      setIsUploading(false)
+      setUploadProgress(0)
+    },
+  })
   
   const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -84,7 +96,7 @@ export default function Upload() {
     setError(null)
 
     try {
-      // Simulate upload progress
+      // Simulate progress for UI feedback
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -95,28 +107,20 @@ export default function Upload() {
         })
       }, 200)
 
-      // TODO: Replace with actual API call
-      // const formData = new FormData()
-      // formData.append('file', file)
-      // formData.append('income_year', incomeYear)
-      // formData.append('ephemeral_mode', String(ephemeralMode))
-      // const response = await uploadCSV(formData)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Upload file using API
+      await uploadMutation.mutateAsync({
+        file,
+        incomeYear,
+        ephemeralMode,
+      })
       
       clearInterval(progressInterval)
       setUploadProgress(100)
-
-      // Navigate to report page with job_id
-      // TODO: Use actual job_id from API response
-      setTimeout(() => {
-        navigate('/report/demo-job-id')
-      }, 500)
+      
+      // Navigation handled by onSuccess callback
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.')
-      setIsUploading(false)
-      setUploadProgress(0)
+      // Error handled by onError callback
+      console.error('Upload error:', err)
     }
   }
 
@@ -158,6 +162,15 @@ export default function Upload() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Upload CSV file - drag and drop or click to browse"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      fileInputRef.current?.click()
+                    }
+                  }}
                   className={`
                     border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
                     transition-colors
@@ -238,12 +251,19 @@ export default function Upload() {
 
               {/* Upload Progress */}
               {isUploading && (
-                <div>
+                <div role="status" aria-live="polite" aria-label="Upload progress">
                   <div className="flex justify-between text-small text-slate-300 mb-2">
                     <span>Uploading and processing...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
+                  <div 
+                    className="w-full h-2 bg-ink-800 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={uploadProgress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Upload progress: ${uploadProgress}%`}
+                  >
                     <div
                       className="h-full bg-accent transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
@@ -282,7 +302,6 @@ export default function Upload() {
               The file should contain transaction date, description, and amount columns.
             </p>
           </div>
-        </div>
       </div>
     </div>
   )

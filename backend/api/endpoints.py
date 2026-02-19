@@ -9,6 +9,7 @@ Validates: Requirements 11.1-11.5
 
 import os
 import uuid
+import time
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -25,6 +26,8 @@ from backend.models.schemas import (
 from backend.storage.storage_service import StorageService
 from backend.storage.database import Database
 from backend.processing.pipeline import ProcessingPipeline
+from backend.logging_config import log_event, log_error, log_security_event, log_audit
+from backend.monitoring import metrics_collector
 
 # Configuration
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -65,6 +68,13 @@ async def upload_csv(
     """
     # Validate file type
     if file.content_type not in ALLOWED_CONTENT_TYPES:
+        log_security_event(
+            'invalid_file_type',
+            'low',
+            content_type=file.content_type,
+            upload_filename=file.filename
+        )
+        metrics_collector.record_security_event('invalid_file')
         raise HTTPException(
             status_code=400,
             detail={
@@ -77,6 +87,14 @@ async def upload_csv(
     # Validate file size
     file_content = await file.read()
     if len(file_content) > MAX_FILE_SIZE:
+        log_security_event(
+            'file_too_large',
+            'medium',
+            file_size=len(file_content),
+            max_size=MAX_FILE_SIZE,
+            upload_filename=file.filename
+        )
+        metrics_collector.record_security_event('invalid_file')
         raise HTTPException(
             status_code=400,
             detail={
@@ -122,6 +140,16 @@ async def upload_csv(
     # Generate unique job ID
     job_id = str(uuid.uuid4())
     
+    # Log upload started
+    log_event(
+        'upload_started',
+        job_id=job_id,
+        file_size=len(file_content),
+        income_year=income_year,
+        ephemeral_mode=ephemeral_mode,
+        confidence_threshold=confidence_threshold
+    )
+    
     # Initialize storage service
     db = Database()
     storage = StorageService(database=db, ephemeral_mode=ephemeral_mode)
@@ -138,10 +166,16 @@ async def upload_csv(
         # Update status to processing
         storage.update_job_status(job_id, "processing")
         
+        # Record upload metrics
+        metrics_collector.record_upload(success=True, file_size=len(file_content))
+        
         # Save uploaded file temporarily
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
         temp_file.write(file_content)
         temp_file.close()
+        
+        # Track processing time
+        processing_start = time.time()
         
         # Initialize processing pipeline
         pipeline = ProcessingPipeline(
@@ -168,8 +202,25 @@ async def upload_csv(
         # Clean up temp file
         os.unlink(temp_file.name)
         
+        # Calculate processing time
+        processing_time = time.time() - processing_start
+        
         # Update job status to completed
         storage.update_job_status(job_id, "completed")
+        
+        # Record job metrics
+        metrics_collector.record_job(success=True, processing_time=processing_time)
+        
+        # Log completion
+        log_event(
+            'upload_completed',
+            job_id=job_id,
+            processing_time=processing_time,
+            transaction_count=len(report_data.candidates) + len(report_data.needs_review) + len(report_data.excluded)
+        )
+        
+        # Audit log
+        log_audit('upload_complete', job_id=job_id, income_year=income_year)
         
         return UploadResponse(
             job_id=job_id,
@@ -180,6 +231,13 @@ async def upload_csv(
     except Exception as e:
         # Update job status to failed
         storage.update_job_status(job_id, "failed", error=str(e))
+        
+        # Record failed upload
+        metrics_collector.record_upload(success=False, file_size=len(file_content))
+        metrics_collector.record_job(success=False, processing_time=0)
+        
+        # Log error
+        log_error('processing_failed', e, job_id=job_id)
         
         raise HTTPException(
             status_code=500,
@@ -335,6 +393,13 @@ def _download_report(
     # Check file exists
     file_path = REPORTS_DIR / job_id / filename
     if not file_path.exists():
+        log_security_event(
+            'report_not_found',
+            'low',
+            job_id=job_id,
+            format=format,
+            report_filename=filename
+        )
         raise HTTPException(
             status_code=404,
             detail={
@@ -343,6 +408,9 @@ def _download_report(
                 "details": {"job_id": job_id, "format": format}
             }
         )
+    
+    # Log download
+    log_audit('report_downloaded', job_id=job_id, format=format)
     
     return FileResponse(
         path=str(file_path),

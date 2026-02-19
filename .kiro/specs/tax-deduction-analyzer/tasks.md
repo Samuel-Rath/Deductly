@@ -430,52 +430,52 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Handle loading and error states
     - _Requirements: 11.1-11.5_
 
-- [ ] 17. Implement sensitive data redaction
-  - [ ] 17.1 Create redaction service
+- [x] 17. Implement sensitive data redaction
+  - [x] 17.1 Create redaction service
     - Define patterns for sensitive data (account numbers, BSB codes)
     - Implement redaction function that replaces matches with [REDACTED]
     - Apply redaction to all report outputs (PDF, CSV, JSON)
     - Make redaction configurable
     - _Requirements: 12.3_
   
-  - [ ] 17.2 Write property test for sensitive data redaction
+  - [x] 17.2 Write property test for sensitive data redaction
     - **Property 23: Sensitive Data Redaction**
     - **Validates: Requirements 12.3**
 
-- [ ] 18. Final integration and polish
-  - [ ] 18.1 Wire frontend to backend API
+- [x] 18. Final integration and polish
+  - [x] 18.1 Wire frontend to backend API
     - Connect all frontend pages to API endpoints
     - Test end-to-end flow from upload to download
     - Handle all error states gracefully
     - Add loading indicators
     - _Requirements: All_
   
-  - [ ] 18.2 Add accessibility improvements
+  - [x] 18.2 Add accessibility improvements
     - Ensure keyboard navigation works throughout
     - Add ARIA labels to all interactive elements
     - Test with screen reader
     - Verify colour contrast meets WCAG AA
     - _Requirements: NFR 4_
   
-  - [ ] 18.3 Performance optimization
+  - [x] 18.3 Performance optimization
     - Optimize CSV parsing for large files (streaming/chunking)
     - Add progress indicators for long-running operations
     - Optimize PDF generation
     - Add caching where appropriate
     - _Requirements: NFR 2_
   
-  - [ ] 18.4 Write end-to-end tests
+  - [x] 18.4 Write end-to-end tests
     - Test complete user journey from landing to export
     - Test with various Australian bank CSV formats
     - Test error scenarios
     - Test accessibility
     - _Requirements: All_
 
-- [ ] 19. Final checkpoint - Ensure all tests pass
+- [x] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 20. Documentation and deployment preparation
-  - [ ] 20.1 Write README documentation
+- [x] 20. Documentation and deployment preparation
+  - [x] 20.1 Write README documentation
     - Document installation and setup
     - Document API endpoints
     - Document configuration options
@@ -483,7 +483,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Include sample CSV formats
     - _Requirements: 12.4_
   
-  - [ ] 20.2 Create deployment configuration
+  - [x] 20.2 Create deployment configuration
     - Create Dockerfile for backend
     - Create Dockerfile for frontend
     - Create docker-compose.yml for local development
@@ -491,7 +491,7 @@ This implementation plan breaks down the Tax Deduction Analyzer into discrete co
     - Create sample .env file
     - _Requirements: Deployment_
   
-  - [ ] 20.3 Create sample rules configuration
+  - [x] 20.3 Create sample rules configuration
     - Create comprehensive rules file with Australian merchants
     - Include rules for all deduction categories
     - Document rule format and fields
