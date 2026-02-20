@@ -5,11 +5,12 @@ import App from './App'
 describe('App', () => {
   it('renders without crashing', () => {
     render(<App />)
-    expect(screen.getByText('Tax Deduction Analyzer')).toBeInTheDocument()
+    // App renders the landing page by default
+    expect(screen.getByText(/Turn your bank CSV into an evidence-ready deduction report/i)).toBeInTheDocument()
   })
 
-  it('displays ready message', () => {
+  it('renders navigation', () => {
     render(<App />)
-    expect(screen.getByText('Application ready')).toBeInTheDocument()
+    expect(screen.getByText('Deductly')).toBeInTheDocument()
   })
 })

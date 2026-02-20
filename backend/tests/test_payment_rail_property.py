@@ -9,7 +9,7 @@ Validates: Requirements 2.5
 
 import pytest
 from hypothesis import given, strategies as st, assume
-from processing.csv_parser import CSVParser
+from backend.processing.csv_parser import CSVParser
 
 
 # Define payment rail keywords and their expected detection results

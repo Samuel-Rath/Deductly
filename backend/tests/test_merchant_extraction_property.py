@@ -9,7 +9,7 @@ Validates: Requirements 2.3
 
 import pytest
 from hypothesis import given, strategies as st, assume
-from processing.csv_parser import CSVParser
+from backend.processing.csv_parser import CSVParser
 
 
 # Feature: tax-deduction-analyzer, Property 4: Merchant Extraction Fallback

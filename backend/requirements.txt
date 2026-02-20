@@ -8,6 +8,10 @@ pydantic-settings>=2.1.0
 pandas>=2.1.0
 python-multipart>=0.0.6
 
+# PDF parsing
+PyPDF2>=3.0.0
+pdfplumber>=0.10.0
+
 # Fuzzy matching
 rapidfuzz>=3.6.0
 

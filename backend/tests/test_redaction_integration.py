@@ -12,7 +12,7 @@ from pathlib import Path
 import csv
 import json
 
-from models.schemas import (
+from backend.models.schemas import (
     NormalisedTransaction,
     ClassifiedTransaction,
     ExcludedTransaction,
@@ -24,8 +24,8 @@ from models.schemas import (
     EvidenceType,
     ExclusionReason
 )
-from processing.report_generator import ReportGenerator
-from processing.redaction_service import RedactionConfig
+from backend.processing.report_generator import ReportGenerator
+from backend.processing.redaction_service import RedactionConfig
 
 
 def test_redaction_in_csv_export(tmp_path):

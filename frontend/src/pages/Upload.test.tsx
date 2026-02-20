@@ -37,9 +37,8 @@ describe('Upload Page', () => {
   it('renders upload form with all required elements', () => {
     renderUpload()
 
-    expect(screen.getByText('Upload your bank CSV')).toBeInTheDocument()
-    expect(screen.getByText('Drop your CSV here')).toBeInTheDocument()
-    expect(screen.getByLabelText('Income year')).toBeInTheDocument()
+    expect(screen.getByText('Upload Your Bank Statement')).toBeInTheDocument()
+    expect(screen.getByText(/Drop your file here/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Ephemeral mode/i)).toBeInTheDocument()
   })
 
@@ -50,24 +49,17 @@ describe('Upload Page', () => {
     expect(ephemeralCheckbox.checked).toBe(true)
   })
 
-  it('displays current income year by default', () => {
-    renderUpload()
-
-    const incomeYearSelect = screen.getByLabelText('Income year') as HTMLSelectElement
-    expect(incomeYearSelect.value).toMatch(/\d{4}-\d{4}/)
-  })
-
-  it('validates file type and shows error for non-CSV files', async () => {
+  it('validates file type and shows error for non-CSV/PDF files', async () => {
     const user = userEvent.setup()
     renderUpload()
 
     const file = new File(['test'], 'test.txt', { type: 'text/plain' })
-    const input = screen.getByLabelText('Bank statement CSV').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
     await user.upload(input, file)
 
     await waitFor(() => {
-      expect(screen.getByText('Only CSV files are accepted')).toBeInTheDocument()
+      expect(screen.getByText('Only CSV and PDF files are accepted')).toBeInTheDocument()
     })
   })
 
@@ -77,7 +69,7 @@ describe('Upload Page', () => {
 
     // Create a file larger than 10MB
     const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.csv', { type: 'text/csv' })
-    const input = screen.getByLabelText('Bank statement CSV').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
     await user.upload(input, largeFile)
 
@@ -91,12 +83,26 @@ describe('Upload Page', () => {
     renderUpload()
 
     const file = new File(['date,description,amount\n2024-01-01,Test,100'], 'test.csv', { type: 'text/csv' })
-    const input = screen.getByLabelText('Bank statement CSV').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
     await user.upload(input, file)
 
     await waitFor(() => {
       expect(screen.getByText('test.csv')).toBeInTheDocument()
+    })
+  })
+
+  it('accepts valid PDF file', async () => {
+    const user = userEvent.setup()
+    renderUpload()
+
+    const file = new File(['%PDF-1.4'], 'statement.pdf', { type: 'application/pdf' })
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+
+    await user.upload(input, file)
+
+    await waitFor(() => {
+      expect(screen.getByText('statement.pdf')).toBeInTheDocument()
     })
   })
 
@@ -112,7 +118,7 @@ describe('Upload Page', () => {
     renderUpload()
 
     const file = new File(['date,description,amount\n2024-01-01,Test,100'], 'test.csv', { type: 'text/csv' })
-    const input = screen.getByLabelText('Bank statement CSV').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
     await user.upload(input, file)
     
@@ -129,7 +135,7 @@ describe('Upload Page', () => {
     renderUpload()
 
     const file = new File(['date,description,amount\n2024-01-01,Test,100'], 'test.csv', { type: 'text/csv' })
-    const input = screen.getByLabelText('Bank statement CSV').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+    const input = screen.getByLabelText('Bank Statement').parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
     await user.upload(input, file)
     

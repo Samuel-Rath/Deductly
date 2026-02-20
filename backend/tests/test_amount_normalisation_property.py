@@ -11,7 +11,7 @@ import pytest
 from decimal import Decimal
 from datetime import date
 from hypothesis import given, strategies as st
-from models.schemas import NormalisedTransaction, TransactionDirection
+from backend.models.schemas import NormalisedTransaction, TransactionDirection
 
 
 # Custom strategies for generating test data

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Chip } from '../components'
+import { Card, Chip, AnimatedSection, Icon } from '../components'
 
 const ruleCategories = [
   {
@@ -66,7 +66,7 @@ const ruleCategories = [
   },
   {
     category: 'Donations',
-    description: 'Gifts to deductible gift recipient organizations',
+    description: 'Gifts to deductible gift recipient organisations',
     keywords: ['red cross', 'salvation army', 'cancer council', 'donation'],
     merchants: ['Red Cross', 'Salvation Army', 'Cancer Council'],
     confidence: 0.90,
@@ -111,18 +111,19 @@ export default function Rules() {
   const [activeSection, setActiveSection] = useState<'classification' | 'exclusion' | 'confidence'>('classification')
 
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="pt-16 container mx-auto px-6 py-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <AnimatedSection className="mb-8">
           <h1 className="text-h1 font-semibold text-white mb-2">
             Classification Rules
           </h1>
           <p className="text-body text-slate-300">
-            Understand how transactions are categorized and what patterns we look for
+            Understand how transactions are categorised and what patterns we look for
           </p>
-        </div>
+        </AnimatedSection>
 
+        <div>
           {/* Section Tabs */}
           <div className="mb-8">
             <div className="flex space-x-6 border-b border-line-700">
@@ -200,16 +201,13 @@ export default function Rules() {
                         <Chip variant="neutral" size="small">
                           v{rule.version}
                         </Chip>
-                        <svg
-                          className={`w-5 h-5 text-slate-500 transition-transform ${
+                        <Icon 
+                          name="ChevronDown" 
+                          size={20} 
+                          className={`text-slate-500 transition-transform ${
                             expandedCategory === rule.category ? 'rotate-180' : ''
                           }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        />
                       </div>
                     </button>
 

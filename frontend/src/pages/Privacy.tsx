@@ -1,86 +1,90 @@
-import { Card } from '../components'
+import { Card, AnimatedSection, Icon } from '../components'
 
 export default function Privacy() {
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="pt-16 container mx-auto px-6 py-12">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <AnimatedSection className="mb-8">
           <h1 className="text-h1 font-semibold text-white mb-2">
             Privacy & Data Handling
           </h1>
           <p className="text-body text-slate-300">
             Understand how your data is processed and what we store
           </p>
-        </div>
+        </AnimatedSection>
 
+        <div>
           {/* What Data is Processed */}
-          <Card className="mb-6">
-            <div className="space-y-4">
-              <h2 className="text-h2 font-semibold text-white">
-                What data is processed
-              </h2>
-              <p className="text-body text-slate-300">
-                When you upload a bank CSV file, we process the following information:
-              </p>
-              <ul className="space-y-2 text-body text-slate-300 list-disc list-inside">
-                <li>Transaction dates</li>
-                <li>Transaction descriptions</li>
-                <li>Transaction amounts (debits and credits)</li>
-                <li>Derived merchant names (extracted from descriptions)</li>
-              </ul>
-              <div className="mt-4 p-4 bg-ink-800 border border-line-700 rounded-lg">
-                <p className="text-small text-slate-300">
-                  <span className="font-semibold text-white">Important:</span> We do not process or store 
-                  account numbers, BSB codes, or any personally identifiable information beyond what's 
-                  needed for transaction classification.
+          <AnimatedSection delay={0.1}>
+            <Card className="mb-6">
+              <div className="space-y-4">
+                <h2 className="text-h2 font-semibold text-white">
+                  What data is processed
+                </h2>
+                <p className="text-body text-slate-300">
+                  When you upload a bank CSV file, we process the following information:
                 </p>
+                <ul className="space-y-2 text-body text-slate-300 list-disc list-inside">
+                  <li>Transaction dates</li>
+                  <li>Transaction descriptions</li>
+                  <li>Transaction amounts (debits and credits)</li>
+                  <li>Derived merchant names (extracted from descriptions)</li>
+                </ul>
+                <div className="mt-4 p-4 bg-ink-800 border border-line-700 rounded-lg">
+                  <p className="text-small text-slate-300">
+                    <span className="font-semibold text-white">Important:</span> We do not process or store 
+                    account numbers, BSB codes, or any personally identifiable information beyond what's 
+                    needed for transaction classification.
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </AnimatedSection>
 
           {/* What is Stored by Default */}
-          <Card className="mb-6">
-            <div className="space-y-4">
-              <h2 className="text-h2 font-semibold text-white">
-                What is stored by default
-              </h2>
-              <p className="text-body text-slate-300">
-                By default, we operate in <span className="font-semibold text-white">ephemeral mode</span>, 
-                which means:
-              </p>
-              <ul className="space-y-2 text-body text-slate-300 list-disc list-inside">
-                <li>Raw CSV data is never written to disk</li>
-                <li>Transaction data is processed in memory only</li>
-                <li>Reports are generated and made available for download</li>
-                <li>All data is deleted immediately after report generation</li>
-              </ul>
-              <div className="mt-4 p-4 bg-accent bg-opacity-10 border border-accent rounded-lg">
-                <p className="text-small text-white">
-                  <span className="font-semibold">Ephemeral mode is enabled by default</span> to maximize 
-                  your privacy. You can disable it during upload if you want to store derived fields for 
-                  future reference.
+          <AnimatedSection delay={0.2}>
+            <Card className="mb-6">
+              <div className="space-y-4">
+                <h2 className="text-h2 font-semibold text-white">
+                  What is stored by default
+                </h2>
+                <p className="text-body text-slate-300">
+                  By default, we operate in <span className="font-semibold text-white">ephemeral mode</span>, 
+                  which means:
                 </p>
+                <ul className="space-y-2 text-body text-slate-300 list-disc list-inside">
+                  <li>Raw CSV data is never written to disk</li>
+                  <li>Transaction data is processed in memory only</li>
+                  <li>Reports are generated and made available for download</li>
+                  <li>All data is deleted immediately after report generation</li>
+                </ul>
+                <div className="mt-4 p-4 bg-accent bg-opacity-10 border border-accent rounded-lg">
+                  <p className="text-small text-white">
+                    <span className="font-semibold">Ephemeral mode is enabled by default</span> to maximize 
+                    your privacy. You can disable it during upload if you want to store derived fields for 
+                    future reference.
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </AnimatedSection>
 
           {/* Ephemeral Mode Explanation */}
-          <Card className="mb-6">
-            <div className="space-y-4">
-              <h2 className="text-h2 font-semibold text-white">
-                Ephemeral mode explained
-              </h2>
-              <p className="text-body text-slate-300">
-                Ephemeral mode is our privacy-first approach to transaction analysis:
-              </p>
+          <AnimatedSection delay={0.3}>
+            <Card className="mb-6">
+              <div className="space-y-4">
+                <h2 className="text-h2 font-semibold text-white">
+                  Ephemeral mode explained
+                </h2>
+                <p className="text-body text-slate-300">
+                  Ephemeral mode is our privacy-first approach to transaction analysis:
+                </p>
               
               <div className="space-y-3 mt-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-1 flex-shrink-0">
-                    <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Icon name="Check" size={16} className="text-accent" />
                   </div>
                   <div>
                     <div className="text-small font-semibold text-white">No persistent storage</div>
@@ -92,9 +96,7 @@ export default function Privacy() {
 
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-1 flex-shrink-0">
-                    <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Icon name="Check" size={16} className="text-accent" />
                   </div>
                   <div>
                     <div className="text-small font-semibold text-white">Memory-only processing</div>
@@ -106,9 +108,7 @@ export default function Privacy() {
 
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-1 flex-shrink-0">
-                    <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Icon name="Check" size={16} className="text-accent" />
                   </div>
                   <div>
                     <div className="text-small font-semibold text-white">Download and delete</div>
@@ -127,17 +127,19 @@ export default function Privacy() {
                 </p>
               </div>
             </div>
-          </Card>
+            </Card>
+          </AnimatedSection>
 
           {/* How Reports are Generated */}
-          <Card className="mb-6">
-            <div className="space-y-4">
-              <h2 className="text-h2 font-semibold text-white">
-                How reports are generated
-              </h2>
-              <p className="text-body text-slate-300">
-                Our processing pipeline follows these steps:
-              </p>
+          <AnimatedSection delay={0.4}>
+            <Card className="mb-6">
+              <div className="space-y-4">
+                <h2 className="text-h2 font-semibold text-white">
+                  How reports are generated
+                </h2>
+                <p className="text-body text-slate-300">
+                  Our processing pipeline follows these steps:
+                </p>
               
               <div className="space-y-4 mt-4">
                 <div className="flex items-start space-x-4">
@@ -199,18 +201,20 @@ export default function Privacy() {
                   transaction was classified.
                 </p>
               </div>
-            </div>
-          </Card>
+              </div>
+            </Card>
+          </AnimatedSection>
 
           {/* Redaction Recommendations */}
-          <Card className="mb-6">
-            <div className="space-y-4">
-              <h2 className="text-h2 font-semibold text-white">
-                Redaction recommendations
-              </h2>
-              <p className="text-body text-slate-300">
-                Before sharing reports with third parties (like your accountant), consider redacting:
-              </p>
+          <AnimatedSection delay={0.5}>
+            <Card className="mb-6">
+              <div className="space-y-4">
+                <h2 className="text-h2 font-semibold text-white">
+                  Redaction recommendations
+                </h2>
+                <p className="text-body text-slate-300">
+                  Before sharing reports with third parties (like your accountant), consider redacting:
+                </p>
               
               <div className="space-y-3 mt-4">
                 <div className="p-3 bg-ink-800 rounded-lg">
@@ -248,11 +252,13 @@ export default function Privacy() {
                   sharing.
                 </p>
               </div>
-            </div>
-          </Card>
+              </div>
+            </Card>
+          </AnimatedSection>
 
           {/* Additional Information */}
-          <Card>
+          <AnimatedSection delay={0.6}>
+            <Card>
             <div className="space-y-4">
               <h2 className="text-h2 font-semibold text-white">
                 Additional information
@@ -291,6 +297,7 @@ export default function Privacy() {
               </div>
             </div>
           </Card>
+          </AnimatedSection>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ from decimal import Decimal
 from datetime import date, datetime
 import re
 
-from models.schemas import (
+from backend.models.schemas import (
     NormalisedTransaction,
     ClassifiedTransaction,
     ExcludedTransaction,
@@ -25,7 +25,7 @@ from models.schemas import (
     EvidenceType,
     ExclusionReason
 )
-from processing.redaction_service import RedactionService, RedactionConfig
+from backend.processing.redaction_service import RedactionService, RedactionConfig
 
 
 # Strategy for generating sensitive data patterns

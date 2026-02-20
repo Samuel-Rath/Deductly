@@ -7,7 +7,7 @@ Tests validation, serialization, and model constraints.
 import pytest
 from decimal import Decimal
 from datetime import date, datetime
-from models import (
+from backend.models import (
     NormalisedTransaction,
     ClassifiedTransaction,
     ExcludedTransaction,

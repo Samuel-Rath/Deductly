@@ -11,8 +11,8 @@ import pytest
 from decimal import Decimal
 from datetime import date
 from io import BytesIO
-from processing.csv_parser import CSVParser, CSVFormat, CSVParseError
-from models.schemas import TransactionDirection
+from backend.processing.csv_parser import CSVParser, CSVFormat, CSVParseError
+from backend.models.schemas import TransactionDirection
 
 
 class TestCSVFormatDetection:
@@ -430,7 +430,7 @@ class TestRecurringDetection:
     
     def test_detect_recurring_monthly_pattern(self):
         """Test detection of monthly recurring transactions."""
-        from models.schemas import NormalisedTransaction, TransactionDirection
+        from backend.models.schemas import NormalisedTransaction, TransactionDirection
         
         # Create monthly transactions (Netflix subscription)
         transactions = [
@@ -470,7 +470,7 @@ class TestRecurringDetection:
     
     def test_detect_recurring_weekly_pattern(self):
         """Test detection of weekly recurring transactions."""
-        from models.schemas import NormalisedTransaction, TransactionDirection
+        from backend.models.schemas import NormalisedTransaction, TransactionDirection
         
         # Create weekly transactions
         transactions = [
@@ -509,7 +509,7 @@ class TestRecurringDetection:
     
     def test_detect_recurring_not_enough_transactions(self):
         """Test that single transactions are not marked as recurring."""
-        from models.schemas import NormalisedTransaction, TransactionDirection
+        from backend.models.schemas import NormalisedTransaction, TransactionDirection
         
         transactions = [
             NormalisedTransaction(
@@ -529,7 +529,7 @@ class TestRecurringDetection:
     
     def test_detect_recurring_irregular_pattern(self):
         """Test that irregular transactions are not marked as recurring."""
-        from models.schemas import NormalisedTransaction, TransactionDirection
+        from backend.models.schemas import NormalisedTransaction, TransactionDirection
         
         # Create irregular transactions (random dates)
         transactions = [

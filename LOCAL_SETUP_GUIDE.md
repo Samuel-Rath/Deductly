@@ -20,13 +20,10 @@ You already have:
 Open a terminal in the project root and run:
 
 ```powershell
-# Navigate to backend directory
-cd backend
+# Install backend dependencies (if not already installed)
+pip install -r backend/requirements.txt
 
-# Install dependencies (if not already installed)
-pip install -r requirements.txt
-
-# Start the backend server
+# Start the backend server (run from project root)
 python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

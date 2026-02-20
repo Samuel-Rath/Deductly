@@ -18,7 +18,7 @@ from datetime import date, datetime
 import tempfile
 from pathlib import Path
 
-from models.schemas import (
+from backend.models.schemas import (
     NormalisedTransaction,
     ClassifiedTransaction,
     ExcludedTransaction,
@@ -30,7 +30,7 @@ from models.schemas import (
     TransactionDirection,
     ExclusionReason,
 )
-from processing.report_generator import ReportGenerator
+from backend.processing.report_generator import ReportGenerator
 
 
 # Custom strategies for generating test data

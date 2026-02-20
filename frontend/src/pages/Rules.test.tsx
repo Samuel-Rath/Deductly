@@ -13,7 +13,7 @@ describe('Rules Page', () => {
     )
 
     expect(screen.getByText('Classification Rules')).toBeInTheDocument()
-    expect(screen.getByText(/Understand how transactions are categorized/i)).toBeInTheDocument()
+    expect(screen.getByText(/Understand how transactions are categorised/i)).toBeInTheDocument()
   })
 
   it('renders section tabs', () => {

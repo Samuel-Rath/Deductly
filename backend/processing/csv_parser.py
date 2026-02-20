@@ -15,7 +15,7 @@ from typing import List, Dict, Optional, Tuple, BinaryIO, TextIO
 from io import StringIO, TextIOWrapper
 import uuid
 
-from models.schemas import NormalisedTransaction, TransactionDirection
+from backend.models.schemas import NormalisedTransaction, TransactionDirection
 
 
 class CSVFormat:

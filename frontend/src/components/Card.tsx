@@ -25,8 +25,8 @@ export const Card: React.FC<CardProps> = ({
       className={`
         bg-ink-900 
         border border-line-700 
-        rounded-card
-        ${elevated ? 'shadow-lg' : ''}
+        rounded-xl
+        ${elevated ? 'shadow-soft-lg' : 'shadow-soft'}
         ${paddingStyles[padding]}
         ${className}
       `}

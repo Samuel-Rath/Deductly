@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 from decimal import Decimal
 from datetime import date, datetime
 
-from models.schemas import (
+from backend.models.schemas import (
     NormalisedTransaction,
     ClassifiedTransaction,
     ExcludedTransaction,

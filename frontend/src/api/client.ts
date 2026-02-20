@@ -23,7 +23,7 @@ const RETRY_DELAY_MS = 1000;
 
 export interface UploadRequest {
   file: File;
-  incomeYear: string;
+  incomeYear?: string; // Optional - will be auto-detected if not provided
   ephemeralMode: boolean;
   confidenceThreshold?: number;
 }
@@ -167,7 +167,12 @@ export async function uploadCSV(request: UploadRequest): Promise<UploadResponse>
   try {
     const formData = new FormData();
     formData.append('file', request.file);
-    formData.append('income_year', request.incomeYear);
+    
+    // Only append income_year if provided (otherwise backend will auto-detect)
+    if (request.incomeYear) {
+      formData.append('income_year', request.incomeYear);
+    }
+    
     formData.append('ephemeral_mode', String(request.ephemeralMode));
     
     if (request.confidenceThreshold !== undefined) {

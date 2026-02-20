@@ -14,7 +14,7 @@ from pathlib import Path
 import csv
 import json
 
-from models.schemas import (
+from backend.models.schemas import (
     ClassifiedTransaction,
     ExcludedTransaction,
     ReportData,
@@ -22,7 +22,7 @@ from models.schemas import (
     AuditEntry,
     DeductionCategory,
 )
-from processing.redaction_service import RedactionService, RedactionConfig
+from backend.processing.redaction_service import RedactionService, RedactionConfig
 
 
 class ReportGenerator:

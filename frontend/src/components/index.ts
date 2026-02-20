@@ -18,3 +18,8 @@ export type { ModalProps } from './Modal';
 
 export { Drawer } from './Drawer';
 export type { DrawerProps } from './Drawer';
+
+export { default as Navigation } from './Navigation';
+export { default as AnimatedSection } from './AnimatedSection';
+export { Icon } from './Icon';
+export type { IconName } from './Icon';

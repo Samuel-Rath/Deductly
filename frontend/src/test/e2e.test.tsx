@@ -73,7 +73,7 @@ describe('End-to-End User Journey', () => {
     expect(screen.getByText(/Turn your bank CSV into an evidence-ready deduction report/i)).toBeInTheDocument()
 
     // Step 2: Navigate to upload page
-    const uploadButton = screen.getByRole('link', { name: /Upload CSV/i })
+    const uploadButton = screen.getByRole('link', { name: /Upload/i })
     await user.click(uploadButton)
 
     await waitFor(() => {
@@ -85,7 +85,7 @@ describe('End-to-End User Journey', () => {
       type: 'text/csv'
     })
 
-    const fileInput = screen.getByLabelText(/Upload CSV file/i, { selector: 'input[type="file"]' })
+    const fileInput = screen.getByLabelText(/Upload bank statement/i, { selector: 'input[type="file"]' })
     await user.upload(fileInput, file)
 
     // Verify file is selected
@@ -94,8 +94,8 @@ describe('End-to-End User Journey', () => {
     })
 
     // Step 4: Start analysis
-    const analyzeButton = screen.getByRole('button', { name: /Start Analysis/i })
-    await user.click(analyzeButton)
+    const analyseButton = screen.getByRole('button', { name: /Start Analysis/i })
+    await user.click(analyseButton)
 
     // Verify upload was called
     await waitFor(() => {
@@ -145,17 +145,17 @@ describe('End-to-End User Journey', () => {
     renderApp()
 
     // Navigate to upload
-    const uploadButton = screen.getByRole('link', { name: /Upload CSV/i })
+    const uploadButton = screen.getByRole('link', { name: /Get Started/i })
     await user.click(uploadButton)
 
     // Upload file
     const file = new File(['test'], 'test.csv', { type: 'text/csv' })
-    const fileInput = screen.getByLabelText(/Upload CSV file/i, { selector: 'input[type="file"]' })
+    const fileInput = screen.getByLabelText(/Upload bank statement/i, { selector: 'input[type="file"]' })
     await user.upload(fileInput, file)
 
     // Start analysis
-    const analyzeButton = screen.getByRole('button', { name: /Start Analysis/i })
-    await user.click(analyzeButton)
+    const analyseButton = screen.getByRole('button', { name: /Start Analysis/i })
+    await user.click(analyseButton)
 
     // Verify error is displayed
     await waitFor(() => {
@@ -185,15 +185,15 @@ describe('End-to-End User Journey', () => {
     renderApp()
 
     // Navigate and upload
-    const uploadButton = screen.getByRole('link', { name: /Upload CSV/i })
+    const uploadButton = screen.getByRole('link', { name: /Get Started/i })
     await user.click(uploadButton)
 
     const file = new File(['test'], 'test.csv', { type: 'text/csv' })
-    const fileInput = screen.getByLabelText(/Upload CSV file/i, { selector: 'input[type="file"]' })
+    const fileInput = screen.getByLabelText(/Upload bank statement/i, { selector: 'input[type="file"]' })
     await user.upload(fileInput, file)
 
-    const analyzeButton = screen.getByRole('button', { name: /Start Analysis/i })
-    await user.click(analyzeButton)
+    const analyseButton = screen.getByRole('button', { name: /Start Analysis/i })
+    await user.click(analyseButton)
 
     // Verify failure message
     await waitFor(() => {
@@ -208,24 +208,24 @@ describe('End-to-End User Journey', () => {
     renderApp()
 
     // Navigate to upload
-    const uploadButton = screen.getByRole('link', { name: /Upload CSV/i })
+    const uploadButton = screen.getByRole('link', { name: /Get Started/i })
     await user.click(uploadButton)
 
-    // Try to upload non-CSV file
+    // Try to upload non-CSV/PDF file
     const file = new File(['test'], 'test.txt', { type: 'text/plain' })
-    const fileInput = screen.getByLabelText(/Upload CSV file/i, { selector: 'input[type="file"]' })
+    const fileInput = screen.getByLabelText(/Upload bank statement/i, { selector: 'input[type="file"]' })
     
     // Note: File input validation happens in the component
     await user.upload(fileInput, file)
 
     // Verify error message
     await waitFor(() => {
-      expect(screen.getByText(/Only CSV files are accepted/i)).toBeInTheDocument()
+      expect(screen.getByText(/Only CSV and PDF files are accepted/i)).toBeInTheDocument()
     })
 
-    // Verify analyze button is disabled
-    const analyzeButton = screen.getByRole('button', { name: /Start Analysis/i })
-    expect(analyzeButton).toBeDisabled()
+    // Verify analyse button is disabled
+    const analyseButton = screen.getByRole('button', { name: /Start Analysis/i })
+    expect(analyseButton).toBeDisabled()
   })
 
   it('supports keyboard navigation throughout the app', async () => {

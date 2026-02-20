@@ -11,6 +11,7 @@ import os
 import uuid
 import time
 import tempfile
+import io
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -26,12 +27,13 @@ from backend.models.schemas import (
 from backend.storage.storage_service import StorageService
 from backend.storage.database import Database
 from backend.processing.pipeline import ProcessingPipeline
+from backend.processing.pdf_parser import PDFParser
 from backend.logging_config import log_event, log_error, log_security_event, log_audit
 from backend.monitoring import metrics_collector
 
 # Configuration
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-ALLOWED_CONTENT_TYPES = ["text/csv", "application/vnd.ms-excel"]
+ALLOWED_CONTENT_TYPES = ["text/csv", "application/vnd.ms-excel", "application/pdf"]
 REPORTS_DIR = Path("backend/reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
@@ -45,18 +47,18 @@ router = APIRouter(prefix="/api")
 @router.post("/upload", response_model=UploadResponse)
 async def upload_csv(
     file: UploadFile = File(...),
-    income_year: str = Form("2023-2024"),
+    income_year: Optional[str] = Form(None),
     ephemeral_mode: bool = Form(True),
     confidence_threshold: float = Form(0.60)
 ) -> UploadResponse:
     """
-    Upload a CSV file for processing.
+    Upload a CSV or PDF file for processing.
     
     Validates: Requirements 11.1, 11.2
     
     Args:
-        file: CSV file to process
-        income_year: Australian income year (format: "YYYY-YYYY")
+        file: CSV or PDF file to process
+        income_year: Australian income year (format: "YYYY-YYYY"). If not provided, will be auto-detected from transaction dates.
         ephemeral_mode: If True, no data is persisted after report generation
         confidence_threshold: Minimum confidence for classification (0.0-1.0)
     
@@ -79,7 +81,7 @@ async def upload_csv(
             status_code=400,
             detail={
                 "error": "invalid_file_type",
-                "message": f"Only CSV files are allowed. Received: {file.content_type}",
+                "message": f"Only CSV and PDF files are allowed. Received: {file.content_type}",
                 "details": {"allowed_types": ALLOWED_CONTENT_TYPES}
             }
         )
@@ -104,27 +106,18 @@ async def upload_csv(
             }
         )
     
-    # Validate income year format
-    if not income_year or not income_year.strip():
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "invalid_income_year",
-                "message": "Income year is required and cannot be empty",
-                "details": {"provided": income_year}
-            }
-        )
-    
-    parts = income_year.split("-")
-    if len(parts) != 2:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "invalid_income_year",
-                "message": "Income year must be in format YYYY-YYYY (e.g., 2023-2024)",
-                "details": {"provided": income_year}
-            }
-        )
+    # Validate income year format (if provided)
+    if income_year:
+        parts = income_year.split("-")
+        if len(parts) != 2:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "invalid_income_year",
+                    "message": "Income year must be in format YYYY-YYYY (e.g., 2023-2024)",
+                    "details": {"provided": income_year}
+                }
+            )
     
     # Validate confidence threshold
     if not 0.0 <= confidence_threshold <= 1.0:
@@ -169,13 +162,72 @@ async def upload_csv(
         # Record upload metrics
         metrics_collector.record_upload(success=True, file_size=len(file_content))
         
+        # Determine file type and save appropriately
+        is_pdf = file.content_type == "application/pdf"
+        file_extension = ".pdf" if is_pdf else ".csv"
+        
         # Save uploaded file temporarily
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
         temp_file.write(file_content)
         temp_file.close()
         
+        # If PDF, convert to CSV first
+        if is_pdf:
+            log_event('pdf_conversion_started', job_id=job_id, file_size=len(file_content))
+            try:
+                pdf_parser = PDFParser()
+                with open(temp_file.name, 'rb') as pdf_file:
+                    transactions = pdf_parser.parse(io.BytesIO(pdf_file.read()))
+                    csv_content = pdf_parser.convert_to_csv_format(transactions)
+                
+                # Save as CSV for processing
+                os.unlink(temp_file.name)
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv", mode='w')
+                temp_file.write(csv_content)
+                temp_file.close()
+                
+                log_event(
+                    'pdf_conversion_completed',
+                    job_id=job_id,
+                    transaction_count=len(transactions)
+                )
+            except Exception as e:
+                os.unlink(temp_file.name)
+                log_error('pdf_conversion_failed', e, job_id=job_id)
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "pdf_parsing_failed",
+                        "message": f"Failed to parse PDF: {str(e)}",
+                        "details": {"job_id": job_id}
+                    }
+                )
+        
         # Track processing time
         processing_start = time.time()
+        
+        # Auto-detect income year if not provided
+        if not income_year:
+            log_event('income_year_auto_detection_started', job_id=job_id)
+            try:
+                income_year = _detect_income_year_from_csv(temp_file.name)
+                log_event(
+                    'income_year_auto_detected',
+                    job_id=job_id,
+                    detected_income_year=income_year
+                )
+            except Exception as e:
+                log_error('income_year_detection_failed', e, job_id=job_id)
+                # Default to current income year if detection fails
+                now = datetime.now()
+                current_year = now.year
+                current_month = now.month
+                income_year = f"{current_year - 1}-{current_year}" if current_month < 7 else f"{current_year}-{current_year + 1}"
+                log_event(
+                    'income_year_defaulted',
+                    job_id=job_id,
+                    default_income_year=income_year
+                )
         
         # Initialize processing pipeline
         pipeline = ProcessingPipeline(
@@ -306,6 +358,95 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
         }
     
     return response
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def _detect_income_year_from_csv(csv_path: str) -> str:
+    """
+    Detect the Australian income year from transaction dates in a CSV file.
+    
+    Australian income year runs from July 1 to June 30.
+    
+    Args:
+        csv_path: Path to the CSV file
+        
+    Returns:
+        Income year string in format "YYYY-YYYY"
+        
+    Raises:
+        ValueError: If no valid dates found or unable to detect
+    """
+    import csv
+    from datetime import datetime
+    
+    dates = []
+    
+    # Read CSV and extract dates
+    with open(csv_path, 'r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        
+        # Try to find date column
+        if not reader.fieldnames:
+            raise ValueError("CSV has no headers")
+        
+        date_col = None
+        for col in reader.fieldnames:
+            col_lower = col.lower().strip()
+            if any(pattern in col_lower for pattern in ['date', 'trans date', 'transaction date']):
+                date_col = col
+                break
+        
+        if not date_col:
+            raise ValueError("No date column found in CSV")
+        
+        # Parse dates
+        date_formats = [
+            "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d",
+            "%d/%m/%y", "%d-%m-%y",
+            "%d %b %Y", "%d %B %Y"
+        ]
+        
+        for row in reader:
+            date_str = row.get(date_col, '').strip()
+            if not date_str:
+                continue
+            
+            # Try each date format
+            for fmt in date_formats:
+                try:
+                    parsed_date = datetime.strptime(date_str, fmt)
+                    dates.append(parsed_date)
+                    break
+                except ValueError:
+                    continue
+    
+    if not dates:
+        raise ValueError("No valid dates found in CSV")
+    
+    # Find the range of dates
+    min_date = min(dates)
+    max_date = max(dates)
+    
+    # Determine income year based on the date range
+    # If transactions span multiple income years, use the one with most transactions
+    income_years = {}
+    
+    for d in dates:
+        # Australian income year: July 1 to June 30
+        if d.month >= 7:
+            year_key = f"{d.year}-{d.year + 1}"
+        else:
+            year_key = f"{d.year - 1}-{d.year}"
+        
+        income_years[year_key] = income_years.get(year_key, 0) + 1
+    
+    # Return the income year with the most transactions
+    detected_year = max(income_years.items(), key=lambda x: x[1])[0]
+    
+    return detected_year
 
 
 # ============================================================================

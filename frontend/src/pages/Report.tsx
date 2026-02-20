@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Chip, Drawer } from '../components'
+import { Card, Button, Chip, Drawer, Icon } from '../components'
 import { useJobStatus, useDownloadReportFile } from '../api/hooks'
 
 // Mock data - will be replaced with API data
@@ -166,15 +166,12 @@ export default function Report() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-12">
+    <div className="pt-16 container mx-auto px-6 py-12">
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
           <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-accent mx-auto mb-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
+            <Icon name="Loader2" size={48} className="text-accent mx-auto mb-4 animate-spin" />
             <p className="text-body text-slate-300">Loading report...</p>
           </div>
         </div>
@@ -185,9 +182,7 @@ export default function Report() {
         <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
-              <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Icon name="AlertCircle" size={64} className="text-red-400 mx-auto mb-4" />
               <h2 className="text-h2 font-semibold text-white mb-2">
                 Failed to load report
               </h2>
@@ -207,15 +202,12 @@ export default function Report() {
         <div className="max-w-2xl mx-auto" role="status" aria-live="polite">
           <Card>
             <div className="text-center py-8">
-              <svg className="animate-spin h-12 w-12 text-accent mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
+              <Icon name="Loader2" size={48} className="text-accent mx-auto mb-4 animate-spin" />
               <h2 className="text-h2 font-semibold text-white mb-2">
                 Processing your file
               </h2>
               <p className="text-body text-slate-300 mb-4">
-                Analyzing transactions and generating report...
+                Analysing transactions and generating report...
               </p>
               {jobStatus.progress !== undefined && (
                 <div className="max-w-md mx-auto">
@@ -248,9 +240,7 @@ export default function Report() {
         <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
-              <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Icon name="AlertCircle" size={64} className="text-red-400 mx-auto mb-4" />
               <h2 className="text-h2 font-semibold text-white mb-2">
                 Processing failed
               </h2>
@@ -298,14 +288,14 @@ export default function Report() {
             >
               {downloadMutation.isPending && downloadMutation.variables?.format === 'pdf' ? (
                 <span className="flex items-center space-x-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <Icon name="Loader2" size={16} className="animate-spin" />
                   <span>Downloading...</span>
                 </span>
               ) : (
-                'Download PDF'
+                <span className="flex items-center space-x-2">
+                  <Icon name="Download" size={16} />
+                  <span>Download PDF</span>
+                </span>
               )}
             </Button>
             <Button
@@ -315,14 +305,14 @@ export default function Report() {
             >
               {downloadMutation.isPending && downloadMutation.variables?.format === 'csv' ? (
                 <span className="flex items-center space-x-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <Icon name="Loader2" size={16} className="animate-spin" />
                   <span>Downloading...</span>
                 </span>
               ) : (
-                'Download CSV'
+                <span className="flex items-center space-x-2">
+                  <Icon name="Download" size={16} />
+                  <span>Download CSV</span>
+                </span>
               )}
             </Button>
             <Button
@@ -332,14 +322,14 @@ export default function Report() {
             >
               {downloadMutation.isPending && downloadMutation.variables?.format === 'json' ? (
                 <span className="flex items-center space-x-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <Icon name="Loader2" size={16} className="animate-spin" />
                   <span>Downloading...</span>
                 </span>
               ) : (
-                'Download JSON'
+                <span className="flex items-center space-x-2">
+                  <Icon name="Download" size={16} />
+                  <span>Download JSON</span>
+                </span>
               )}
             </Button>
           </div>
@@ -348,9 +338,7 @@ export default function Report() {
           {downloadError && (
             <div className="mt-3 p-3 bg-red-900 bg-opacity-20 border border-red-700 rounded-lg">
               <div className="flex items-start space-x-2">
-                <svg className="w-5 h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <Icon name="AlertCircle" size={20} className="text-red-400 mt-0.5" />
                 <div className="text-small text-red-300">
                   {downloadError}
                 </div>
@@ -406,7 +394,7 @@ export default function Report() {
           <Card>
             <div className="space-y-2">
               <div className="text-micro font-medium text-slate-500">
-                TOTAL ANALYZED
+                TOTAL ANALYSED
               </div>
               <div className="text-h1 font-semibold text-white">
                 {totalTransactions}
@@ -895,9 +883,7 @@ export default function Report() {
                       {transaction.evidence.map((evidence, idx) => (
                         <div key={idx} className="flex items-start space-x-2">
                           <div className="w-5 h-5 rounded border border-line-700 bg-ink-800 flex items-center justify-center mt-0.5">
-                            <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Icon name="Check" size={12} className="text-slate-500" />
                           </div>
                           <div className="text-small text-slate-300">
                             {evidence}
@@ -918,9 +904,7 @@ export default function Report() {
                       {transaction.flags.map((flag, idx) => (
                         <div key={idx} className="flex items-start space-x-2">
                           <div className="w-5 h-5 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-0.5">
-                            <svg className="w-3 h-3 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
+                            <Icon name="AlertTriangle" size={12} className="text-accent" />
                           </div>
                           <div>
                             <div className="text-small text-white font-medium">
@@ -947,14 +931,11 @@ export default function Report() {
                     className="flex items-center justify-between w-full text-small font-medium text-white hover:text-accent transition-colors"
                   >
                     <span>More detail</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${showMoreDetail ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <Icon 
+                      name="ChevronDown" 
+                      size={20} 
+                      className={`transition-transform ${showMoreDetail ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   
                   {showMoreDetail && (

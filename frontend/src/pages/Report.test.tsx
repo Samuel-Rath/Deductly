@@ -42,7 +42,7 @@ describe('Report Page', () => {
     expect(screen.getByText('LIKELY DEDUCTIBLE')).toBeInTheDocument()
     expect(screen.getByText('NEEDS REVIEW')).toBeInTheDocument()
     expect(screen.getByText('EXCLUDED')).toBeInTheDocument()
-    expect(screen.getByText('TOTAL ANALYZED')).toBeInTheDocument()
+    expect(screen.getByText('TOTAL ANALYSED')).toBeInTheDocument()
   })
 
   it('renders confidence distribution chart', () => {

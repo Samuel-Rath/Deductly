@@ -1,7 +1,7 @@
 import React from 'react';
 
-export type ChipVariant = 'category' | 'confidence' | 'flag';
-export type ChipSize = 'sm' | 'md';
+export type ChipVariant = 'category' | 'confidence' | 'flag' | 'neutral' | 'accent';
+export type ChipSize = 'sm' | 'md' | 'small';
 
 export interface ChipProps {
   label: string;
@@ -26,7 +26,8 @@ export const Chip: React.FC<ChipProps> = ({
   
   const sizeStyles = {
     sm: 'px-2 py-1 text-micro',
-    md: 'px-3 py-1.5 text-small'
+    md: 'px-3 py-1.5 text-small',
+    small: 'px-2 py-1 text-micro', // Alias for sm
   };
   
   const variantStyles = {
@@ -34,7 +35,9 @@ export const Chip: React.FC<ChipProps> = ({
       ? 'bg-accent-secondary text-ink-950 border border-accent-secondary'
       : 'bg-transparent text-slate-300 border border-line-700 hover:border-slate-500',
     confidence: 'bg-transparent text-slate-300 border border-line-700',
-    flag: 'bg-ink-800 text-slate-300 border border-line-700'
+    flag: 'bg-ink-800 text-slate-300 border border-line-700',
+    neutral: 'bg-ink-800 text-slate-300 border border-line-700',
+    accent: 'bg-accent bg-opacity-10 text-accent border border-accent',
   };
   
   const interactiveStyles = onClick ? 'cursor-pointer hover:bg-ink-800' : '';
