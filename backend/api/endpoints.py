@@ -193,7 +193,9 @@ async def upload_csv(
                 )
             except Exception as e:
                 os.unlink(temp_file.name)
+                storage.update_job_status(job_id, "failed", error=str(e))
                 log_error('pdf_conversion_failed', e, job_id=job_id)
+                metrics_collector.record_upload(success=False, file_size=len(file_content))
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -280,6 +282,9 @@ async def upload_csv(
             message="CSV processed successfully. Reports are ready for download."
         )
         
+    except HTTPException:
+        # Re-raise HTTP exceptions (they're already properly formatted)
+        raise
     except Exception as e:
         # Update job status to failed
         storage.update_job_status(job_id, "failed", error=str(e))
@@ -406,7 +411,7 @@ def _detect_income_year_from_csv(csv_path: str) -> str:
         date_formats = [
             "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d",
             "%d/%m/%y", "%d-%m-%y",
-            "%d %b %Y", "%d %B %Y"
+            "%d %b %Y", "%d %b %y", "%d %B %Y"
         ]
         
         for row in reader:

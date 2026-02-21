@@ -18,6 +18,7 @@ class PDFParser:
     Parser for extracting transaction data from PDF bank statements.
     
     Supports major Australian banks: CommBank, NAB, Westpac, ANZ, ING.
+    Uses a state machine approach for robust multi-line transaction parsing.
     """
     
     def __init__(self):
@@ -56,7 +57,7 @@ class PDFParser:
     
     def _parse_with_pdfplumber(self, pdf_file: io.BytesIO) -> List[Dict[str, Any]]:
         """
-        Parse PDF using pdfplumber (better for structured tables).
+        Parse PDF using pdfplumber with state machine for multi-line transactions.
         
         Args:
             pdf_file: BytesIO object containing PDF data
@@ -68,29 +69,17 @@ class PDFParser:
         
         try:
             with pdfplumber.open(pdf_file) as pdf:
+                all_text = []
+                
+                # Extract all text from all pages
                 for page in pdf.pages:
-                    # Extract tables
-                    tables = page.extract_tables()
-                    
-                    for table in tables:
-                        if not table:
-                            continue
-                        
-                        # Try to identify transaction rows
-                        for row in table:
-                            if not row or len(row) < 3:
-                                continue
-                            
-                            transaction = self._extract_transaction_from_row(row)
-                            if transaction:
-                                transactions.append(transaction)
-                    
-                    # Also try text extraction for non-table formats
-                    if not transactions:
-                        text = page.extract_text()
-                        if text:
-                            text_transactions = self._extract_transactions_from_text(text)
-                            transactions.extend(text_transactions)
+                    text = page.extract_text()
+                    if text:
+                        all_text.append(text)
+                
+                # Join all pages and parse with state machine
+                full_text = '\n'.join(all_text)
+                transactions = self._parse_with_state_machine(full_text)
         
         except Exception as e:
             print(f"pdfplumber parsing error: {e}")
@@ -112,12 +101,16 @@ class PDFParser:
         
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
+            all_text = []
             
             for page in pdf_reader.pages:
                 text = page.extract_text()
                 if text:
-                    page_transactions = self._extract_transactions_from_text(text)
-                    transactions.extend(page_transactions)
+                    all_text.append(text)
+            
+            # Join all pages and parse with state machine
+            full_text = '\n'.join(all_text)
+            transactions = self._parse_with_state_machine(full_text)
         
         except Exception as e:
             print(f"PyPDF2 parsing error: {e}")
@@ -125,65 +118,17 @@ class PDFParser:
         
         return transactions
     
-    def _extract_transaction_from_row(self, row: List[str]) -> Optional[Dict[str, Any]]:
+    def _parse_with_state_machine(self, text: str) -> List[Dict[str, Any]]:
         """
-        Extract transaction data from a table row.
+        Parse transactions using a state machine approach.
+        
+        Handles multi-line transactions where:
+        - Each transaction starts with a date
+        - Particulars (description) can wrap across multiple lines
+        - Amounts appear after the description
         
         Args:
-            row: List of cell values from a table row
-            
-        Returns:
-            Transaction dictionary or None if not a valid transaction
-        """
-        # Skip header rows
-        if any(str(cell).upper() in ['DATE', 'DESCRIPTION', 'AMOUNT', 'BALANCE', 'DEBIT', 'CREDIT'] 
-               for cell in row if cell):
-            return None
-        
-        # Try to find date, description, and amount in the row
-        date_str = None
-        description = None
-        amount = None
-        
-        for i, cell in enumerate(row):
-            if not cell:
-                continue
-            
-            cell = str(cell).strip()
-            
-            if not cell or len(cell) < 2:
-                continue
-            
-            # Try to parse as date (usually first column)
-            if not date_str and self._is_date(cell):
-                date_str = cell
-            
-            # Try to parse as amount (usually last column, or second-to-last)
-            elif self._is_amount(cell):
-                # Only set amount if we haven't found one yet, or this is closer to the end
-                if amount is None or i > row.index(str(amount)):
-                    amount = self._parse_amount(cell)
-            
-            # Otherwise, it's likely a description (usually middle column)
-            elif not description and len(cell) > 2 and not cell.replace('.', '').replace(',', '').replace('-', '').replace('$', '').strip().isdigit():
-                description = cell
-        
-        # Valid transaction needs at least date and description
-        if date_str and description:
-            return {
-                'date': date_str,
-                'description': description,
-                'amount': amount if amount is not None else 0.0
-            }
-        
-        return None
-    
-    def _extract_transactions_from_text(self, text: str) -> List[Dict[str, Any]]:
-        """
-        Extract transactions from plain text using regex patterns.
-        
-        Args:
-            text: Extracted text from PDF
+            text: Full text extracted from PDF
             
         Returns:
             List of transaction dictionaries
@@ -191,78 +136,163 @@ class PDFParser:
         transactions = []
         lines = text.split('\n')
         
-        # Pattern to match transaction lines
-        # Looks for: date, description, amount
-        # Example: "15/01/2024 WOOLWORTHS -123.45" or "15 Jan 2024 COLES -50.00"
-        date_patterns = [
-            r'\d{1,2}/\d{1,2}/\d{4}',  # DD/MM/YYYY
-            r'\d{1,2}-\d{1,2}-\d{4}',  # DD-MM-YYYY
-            r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}',  # DD Mon YYYY
-        ]
+        # State machine variables
+        current_transaction = None
+        in_transaction_section = False
         
-        # Amount pattern - matches currency amounts with optional minus sign
-        amount_pattern = r'-?\$?\s*\d+[,\d]*\.?\d*$'
+        # Date pattern for NAB and other banks
+        date_pattern = r'^\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2,4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})'
         
         for line in lines:
-            line = line.strip()
-            if not line or len(line) < 10:  # Skip very short lines
+            line_stripped = line.strip()
+            
+            # Skip empty lines
+            if not line_stripped:
+                continue
+            
+            # Detect start of transaction section
+            if 'TRANSACTION' in line_stripped.upper() and 'DETAILS' in line_stripped.upper():
+                in_transaction_section = True
                 continue
             
             # Skip header lines
-            if any(header in line.upper() for header in ['DATE', 'DESCRIPTION', 'AMOUNT', 'BALANCE', 'BANK STATEMENT']):
+            if any(header in line_stripped.upper() for header in [
+                'DATE', 'PARTICULARS', 'DEBITS', 'CREDITS', 'BALANCE',
+                'ACCOUNT BALANCE', 'OPENING BALANCE', 'CLOSING BALANCE',
+                'TOTAL CREDITS', 'TOTAL DEBITS', 'BANK STATEMENT'
+            ]):
                 continue
             
-            # Try each date pattern
-            date_str = None
-            for pattern in date_patterns:
-                match = re.search(pattern, line)
-                if match:
-                    date_str = match.group()
-                    # Validate it's actually a valid date
-                    if not self._is_date(date_str):
-                        date_str = None
-                        continue
-                    break
+            # Check if line starts with a date
+            date_match = re.match(date_pattern, line_stripped)
             
-            if not date_str:
-                continue
-            
-            # Extract amount from the end of the line
-            amount_match = re.search(amount_pattern, line)
-            amount = 0.0
-            amount_end_pos = len(line)
-            
-            if amount_match:
-                amount_str = amount_match.group()
-                amount = self._parse_amount(amount_str)
-                amount_end_pos = amount_match.start()
-            
-            # Description is everything between date and amount
-            date_match = re.search(r'\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', line)
             if date_match:
-                desc_start = date_match.end()
-                description = line[desc_start:amount_end_pos].strip()
+                # Save previous transaction if exists
+                if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
+                    # Extract amount from description
+                    self._extract_amount_from_description(current_transaction)
+                    if current_transaction.get('amount') and current_transaction['amount'] != 0:
+                        transactions.append(current_transaction)
                 
-                # Clean up description - remove extra whitespace
-                description = re.sub(r'\s+', ' ', description)
+                # Start new transaction
+                date_str = date_match.group(1).strip()
+                # Remove the date from the line to get the rest
+                rest_of_line = line_stripped[date_match.end():].strip()
                 
-                if description and len(description) > 1:
-                    transactions.append({
-                        'date': date_str,
-                        'description': description,
-                        'amount': amount
-                    })
+                current_transaction = {
+                    'date': date_str,
+                    'description': rest_of_line,
+                    'amount': None
+                }
+            
+            elif current_transaction is not None:
+                # Continue building current transaction (multi-line description)
+                current_transaction['description'] += ' ' + line_stripped
+        
+        # Don't forget the last transaction
+        if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
+            self._extract_amount_from_description(current_transaction)
+            if current_transaction.get('amount') and current_transaction['amount'] != 0:
+                transactions.append(current_transaction)
         
         return transactions
     
+    def _extract_amount_from_description(self, transaction: Dict[str, Any]) -> None:
+        """
+        Extract amount from the accumulated description and clean it up.
+        
+        Modifies the transaction dict in place to:
+        - Set the 'amount' field (negative for debits, positive for credits)
+        - Clean up the 'description' field to remove amounts and balance
+        
+        Args:
+            transaction: Transaction dictionary with 'description' field
+        """
+        description = transaction['description']
+        
+        # Pattern to match amounts: $13.90 or 13.90 or $1,234.56
+        amount_pattern = r'\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+        
+        # Find all amounts in the description
+        amounts = []
+        for match in re.finditer(amount_pattern, description):
+            amount_str = match.group(1).replace(',', '')
+            try:
+                amounts.append((float(amount_str), match.start(), match.end()))
+            except ValueError:
+                continue
+        
+        if not amounts:
+            transaction['amount'] = 0
+            return
+        
+        # Heuristic: 
+        # - If there are 2+ amounts, the last one is usually the balance
+        # - The first/second-to-last is the transaction amount
+        # - Check for "CR" suffix to determine if balance is credit
+        
+        if len(amounts) >= 2:
+            # Second-to-last is likely the transaction amount
+            transaction_amount = amounts[-2][0]
+            balance_amount = amounts[-1][0]
+            
+            # Remove amounts from description (keep only the particulars)
+            # Remove from the position of the transaction amount onwards
+            clean_desc = description[:amounts[-2][1]].strip()
+            
+            # Determine if debit or credit
+            # Check if "CR" appears after the balance (indicates credit balance)
+            balance_pos = amounts[-1][2]
+            text_after_balance = description[balance_pos:balance_pos+10].upper()
+            
+            # Infer transaction type:
+            # If description contains credit keywords, it's a credit
+            desc_upper = description.upper()
+            is_credit = any(keyword in desc_upper for keyword in [
+                'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT', 
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED'
+            ])
+            
+            if is_credit:
+                transaction['amount'] = transaction_amount
+            else:
+                transaction['amount'] = -transaction_amount
+            
+            transaction['description'] = clean_desc
+        
+        elif len(amounts) == 1:
+            # Only one amount - assume it's the transaction amount
+            transaction_amount = amounts[0][0]
+            clean_desc = description[:amounts[0][1]].strip()
+            
+            # Check if it's a credit based on keywords
+            desc_upper = description.upper()
+            is_credit = any(keyword in desc_upper for keyword in [
+                'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT',
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED'
+            ])
+            
+            if is_credit:
+                transaction['amount'] = transaction_amount
+            else:
+                transaction['amount'] = -transaction_amount
+            
+            transaction['description'] = clean_desc
+        
+        # Final cleanup of description
+        transaction['description'] = re.sub(r'\s+', ' ', transaction['description']).strip()
+        
+        # If description is empty or too short, use a placeholder
+        if not transaction['description'] or len(transaction['description']) < 2:
+            transaction['description'] = 'Transaction'
+    
     def _is_date(self, text: str) -> bool:
         """Check if text looks like a date and is a valid date."""
-        from datetime import datetime
-        
         date_patterns = [
             (r'^\d{1,2}/\d{1,2}/\d{4}$', '%d/%m/%Y'),
             (r'^\d{1,2}-\d{1,2}-\d{4}$', '%d-%m-%Y'),
             (r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', '%d %b %Y'),
+            (r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{2}$', '%d %b %y'),  # NAB format: "23 Oct 25"
         ]
         
         text = text.strip()
@@ -305,23 +335,52 @@ class PDFParser:
     def convert_to_csv_format(self, transactions: List[Dict[str, Any]]) -> str:
         """
         Convert parsed transactions to CSV format string.
-        
+
+        For transactions with separate debit/credit amounts, creates a CSV
+        with Debit and Credit columns. Otherwise uses a single Amount column.
+
         Args:
             transactions: List of transaction dictionaries
-            
+
         Returns:
             CSV formatted string with header
         """
         if not transactions:
             return "date,description,amount\n"
-        
-        csv_lines = ["date,description,amount"]
-        
-        for txn in transactions:
-            date = txn.get('date', '')
-            description = txn.get('description', '').replace(',', ' ')  # Remove commas from description
-            amount = txn.get('amount', 0.0)
-            
-            csv_lines.append(f"{date},{description},{amount}")
-        
+
+        # Check if we have separate debit/credit transactions
+        # (indicated by negative and positive amounts)
+        has_mixed_signs = any(txn.get('amount', 0) < 0 for txn in transactions) and \
+                         any(txn.get('amount', 0) > 0 for txn in transactions)
+
+        if has_mixed_signs:
+            # Use separate Debit/Credit columns
+            csv_lines = ["Date,Particulars,Debits,Credits"]
+
+            for txn in transactions:
+                date = txn.get('date', '')
+                description = txn.get('description', '').replace(',', ' ')
+                amount = txn.get('amount', 0.0)
+
+                if amount < 0:
+                    # Debit transaction
+                    debit = abs(amount)
+                    credit = ''
+                else:
+                    # Credit transaction
+                    debit = ''
+                    credit = amount
+
+                csv_lines.append(f"{date},{description},{debit},{credit}")
+        else:
+            # Use single Amount column
+            csv_lines = ["date,description,amount"]
+
+            for txn in transactions:
+                date = txn.get('date', '')
+                description = txn.get('description', '').replace(',', ' ')
+                amount = txn.get('amount', 0.0)
+
+                csv_lines.append(f"{date},{description},{amount}")
+
         return '\n'.join(csv_lines)

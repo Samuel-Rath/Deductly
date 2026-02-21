@@ -4,14 +4,14 @@ echo Starting Tax Deduction Analyzer Backend
 echo ========================================
 echo.
 
-cd backend
-
 echo Checking Python installation...
 python --version
 echo.
 
 echo Installing/updating dependencies...
+cd backend
 pip install -r requirements.txt
+cd ..
 echo.
 
 echo Starting backend server...

@@ -88,6 +88,7 @@ class CSVParser:
         "%d/%m/%y",      # 15/01/24
         "%d-%m-%y",      # 15-01-24
         "%d %b %Y",      # 15 Jan 2024
+        "%d %b %y",      # 23 Oct 25 (NAB format)
         "%d %B %Y",      # 15 January 2024
     ]
     
