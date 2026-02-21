@@ -1,113 +1,93 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Card, Button, Chip, Drawer, Icon } from '../components'
 import { useJobStatus, useDownloadReportFile } from '../api/hooks'
-
-// Mock data - will be replaced with API data
-const mockReportData = {
-  incomeYear: '2023-2024',
-  generatedAt: '2024-01-15T10:30:00Z',
-  summary: {
-    totalDeductible: 12450.00,
-    totalNeedsReview: 2340.00,
-    totalExcluded: 45210.00,
-    categoryTotals: {
-      'Work Software': 1200.00,
-      'Professional Memberships': 450.00,
-      'Training & Education': 2800.00,
-      'Work Equipment': 3500.00,
-      'Phone & Internet': 890.00,
-      'Working from Home': 1200.00,
-      'Travel': 1800.00,
-      'Donations': 610.00,
-    },
-    confidenceDistribution: {
-      high: 45,
-      medium: 23,
-      low: 12,
-    },
-  },
-  candidates: [
-    {
-      id: '1',
-      date: '2024-01-15',
-      merchant: 'Adobe',
-      description: 'PAYPAL *ADOBE CREATIVE',
-      amount: 79.99,
-      category: 'Work Software',
-      confidence: 0.95,
-      reason: 'Keyword match: adobe',
-      evidence: ['Receipt'],
-      flags: [],
-    },
-    {
-      id: '2',
-      date: '2024-01-22',
-      merchant: 'Officeworks',
-      description: 'EFTPOS OFFICEWORKS SYDNEY',
-      amount: 145.50,
-      category: 'Work Equipment',
-      confidence: 0.88,
-      reason: 'Merchant match: Officeworks',
-      evidence: ['Receipt'],
-      flags: [],
-    },
-    {
-      id: '3',
-      date: '2024-01-28',
-      merchant: 'Telstra',
-      description: 'DIRECT DEBIT TELSTRA',
-      amount: 89.00,
-      category: 'Phone & Internet',
-      confidence: 0.75,
-      reason: 'Keyword match: telstra',
-      evidence: ['Receipt', 'Percentage Record'],
-      flags: ['percentage_required'],
-    },
-  ],
-  needsReview: [
-    {
-      id: '4',
-      date: '2024-02-05',
-      merchant: 'Unknown Merchant',
-      description: 'CARD PURCHASE 1234',
-      amount: 250.00,
-      category: null,
-      confidence: 0.45,
-      reason: 'No rule match',
-      evidence: [],
-      flags: ['needs_review'],
-    },
-  ],
-  excluded: [
-    {
-      id: '5',
-      date: '2024-01-10',
-      merchant: 'Transfer',
-      description: 'TRANSFER TO SAVINGS',
-      amount: 1000.00,
-      reason: 'Transfer between accounts',
-      explanation: 'Internal transfer - not a deduction candidate',
-    },
-  ],
-}
+import { downloadReport } from '../api/client'
 
 export default function Report() {
   const { jobId } = useParams<{ jobId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<'candidates' | 'needs-review' | 'excluded' | 'audit'>('candidates')
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [reportError, setReportError] = useState<string | null>(null)
+  
+  // Check if report data was passed via navigation state (ephemeral mode)
+  const stateReportData = location.state?.reportData
+  
+  // Normalize report data to handle both snake_case (backend) and camelCase (old format)
+  const normalizeReportData = (data: any) => {
+    if (!data) return null
+    
+    return {
+      income_year: data.income_year,
+      generated_at: data.generated_at,
+      summary: {
+        totalDeductible: data.summary?.total_deductible ?? data.summary?.totalDeductible ?? 0,
+        totalNeedsReview: data.summary?.total_needs_review ?? data.summary?.totalNeedsReview ?? 0,
+        totalExcluded: data.summary?.total_excluded ?? data.summary?.totalExcluded ?? 0,
+        categoryTotals: data.summary?.category_totals ?? data.summary?.categoryTotals ?? {},
+        confidenceDistribution: {
+          high: data.summary?.confidence_distribution?.high ?? data.summary?.confidenceDistribution?.high ?? 0,
+          medium: data.summary?.confidence_distribution?.medium ?? data.summary?.confidenceDistribution?.medium ?? 0,
+          low: data.summary?.confidence_distribution?.low ?? data.summary?.confidenceDistribution?.low ?? 0,
+        }
+      },
+      candidates: data.candidates ?? [],
+      needs_review: data.needs_review ?? [],
+      excluded: data.excluded ?? []
+    }
+  }
+  
+  const [reportData, setReportData] = useState<any>(normalizeReportData(stateReportData))
+  
+  // Debug logging
+  console.log('Report component state:', {
+    stateReportData: !!stateReportData,
+    reportData: !!reportData,
+    summary: !!reportData?.summary,
+    candidates: reportData?.candidates?.length,
+    needs_review: reportData?.needs_review?.length,
+    excluded: reportData?.excluded?.length,
+    jobId
+  })
+  
+  // Log the actual data structure
+  if (reportData) {
+    console.log('Full report data:', reportData)
+    console.log('Summary:', reportData.summary)
+    console.log('First candidate:', reportData.candidates?.[0])
+  }
 
-  // Fetch job status with polling
+  // Fetch job status with polling - only if we don't already have report data
   const { data: jobStatus, isLoading, error: jobError } = useJobStatus(jobId || '', {
-    enabled: !!jobId,
+    enabled: !!jobId && !stateReportData,
     refetchInterval: (data) => {
       // Stop polling when job is complete or failed
-      if (!data) return 2000
-      return data.status === 'completed' || data.status === 'failed' ? false : 2000
+      if (!data) return 5000 // Poll every 5 seconds initially
+      return data.status === 'completed' || data.status === 'failed' ? false : 5000 // Poll every 5 seconds
     },
   })
+
+  // Fetch report data when job is completed - only if we don't already have it from state
+  useEffect(() => {
+    async function fetchReportData() {
+      if (jobStatus?.status === 'completed' && jobId && !reportData) {
+        try {
+          const blob = await downloadReport(jobId, 'json')
+          const text = await blob.text()
+          const data = JSON.parse(text)
+          setReportData(normalizeReportData(data))
+          setReportError(null)
+        } catch (error) {
+          console.error('Failed to fetch report data:', error)
+          setReportError('Failed to load report data')
+        }
+      }
+    }
+    fetchReportData()
+  }, [jobStatus, jobId, reportData])
 
   // Download mutation
   const downloadMutation = useDownloadReportFile({
@@ -119,8 +99,11 @@ export default function Report() {
     },
   })
 
-  // Use mock data for now - will be replaced with actual report data from API
-  const { summary, candidates, needsReview, excluded } = mockReportData
+  // Use report data from API
+  const summary = reportData?.summary
+  const candidates = reportData?.candidates || []
+  const needsReview = reportData?.needs_review || []
+  const excluded = reportData?.excluded || []
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', {
@@ -144,9 +127,9 @@ export default function Report() {
     return { label: 'Low', color: 'bg-slate-700' }
   }
 
-  const totalTransactions = summary.confidenceDistribution.high + 
-                           summary.confidenceDistribution.medium + 
-                           summary.confidenceDistribution.low
+  const totalTransactions = (summary?.confidenceDistribution?.high ?? 0) + 
+                           (summary?.confidenceDistribution?.medium ?? 0) + 
+                           (summary?.confidenceDistribution?.low ?? 0)
 
   const handleDownload = async (format: 'pdf' | 'csv' | 'json') => {
     if (!jobId) return
@@ -157,7 +140,7 @@ export default function Report() {
       await downloadMutation.mutateAsync({
         jobId,
         format,
-        filename: `deduction_report_${mockReportData.incomeYear}.${format}`,
+        filename: `deduction_report_${reportData?.income_year || 'report'}.${format}`,
       })
     } catch (err) {
       // Error handled by onError callback
@@ -165,10 +148,13 @@ export default function Report() {
     }
   }
 
+  // Show loading while fetching job status or report data (skip if we have data from state)
+  const isLoadingReport = !stateReportData && (isLoading || (jobStatus?.status === 'completed' && !reportData && !reportError))
+
   return (
-    <div className="pt-16 container mx-auto px-6 py-12">
+    <div className="pt-24 container mx-auto px-6 py-12">
       {/* Loading State */}
-      {isLoading && (
+      {isLoadingReport && (
         <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
           <div className="text-center">
             <Icon name="Loader2" size={48} className="text-accent mx-auto mb-4 animate-spin" />
@@ -178,7 +164,7 @@ export default function Report() {
       )}
 
       {/* Error State */}
-      {jobError && (
+      {(jobError || reportError) && (
         <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
@@ -187,7 +173,7 @@ export default function Report() {
                 Failed to load report
               </h2>
               <p className="text-body text-slate-300 mb-6">
-                {jobError.message || 'An error occurred while loading the report.'}
+                {jobError?.message || reportError || 'An error occurred while loading the report.'}
               </p>
               <Button variant="primary" onClick={() => navigate('/upload')}>
                 Upload New File
@@ -197,8 +183,8 @@ export default function Report() {
         </div>
       )}
 
-      {/* Processing State */}
-      {jobStatus && (jobStatus.status === 'queued' || jobStatus.status === 'processing') && (
+      {/* Processing State - only show if we don't have report data from state */}
+      {!stateReportData && jobStatus && (jobStatus.status === 'queued' || jobStatus.status === 'processing') && (
         <div className="max-w-2xl mx-auto" role="status" aria-live="polite">
           <Card>
             <div className="text-center py-8">
@@ -235,8 +221,8 @@ export default function Report() {
         </div>
       )}
 
-      {/* Failed State */}
-      {jobStatus && jobStatus.status === 'failed' && (
+      {/* Failed State - only show if we don't have report data from state */}
+      {!stateReportData && jobStatus && jobStatus.status === 'failed' && (
         <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
@@ -255,8 +241,8 @@ export default function Report() {
         </div>
       )}
 
-      {/* Report Content - Only show when completed */}
-      {jobStatus && jobStatus.status === 'completed' && (
+      {/* Report Content - Show when we have report data (from state or fetched) */}
+      {reportData && summary && (
       <div>
       {/* Header */}
       <div className="mb-8">
@@ -266,7 +252,7 @@ export default function Report() {
               Deduction Report
             </h1>
             <p className="text-body text-slate-300">
-              Income Year: {mockReportData.incomeYear} (1 July 2023 - 30 June 2024)
+              Income Year: {reportData.income_year} (1 July {reportData.income_year.split('-')[0]} - 30 June {reportData.income_year.split('-')[1]})
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -279,7 +265,8 @@ export default function Report() {
           </div>
         </div>
 
-          {/* Export Buttons */}
+          {/* Export Buttons - Only show if files exist (not in ephemeral mode) */}
+          {!stateReportData && jobId && (
           <div className="flex items-center space-x-3">
             <Button
               variant="secondary"
@@ -333,6 +320,19 @@ export default function Report() {
               )}
             </Button>
           </div>
+          )}
+          
+          {/* Ephemeral Mode Notice */}
+          {stateReportData && (
+            <div className="mt-3 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <Icon name="Info" size={20} className="text-accent mt-0.5" />
+                <div className="text-small text-slate-300">
+                  Report generated in ephemeral mode - data is not stored and downloads are not available. You can view and analyze the report on this page.
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Download Error */}
           {downloadError && (
@@ -467,19 +467,19 @@ export default function Report() {
               Category Totals
             </h3>
             <div className="space-y-3">
-              {Object.entries(summary.categoryTotals)
-                .sort(([, a], [, b]) => b - a)
+              {summary.categoryTotals && Object.entries(summary.categoryTotals)
+                .sort(([, a], [, b]) => (b as number) - (a as number))
                 .map(([category, amount]) => (
                   <div key={category}>
                     <div className="flex justify-between text-small text-slate-300 mb-1">
                       <span>{category}</span>
-                      <span className="font-medium">{formatCurrency(amount)}</span>
+                      <span className="font-medium">{formatCurrency(amount as number)}</span>
                     </div>
                     <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-white"
                         style={{ 
-                          width: `${(amount / summary.totalDeductible) * 100}%` 
+                          width: `${((amount as number) / (summary.totalDeductible || 1)) * 100}%` 
                         }}
                       />
                     </div>
@@ -634,7 +634,7 @@ export default function Report() {
                         </td>
                         <td className="py-4">
                           <div className="flex flex-wrap gap-1">
-                            {transaction.evidence.map((ev, idx) => (
+                            {transaction.evidence && transaction.evidence.map((ev, idx) => (
                               <Chip key={idx} label={ev} variant="category" size="sm" />
                             ))}
                           </div>

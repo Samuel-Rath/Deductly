@@ -32,6 +32,7 @@ export interface UploadResponse {
   job_id: string;
   status: 'queued' | 'processing' | 'completed' | 'failed';
   message: string;
+  report_data?: any; // Report data included in ephemeral mode
 }
 
 export interface JobStatusResponse {

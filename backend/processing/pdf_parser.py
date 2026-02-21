@@ -2,15 +2,20 @@
 PDF Parser for extracting transaction data from bank statement PDFs.
 
 This module provides functionality to parse PDF bank statements and extract
-transaction data in a format compatible with the CSV parser output.
+transaction data directly into NormalisedTransaction objects, matching the
+CSV parser's output format.
 """
 
 import re
 import io
-from typing import List, Dict, Any, Optional
+import uuid
+from typing import List, Optional
 from datetime import datetime
 import PyPDF2
 import pdfplumber
+
+from backend.models.schemas import NormalisedTransaction, TransactionDirection
+from backend.processing.csv_parser import CSVParser
 
 
 class PDFParser:
@@ -19,21 +24,23 @@ class PDFParser:
     
     Supports major Australian banks: CommBank, NAB, Westpac, ANZ, ING.
     Uses a state machine approach for robust multi-line transaction parsing.
+    Returns NormalisedTransaction objects directly, just like CSVParser.
     """
     
     def __init__(self):
         """Initialize the PDF parser."""
         self.supported_banks = ['commbank', 'nab', 'westpac', 'anz', 'ing']
+        self.csv_parser = CSVParser()  # Reuse CSV parser logic for merchant extraction
     
-    def parse(self, pdf_file: io.BytesIO) -> List[Dict[str, Any]]:
+    def parse(self, pdf_file: io.BytesIO) -> List[NormalisedTransaction]:
         """
-        Parse a PDF bank statement and extract transactions.
+        Parse a PDF bank statement and extract transactions as NormalisedTransaction objects.
         
         Args:
             pdf_file: BytesIO object containing PDF data
             
         Returns:
-            List of transaction dictionaries with keys: date, description, amount
+            List of NormalisedTransaction objects (same as CSV parser output)
             
         Raises:
             ValueError: If PDF cannot be parsed or no transactions found
@@ -50,12 +57,15 @@ class PDFParser:
             if not transactions:
                 raise ValueError("No transactions found in PDF")
             
+            # Detect recurring patterns (same as CSV parser)
+            transactions = self.csv_parser.detect_recurring(transactions)
+            
             return transactions
             
         except Exception as e:
             raise ValueError(f"Failed to parse PDF: {str(e)}")
     
-    def _parse_with_pdfplumber(self, pdf_file: io.BytesIO) -> List[Dict[str, Any]]:
+    def _parse_with_pdfplumber(self, pdf_file: io.BytesIO) -> List[NormalisedTransaction]:
         """
         Parse PDF using pdfplumber with state machine for multi-line transactions.
         
@@ -63,7 +73,7 @@ class PDFParser:
             pdf_file: BytesIO object containing PDF data
             
         Returns:
-            List of transaction dictionaries
+            List of NormalisedTransaction objects
         """
         transactions = []
         
@@ -87,7 +97,7 @@ class PDFParser:
         
         return transactions
     
-    def _parse_with_pypdf2(self, pdf_file: io.BytesIO) -> List[Dict[str, Any]]:
+    def _parse_with_pypdf2(self, pdf_file: io.BytesIO) -> List[NormalisedTransaction]:
         """
         Parse PDF using PyPDF2 (fallback method).
         
@@ -95,7 +105,7 @@ class PDFParser:
             pdf_file: BytesIO object containing PDF data
             
         Returns:
-            List of transaction dictionaries
+            List of NormalisedTransaction objects
         """
         transactions = []
         
@@ -118,7 +128,7 @@ class PDFParser:
         
         return transactions
     
-    def _parse_with_state_machine(self, text: str) -> List[Dict[str, Any]]:
+    def _parse_with_state_machine(self, text: str) -> List[NormalisedTransaction]:
         """
         Parse transactions using a state machine approach.
         
@@ -131,7 +141,7 @@ class PDFParser:
             text: Full text extracted from PDF
             
         Returns:
-            List of transaction dictionaries
+            List of NormalisedTransaction objects
         """
         transactions = []
         lines = text.split('\n')
@@ -169,10 +179,10 @@ class PDFParser:
             if date_match:
                 # Save previous transaction if exists
                 if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
-                    # Extract amount from description
-                    self._extract_amount_from_description(current_transaction)
-                    if current_transaction.get('amount') and current_transaction['amount'] != 0:
-                        transactions.append(current_transaction)
+                    # Extract amount and create NormalisedTransaction
+                    norm_txn = self._create_normalised_transaction(current_transaction)
+                    if norm_txn:
+                        transactions.append(norm_txn)
                 
                 # Start new transaction
                 date_str = date_match.group(1).strip()
@@ -191,13 +201,66 @@ class PDFParser:
         
         # Don't forget the last transaction
         if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
-            self._extract_amount_from_description(current_transaction)
-            if current_transaction.get('amount') and current_transaction['amount'] != 0:
-                transactions.append(current_transaction)
+            norm_txn = self._create_normalised_transaction(current_transaction)
+            if norm_txn:
+                transactions.append(norm_txn)
         
         return transactions
     
-    def _extract_amount_from_description(self, transaction: Dict[str, Any]) -> None:
+    def _create_normalised_transaction(self, raw_txn: dict) -> Optional[NormalisedTransaction]:
+        """
+        Convert raw transaction dict to NormalisedTransaction object.
+        
+        Extracts amount from description, determines direction, and creates
+        a properly formatted NormalisedTransaction.
+        
+        Args:
+            raw_txn: Dict with 'date', 'description' fields
+            
+        Returns:
+            NormalisedTransaction object or None if invalid
+        """
+        # Extract amount from description
+        self._extract_amount_from_description(raw_txn)
+        
+        if not raw_txn.get('amount') or raw_txn['amount'] == 0:
+            return None
+        
+        # Parse date
+        try:
+            date_obj = self._parse_date(raw_txn['date'])
+        except ValueError:
+            return None
+        
+        # Determine direction and amounts
+        signed_amount = raw_txn['amount']
+        if signed_amount < 0:
+            direction = TransactionDirection.DEBIT
+            absolute_amount = abs(signed_amount)
+        else:
+            direction = TransactionDirection.CREDIT
+            absolute_amount = signed_amount
+        
+        # Extract merchant using CSV parser logic
+        description = raw_txn['description']
+        merchant = self.csv_parser.extract_merchant(description)
+        payment_rail = self.csv_parser.detect_payment_rail(description)
+        
+        # Create NormalisedTransaction
+        return NormalisedTransaction(
+            transaction_id=str(uuid.uuid4()),
+            date=date_obj,
+            description=description,
+            merchant=merchant,
+            direction=direction,
+            absolute_amount=absolute_amount,
+            signed_amount=signed_amount,
+            payment_rail=payment_rail,
+            recurring_flag=False,  # Will be detected later
+            raw_data={'source': 'pdf', 'original_description': description}
+        )
+    
+    def _extract_amount_from_description(self, transaction: dict) -> None:
         """
         Extract amount from the accumulated description and clean it up.
         
@@ -234,23 +297,17 @@ class PDFParser:
         if len(amounts) >= 2:
             # Second-to-last is likely the transaction amount
             transaction_amount = amounts[-2][0]
-            balance_amount = amounts[-1][0]
             
             # Remove amounts from description (keep only the particulars)
             # Remove from the position of the transaction amount onwards
             clean_desc = description[:amounts[-2][1]].strip()
             
             # Determine if debit or credit
-            # Check if "CR" appears after the balance (indicates credit balance)
-            balance_pos = amounts[-1][2]
-            text_after_balance = description[balance_pos:balance_pos+10].upper()
-            
-            # Infer transaction type:
-            # If description contains credit keywords, it's a credit
+            # Check if description contains credit keywords
             desc_upper = description.upper()
             is_credit = any(keyword in desc_upper for keyword in [
                 'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT', 
-                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED'
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT'
             ])
             
             if is_credit:
@@ -269,7 +326,7 @@ class PDFParser:
             desc_upper = description.upper()
             is_credit = any(keyword in desc_upper for keyword in [
                 'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT',
-                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED'
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT'
             ])
             
             if is_credit:
@@ -286,101 +343,33 @@ class PDFParser:
         if not transaction['description'] or len(transaction['description']) < 2:
             transaction['description'] = 'Transaction'
     
-    def _is_date(self, text: str) -> bool:
-        """Check if text looks like a date and is a valid date."""
-        date_patterns = [
-            (r'^\d{1,2}/\d{1,2}/\d{4}$', '%d/%m/%Y'),
-            (r'^\d{1,2}-\d{1,2}-\d{4}$', '%d-%m-%Y'),
-            (r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$', '%d %b %Y'),
-            (r'^\d{1,2}\s+[A-Za-z]{3}\s+\d{2}$', '%d %b %y'),  # NAB format: "23 Oct 25"
-        ]
-        
-        text = text.strip()
-        for pattern, date_format in date_patterns:
-            if re.match(pattern, text):
-                # Check if it's actually a valid date
-                try:
-                    datetime.strptime(text, date_format)
-                    return True
-                except ValueError:
-                    # Invalid date (e.g., 15/13/2024)
-                    return False
-        
-        return False
-    
-    def _is_amount(self, text: str) -> bool:
-        """Check if text looks like a monetary amount."""
-        # Match patterns like: 123.45, -123.45, $123.45, 1,234.56
-        pattern = r'^-?\$?\s*\d+[,\d]*\.?\d*$'
-        return bool(re.match(pattern, text.strip()))
-    
-    def _parse_amount(self, text: str) -> float:
+    def _parse_date(self, date_str: str):
         """
-        Parse amount string to float.
+        Parse date string to date object.
         
         Args:
-            text: Amount string (e.g., "$123.45", "-50.00", "1,234.56")
+            date_str: Date string in various formats
             
         Returns:
-            Float value of the amount
+            date object
+            
+        Raises:
+            ValueError: If date cannot be parsed
         """
-        # Remove currency symbols, spaces, and commas
-        cleaned = re.sub(r'[\$,\s]', '', text.strip())
+        date_formats = [
+            '%d/%m/%Y',
+            '%d-%m-%Y',
+            '%d %b %Y',
+            '%d %b %y',  # NAB format
+            '%d/%m/%y',
+            '%d-%m-%y',
+        ]
         
-        try:
-            return float(cleaned)
-        except ValueError:
-            return 0.0
-    
-    def convert_to_csv_format(self, transactions: List[Dict[str, Any]]) -> str:
-        """
-        Convert parsed transactions to CSV format string.
-
-        For transactions with separate debit/credit amounts, creates a CSV
-        with Debit and Credit columns. Otherwise uses a single Amount column.
-
-        Args:
-            transactions: List of transaction dictionaries
-
-        Returns:
-            CSV formatted string with header
-        """
-        if not transactions:
-            return "date,description,amount\n"
-
-        # Check if we have separate debit/credit transactions
-        # (indicated by negative and positive amounts)
-        has_mixed_signs = any(txn.get('amount', 0) < 0 for txn in transactions) and \
-                         any(txn.get('amount', 0) > 0 for txn in transactions)
-
-        if has_mixed_signs:
-            # Use separate Debit/Credit columns
-            csv_lines = ["Date,Particulars,Debits,Credits"]
-
-            for txn in transactions:
-                date = txn.get('date', '')
-                description = txn.get('description', '').replace(',', ' ')
-                amount = txn.get('amount', 0.0)
-
-                if amount < 0:
-                    # Debit transaction
-                    debit = abs(amount)
-                    credit = ''
-                else:
-                    # Credit transaction
-                    debit = ''
-                    credit = amount
-
-                csv_lines.append(f"{date},{description},{debit},{credit}")
-        else:
-            # Use single Amount column
-            csv_lines = ["date,description,amount"]
-
-            for txn in transactions:
-                date = txn.get('date', '')
-                description = txn.get('description', '').replace(',', ' ')
-                amount = txn.get('amount', 0.0)
-
-                csv_lines.append(f"{date},{description},{amount}")
-
-        return '\n'.join(csv_lines)
+        date_str = date_str.strip()
+        for fmt in date_formats:
+            try:
+                return datetime.strptime(date_str, fmt).date()
+            except ValueError:
+                continue
+        
+        raise ValueError(f"Could not parse date: {date_str}")

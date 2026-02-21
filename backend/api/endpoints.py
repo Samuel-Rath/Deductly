@@ -171,25 +171,19 @@ async def upload_csv(
         temp_file.write(file_content)
         temp_file.close()
         
-        # If PDF, convert to CSV first
+        # If PDF, parse directly to transactions
+        pdf_transactions = None
         if is_pdf:
             log_event('pdf_conversion_started', job_id=job_id, file_size=len(file_content))
             try:
                 pdf_parser = PDFParser()
                 with open(temp_file.name, 'rb') as pdf_file:
-                    transactions = pdf_parser.parse(io.BytesIO(pdf_file.read()))
-                    csv_content = pdf_parser.convert_to_csv_format(transactions)
-                
-                # Save as CSV for processing
-                os.unlink(temp_file.name)
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv", mode='w')
-                temp_file.write(csv_content)
-                temp_file.close()
+                    pdf_transactions = pdf_parser.parse(io.BytesIO(pdf_file.read()))
                 
                 log_event(
                     'pdf_conversion_completed',
                     job_id=job_id,
-                    transaction_count=len(transactions)
+                    transaction_count=len(pdf_transactions)
                 )
             except Exception as e:
                 os.unlink(temp_file.name)
@@ -212,7 +206,12 @@ async def upload_csv(
         if not income_year:
             log_event('income_year_auto_detection_started', job_id=job_id)
             try:
-                income_year = _detect_income_year_from_csv(temp_file.name)
+                if pdf_transactions:
+                    # Detect from parsed PDF transactions
+                    income_year = _detect_income_year_from_transactions(pdf_transactions)
+                else:
+                    # Detect from CSV file
+                    income_year = _detect_income_year_from_csv(temp_file.name)
                 log_event(
                     'income_year_auto_detected',
                     job_id=job_id,
@@ -238,13 +237,14 @@ async def upload_csv(
             storage_service=storage
         )
         
-        # Process CSV and generate reports
+        # Process and generate reports
         job_dir = REPORTS_DIR / job_id
         job_dir.mkdir(exist_ok=True)
         
-        with open(temp_file.name, 'rb') as csv_file:
+        if pdf_transactions:
+            # Process PDF transactions directly
             report_data, generated_files = pipeline.process_and_generate_reports(
-                csv_file=csv_file,
+                transactions=pdf_transactions,
                 income_year=income_year,
                 output_dir=job_dir,
                 job_id=job_id,
@@ -252,6 +252,18 @@ async def upload_csv(
                 generate_csv=True,
                 generate_json=True
             )
+        else:
+            # Process CSV file
+            with open(temp_file.name, 'rb') as csv_file:
+                report_data, generated_files = pipeline.process_and_generate_reports(
+                    csv_file=csv_file,
+                    income_year=income_year,
+                    output_dir=job_dir,
+                    job_id=job_id,
+                    generate_pdf=True,
+                    generate_csv=True,
+                    generate_json=True
+                )
         
         # Clean up temp file
         os.unlink(temp_file.name)
@@ -276,10 +288,39 @@ async def upload_csv(
         # Audit log
         log_audit('upload_complete', job_id=job_id, income_year=income_year)
         
+        # Convert report_data to dict for response
+        report_dict = {
+            "income_year": report_data.income_year,
+            "generated_at": report_data.generated_at.isoformat(),
+            "summary": {
+                "total_deductible": float(report_data.summary.total_deductible),
+                "total_needs_review": float(report_data.summary.total_needs_review),
+                "total_excluded": float(report_data.summary.total_excluded),
+                "category_totals": {k: float(v) for k, v in report_data.summary.category_totals.items()},
+                "confidence_distribution": {
+                    "high": report_data.summary.confidence_distribution.get("high", 0),
+                    "medium": report_data.summary.confidence_distribution.get("medium", 0),
+                    "low": report_data.summary.confidence_distribution.get("low", 0),
+                }
+            },
+            "candidates": [t.model_dump() for t in report_data.candidates],
+            "needs_review": [t.model_dump() for t in report_data.needs_review],
+            "excluded": [t.model_dump() for t in report_data.excluded],
+        }
+        
+        # In ephemeral mode, clean up generated files immediately after sending response
+        if ephemeral_mode:
+            import shutil
+            try:
+                shutil.rmtree(job_dir)
+            except Exception as cleanup_error:
+                log_event('cleanup_warning', job_id=job_id, error=str(cleanup_error))
+        
         return UploadResponse(
             job_id=job_id,
             status="completed",
-            message="CSV processed successfully. Reports are ready for download."
+            message="File processed successfully.",
+            report_data=report_dict
         )
         
     except HTTPException:
@@ -434,6 +475,47 @@ def _detect_income_year_from_csv(csv_path: str) -> str:
     # Find the range of dates
     min_date = min(dates)
     max_date = max(dates)
+    
+    # Determine income year based on the date range
+    # If transactions span multiple income years, use the one with most transactions
+    income_years = {}
+    
+    for d in dates:
+        # Australian income year: July 1 to June 30
+        if d.month >= 7:
+            year_key = f"{d.year}-{d.year + 1}"
+        else:
+            year_key = f"{d.year - 1}-{d.year}"
+        
+        income_years[year_key] = income_years.get(year_key, 0) + 1
+    
+    # Return the income year with the most transactions
+    detected_year = max(income_years.items(), key=lambda x: x[1])[0]
+    
+    return detected_year
+
+
+def _detect_income_year_from_transactions(transactions: list) -> str:
+    """
+    Detect Australian income year from a list of NormalisedTransaction objects.
+    
+    Args:
+        transactions: List of NormalisedTransaction objects
+        
+    Returns:
+        Income year string in format "YYYY-YYYY" (e.g., "2023-2024")
+        
+    Raises:
+        ValueError: If no valid dates found
+    """
+    if not transactions:
+        raise ValueError("No transactions provided")
+    
+    # Extract dates from transactions
+    dates = [txn.date for txn in transactions if txn.date]
+    
+    if not dates:
+        raise ValueError("No valid dates found in transactions")
     
     # Determine income year based on the date range
     # If transactions span multiple income years, use the one with most transactions

@@ -2,7 +2,7 @@ import { Card, AnimatedSection, Icon } from '../components'
 
 export default function Privacy() {
   return (
-    <div className="pt-16 container mx-auto px-6 py-12">
+    <div className="pt-24 container mx-auto px-6 py-12">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <AnimatedSection className="mb-8">

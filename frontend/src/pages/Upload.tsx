@@ -9,7 +9,13 @@ export default function Upload() {
   
   const uploadMutation = useUploadCSV({
     onSuccess: (data) => {
-      navigate(`/report/${data.job_id}`)
+      // If report data is included in response (ephemeral mode), navigate with state
+      if (data.report_data) {
+        navigate(`/report/${data.job_id}`, { state: { reportData: data.report_data } })
+      } else {
+        // Otherwise navigate normally and let Report component fetch data
+        navigate(`/report/${data.job_id}`)
+      }
     },
     onError: (error) => {
       setError(error.message || 'Upload failed. Please try again.')
@@ -117,7 +123,7 @@ export default function Upload() {
     }
 
   return (
-    <div className="pt-16 container mx-auto px-6 py-12">
+    <div className="pt-24 container mx-auto px-6 py-12">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-h1 font-semibold text-white mb-2">

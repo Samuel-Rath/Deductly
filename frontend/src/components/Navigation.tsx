@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Shield, BookOpen, Upload } from 'lucide-react'
 
 export default function Navigation() {
   const location = useLocation()
@@ -39,11 +38,10 @@ export default function Navigation() {
             
             <Link
               to="/upload"
-              className={`text-base font-medium transition-colors relative flex items-center gap-2 ${
+              className={`text-base font-medium transition-colors relative ${
                 isActive('/upload') ? 'text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Upload size={18} />
               Upload
               {isActive('/upload') && (
                 <motion.div
@@ -55,11 +53,10 @@ export default function Navigation() {
             
             <Link
               to="/rules"
-              className={`text-base font-medium transition-colors relative flex items-center gap-2 ${
+              className={`text-base font-medium transition-colors relative ${
                 isActive('/rules') ? 'text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <BookOpen size={18} />
               Rules
               {isActive('/rules') && (
                 <motion.div
@@ -71,11 +68,10 @@ export default function Navigation() {
             
             <Link
               to="/privacy"
-              className={`text-base font-medium transition-colors relative flex items-center gap-2 ${
+              className={`text-base font-medium transition-colors relative ${
                 isActive('/privacy') ? 'text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Shield size={18} />
               Privacy
               {isActive('/privacy') && (
                 <motion.div

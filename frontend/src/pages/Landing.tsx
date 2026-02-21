@@ -7,7 +7,7 @@ export default function Landing() {
   const navigate = useNavigate()
 
   return (
-    <div className="pt-16">
+    <div className="pt-24">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-ink-950 via-ink-900 to-ink-900">
         {/* Subtle Background Pattern */}

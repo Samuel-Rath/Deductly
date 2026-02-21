@@ -80,15 +80,16 @@ class ProcessingPipeline:
     
     def process(
         self,
-        csv_file: BinaryIO,
-        income_year: str,
+        csv_file: Optional[BinaryIO] = None,
+        transactions: Optional[list] = None,
+        income_year: str = None,
         job_id: Optional[str] = None
     ) -> ReportData:
         """
-        Process a CSV file through the complete pipeline.
+        Process transactions through the complete pipeline.
         
         This is the main entry point for processing. It:
-        1. Parses and normalises transactions
+        1. Parses and normalises transactions (from CSV or accepts pre-parsed)
         2. Records normalisation in audit trail
         3. Applies exclusion rules
         4. Records exclusion checks in audit trail
@@ -98,7 +99,8 @@ class ProcessingPipeline:
         8. Stores derived fields (if storage service provided)
         
         Args:
-            csv_file: Binary file object containing CSV data
+            csv_file: Binary file object containing CSV data (optional if transactions provided)
+            transactions: Pre-parsed list of NormalisedTransaction objects (optional if csv_file provided)
             income_year: Australian income year (e.g., "2023-2024")
             job_id: Optional job identifier for storage
         
@@ -107,17 +109,25 @@ class ProcessingPipeline:
         
         Raises:
             CSVParseError: If CSV parsing fails
+            ValueError: If neither csv_file nor transactions provided
             Exception: If processing fails at any step
         """
         try:
-            # Step 1: Parse and normalise CSV
-            transactions = self._parse_csv(csv_file)
+            # Step 1: Parse and normalise (from CSV or use provided transactions)
+            if transactions is not None:
+                # Use pre-parsed transactions (e.g., from PDF parser)
+                parsed_transactions = transactions
+            elif csv_file is not None:
+                # Parse CSV file
+                parsed_transactions = self._parse_csv(csv_file)
+            else:
+                raise ValueError("Either csv_file or transactions must be provided")
             
             # Step 2: Record normalisation in audit trail
-            self._record_normalisation(transactions)
+            self._record_normalisation(parsed_transactions)
             
             # Step 3: Apply exclusion rules
-            candidates, excluded = self._apply_exclusions(transactions)
+            candidates, excluded = self._apply_exclusions(parsed_transactions)
             
             # Step 4: Record exclusion checks in audit trail
             self._record_exclusions(transactions, excluded)
@@ -385,21 +395,23 @@ class ProcessingPipeline:
     
     def process_and_generate_reports(
         self,
-        csv_file: BinaryIO,
-        income_year: str,
-        output_dir: Path,
+        csv_file: Optional[BinaryIO] = None,
+        transactions: Optional[list] = None,
+        income_year: str = None,
+        output_dir: Path = None,
         job_id: Optional[str] = None,
         generate_pdf: bool = True,
         generate_csv: bool = True,
         generate_json: bool = True
     ) -> tuple:
         """
-        Complete end-to-end processing: parse CSV and generate all reports.
+        Complete end-to-end processing: parse transactions and generate all reports.
         
         This is a convenience method that combines process() and generate_reports().
         
         Args:
-            csv_file: Binary file object containing CSV data
+            csv_file: Binary file object containing CSV data (optional if transactions provided)
+            transactions: Pre-parsed list of NormalisedTransaction objects (optional if csv_file provided)
             income_year: Australian income year
             output_dir: Directory where reports should be written
             job_id: Optional job identifier for storage
@@ -410,9 +422,10 @@ class ProcessingPipeline:
         Returns:
             Tuple of (report_data, generated_files)
         """
-        # Process CSV through pipeline
+        # Process through pipeline
         report_data = self.process(
             csv_file=csv_file,
+            transactions=transactions,
             income_year=income_year,
             job_id=job_id
         )

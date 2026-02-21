@@ -239,6 +239,7 @@ class UploadResponse(BaseModel):
     job_id: str
     status: str  # "queued", "processing", "completed", "failed"
     message: str
+    report_data: Optional[dict] = None  # Include report data directly in ephemeral mode
 
 
 class JobStatusResponse(BaseModel):
