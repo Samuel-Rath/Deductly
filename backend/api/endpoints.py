@@ -288,6 +288,38 @@ async def upload_csv(
         # Audit log
         log_audit('upload_complete', job_id=job_id, income_year=income_year)
         
+        # Helper function to flatten classified transaction for frontend
+        def flatten_classified_transaction(ct):
+            """Flatten ClassifiedTransaction to match frontend expectations."""
+            txn = ct.transaction
+            return {
+                "id": txn.transaction_id,
+                "date": txn.date.isoformat(),
+                "description": txn.description,
+                "merchant": txn.merchant,
+                "amount": float(txn.absolute_amount),
+                "category": ct.category.value if ct.category else None,
+                "confidence": ct.confidence,
+                "reason": ct.reason,
+                "evidence": [e.value for e in ct.evidence_checklist],
+                "flags": ct.flags,
+                "matched_rule_id": ct.matched_rule_id,
+            }
+        
+        # Helper function to flatten excluded transaction for frontend
+        def flatten_excluded_transaction(et):
+            """Flatten ExcludedTransaction to match frontend expectations."""
+            txn = et.transaction
+            return {
+                "id": txn.transaction_id,
+                "date": txn.date.isoformat(),
+                "description": txn.description,
+                "merchant": txn.merchant,
+                "amount": float(txn.absolute_amount),
+                "reason": et.reason.value,
+                "explanation": et.explanation,
+            }
+        
         # Convert report_data to dict for response
         report_dict = {
             "income_year": report_data.income_year,
@@ -303,9 +335,9 @@ async def upload_csv(
                     "low": report_data.summary.confidence_distribution.get("low", 0),
                 }
             },
-            "candidates": [t.model_dump() for t in report_data.candidates],
-            "needs_review": [t.model_dump() for t in report_data.needs_review],
-            "excluded": [t.model_dump() for t in report_data.excluded],
+            "candidates": [flatten_classified_transaction(t) for t in report_data.candidates],
+            "needs_review": [flatten_classified_transaction(t) for t in report_data.needs_review],
+            "excluded": [flatten_excluded_transaction(t) for t in report_data.excluded],
         }
         
         # In ephemeral mode, clean up generated files immediately after sending response
