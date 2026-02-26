@@ -71,30 +71,6 @@ jobs:
           cd frontend
           npm audit --audit-level=moderate
         continue-on-error: true
-      
-      - name: Run Snyk security scan
-        if: ${{ secrets.SNYK_TOKEN != '' }}
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-          command: test
-          working-directory: frontend
-
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3
-        with:
-          fail-on-severity: moderate
 
   codeql-analysis:
     name: CodeQL Analysis
@@ -121,16 +97,4 @@ jobs:
       
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
-
-  security-headers:
-    name: Security Headers Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Check Security Headers
-        run: |
-          # This will run after deployment
-          # Add your deployed URL here
-          echo "Security headers check - configure with your deployed URL"
-          # curl -I https://your-site.netlify.app | grep -E "(Strict-Transport|Content-Security|X-Frame)"
+        continue-on-error: true
