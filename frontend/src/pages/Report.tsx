@@ -130,6 +130,12 @@ export default function Report() {
   const totalTransactions = (summary?.confidenceDistribution?.high ?? 0) + 
                            (summary?.confidenceDistribution?.medium ?? 0) + 
                            (summary?.confidenceDistribution?.low ?? 0)
+  
+  // Helper to safely calculate percentage for charts
+  const safePercentage = (value: number, total: number) => {
+    if (!total || total === 0) return 0
+    return Math.min(100, Math.max(0, (value / total) * 100))
+  }
 
   const handleDownload = async (format: 'pdf' | 'csv' | 'json') => {
     if (!jobId) return
@@ -423,7 +429,7 @@ export default function Report() {
                   <div
                     className="h-full bg-accent"
                     style={{ 
-                      width: `${(summary.confidenceDistribution.high / totalTransactions) * 100}%` 
+                      width: `${safePercentage(summary.confidenceDistribution.high, totalTransactions)}%` 
                     }}
                   />
                 </div>
@@ -438,7 +444,7 @@ export default function Report() {
                   <div
                     className="h-full bg-slate-500"
                     style={{ 
-                      width: `${(summary.confidenceDistribution.medium / totalTransactions) * 100}%` 
+                      width: `${safePercentage(summary.confidenceDistribution.medium, totalTransactions)}%` 
                     }}
                   />
                 </div>
@@ -453,7 +459,7 @@ export default function Report() {
                   <div
                     className="h-full bg-slate-700"
                     style={{ 
-                      width: `${(summary.confidenceDistribution.low / totalTransactions) * 100}%` 
+                      width: `${safePercentage(summary.confidenceDistribution.low, totalTransactions)}%` 
                     }}
                   />
                 </div>
@@ -479,7 +485,7 @@ export default function Report() {
                       <div
                         className="h-full bg-white"
                         style={{ 
-                          width: `${((amount as number) / (summary.totalDeductible || 1)) * 100}%` 
+                          width: `${safePercentage(amount as number, summary.totalDeductible)}%` 
                         }}
                       />
                     </div>
