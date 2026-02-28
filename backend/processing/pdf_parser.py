@@ -146,6 +146,12 @@ class PDFParser:
         transactions = []
         lines = text.split('\n')
         
+        # Debug: Print first 20 lines to see structure
+        print("=== PDF PARSER DEBUG: First 20 lines ===")
+        for i, line in enumerate(lines[:20]):
+            print(f"{i}: {line}")
+        print("=== END DEBUG ===")
+        
         # State machine variables
         current_transaction = None
         in_transaction_section = False
@@ -163,6 +169,7 @@ class PDFParser:
             # Detect start of transaction section
             if 'TRANSACTION' in line_stripped.upper() and 'DETAILS' in line_stripped.upper():
                 in_transaction_section = True
+                print(f"Found transaction section: {line_stripped}")
                 continue
             
             # Skip header lines
@@ -180,9 +187,13 @@ class PDFParser:
                 # Save previous transaction if exists
                 if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
                     # Extract amount and create NormalisedTransaction
+                    print(f"Processing transaction: {current_transaction}")
                     norm_txn = self._create_normalised_transaction(current_transaction)
                     if norm_txn:
+                        print(f"Created transaction: {norm_txn.description} - ${norm_txn.absolute_amount}")
                         transactions.append(norm_txn)
+                    else:
+                        print(f"Failed to create transaction from: {current_transaction}")
                 
                 # Start new transaction
                 date_str = date_match.group(1).strip()
@@ -194,6 +205,7 @@ class PDFParser:
                     'description': rest_of_line,
                     'amount': None
                 }
+                print(f"Started new transaction: date={date_str}, desc_start={rest_of_line[:50]}")
             
             elif current_transaction is not None:
                 # Continue building current transaction (multi-line description)
@@ -201,10 +213,13 @@ class PDFParser:
         
         # Don't forget the last transaction
         if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
+            print(f"Processing final transaction: {current_transaction}")
             norm_txn = self._create_normalised_transaction(current_transaction)
             if norm_txn:
+                print(f"Created final transaction: {norm_txn.description} - ${norm_txn.absolute_amount}")
                 transactions.append(norm_txn)
         
+        print(f"=== TOTAL TRANSACTIONS PARSED: {len(transactions)} ===")
         return transactions
     
     def _create_normalised_transaction(self, raw_txn: dict) -> Optional[NormalisedTransaction]:
@@ -272,8 +287,10 @@ class PDFParser:
             transaction: Transaction dictionary with 'description' field
         """
         description = transaction['description']
+        print(f"Extracting amount from: {description[:100]}")
         
         # Pattern to match amounts: $13.90 or 13.90 or $1,234.56
+        # Also match amounts with spaces: $ 13.90
         amount_pattern = r'\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
         
         # Find all amounts in the description
@@ -281,13 +298,20 @@ class PDFParser:
         for match in re.finditer(amount_pattern, description):
             amount_str = match.group(1).replace(',', '')
             try:
-                amounts.append((float(amount_str), match.start(), match.end()))
+                amount_val = float(amount_str)
+                # Skip very small amounts (likely not transaction amounts)
+                if amount_val >= 0.01:
+                    amounts.append((amount_val, match.start(), match.end()))
+                    print(f"  Found amount: ${amount_val} at position {match.start()}")
             except ValueError:
                 continue
         
         if not amounts:
+            print(f"  No amounts found!")
             transaction['amount'] = 0
             return
+        
+        print(f"  Total amounts found: {len(amounts)}")
         
         # Heuristic: 
         # - If there are 2+ amounts, the last one is usually the balance
@@ -297,6 +321,7 @@ class PDFParser:
         if len(amounts) >= 2:
             # Second-to-last is likely the transaction amount
             transaction_amount = amounts[-2][0]
+            print(f"  Using second-to-last amount as transaction: ${transaction_amount}")
             
             # Remove amounts from description (keep only the particulars)
             # Remove from the position of the transaction amount onwards
@@ -307,8 +332,10 @@ class PDFParser:
             desc_upper = description.upper()
             is_credit = any(keyword in desc_upper for keyword in [
                 'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT', 
-                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT'
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT', 'INTEREST'
             ])
+            
+            print(f"  Is credit: {is_credit}")
             
             if is_credit:
                 transaction['amount'] = transaction_amount
@@ -320,14 +347,17 @@ class PDFParser:
         elif len(amounts) == 1:
             # Only one amount - assume it's the transaction amount
             transaction_amount = amounts[0][0]
+            print(f"  Using single amount as transaction: ${transaction_amount}")
             clean_desc = description[:amounts[0][1]].strip()
             
             # Check if it's a credit based on keywords
             desc_upper = description.upper()
             is_credit = any(keyword in desc_upper for keyword in [
                 'JOBSEEKER', 'WAGES', 'SALARY', 'PAYOUT', 'DEPOSIT',
-                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT'
+                'TRANSFER IN', 'REFUND', 'PAYMENT RECEIVED', 'CREDIT', 'INTEREST'
             ])
+            
+            print(f"  Is credit: {is_credit}")
             
             if is_credit:
                 transaction['amount'] = transaction_amount
@@ -342,6 +372,8 @@ class PDFParser:
         # If description is empty or too short, use a placeholder
         if not transaction['description'] or len(transaction['description']) < 2:
             transaction['description'] = 'Transaction'
+        
+        print(f"  Final: amount=${transaction['amount']}, desc={transaction['description'][:50]}")
     
     def _parse_date(self, date_str: str):
         """

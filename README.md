@@ -390,3 +390,11 @@ This application provides analysis tools only and does not constitute tax advice
 - Ephemeral mode
 - Automatic redaction
 - Australian tax compliance features
+
+## 👤 Author
+
+**Samuel Rath**
+
+---
+
+*Built with privacy and security as core principles*
