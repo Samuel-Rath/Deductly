@@ -15,6 +15,10 @@ import re
 from typing import Dict, List, Optional
 
 from backend.rag.knowledge_base import ATOKnowledgeBase
+from backend.processing.redaction_service import RedactionService
+
+# Module-level redaction service — applied before any data leaves the process
+_redaction = RedactionService()
 
 
 # System prompt given to Claude for every classification request
@@ -145,14 +149,19 @@ class RAGEngine:
         Returns:
             RAGResult with confidence, reason, ATO citation, etc.
         """
-        query = f"{description} {merchant}"
+        # Redact PII (BSB codes, account numbers, card numbers) before any
+        # external API call or logging — preserves merchant/keyword signals
+        safe_description = _redaction.redact_text(description)
+        safe_merchant = _redaction.redact_text(merchant)
+
+        query = f"{safe_description} {safe_merchant}"
 
         # Step 1 — keyword confidence (0–30)
-        keyword_score_float = self.kb.keyword_confidence(description, merchant)
+        keyword_score_float = self.kb.keyword_confidence(safe_description, safe_merchant)
         keyword_score_int = int(keyword_score_float * 100)  # 0–30
 
         if not self.available:
-            return self._fallback_result(description, merchant, keyword_score_int)
+            return self._fallback_result(safe_description, safe_merchant, keyword_score_int)
 
         # Step 2 — retrieve relevant ATO chunks
         chunks = self.kb.retrieve(query, k=self.retrieve_k)
@@ -162,10 +171,10 @@ class RAGEngine:
 
         # Step 4 — call Claude
         try:
-            raw = self._call_claude(description, merchant, amount, chunks)
+            raw = self._call_claude(safe_description, safe_merchant, amount, chunks)
             parsed = self._parse_response(raw)
         except Exception as e:
-            return self._fallback_result(description, merchant, keyword_score_int, error=str(e))
+            return self._fallback_result(safe_description, safe_merchant, keyword_score_int, error=str(e))
 
         # Step 5 — composite confidence
         claude_score = int((parsed.get("confidence", 0) / 100) * 30)  # 0–30

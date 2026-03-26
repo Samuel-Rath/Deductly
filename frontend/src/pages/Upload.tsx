@@ -26,7 +26,6 @@ export default function Upload() {
   
   const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [ephemeralMode, setEphemeralMode] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -109,7 +108,7 @@ export default function Upload() {
         // Upload file using API (income year will be auto-detected from transaction dates)
         await uploadMutation.mutateAsync({
           file,
-          ephemeralMode,
+          ephemeralMode: true,
         })
 
         clearInterval(progressInterval)
@@ -157,12 +156,12 @@ export default function Upload() {
                   }}
                   className={`
                     border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
-                    transition-all
-                    ${isDragging 
-                      ? 'border-accent bg-accent/5 scale-[1.02]' 
+                    transition-all duration-200
+                    ${isDragging
+                      ? 'border-violet-500 bg-violet-500/5 scale-[1.02] shadow-glow-violet'
                       : file
                       ? 'border-accent/50 bg-accent/5'
-                      : 'border-line-700 hover:border-accent/50 hover:bg-ink-800'
+                      : 'border-line-700 hover:border-line-600 hover:bg-ink-700/40'
                     }
                   `}
                 >
@@ -206,26 +205,12 @@ export default function Upload() {
                 )}
               </div>
 
-              {/* Privacy Toggle */}
-              <div className="flex items-start gap-3 p-4 bg-accent/5 border border-accent/20 rounded-xl">
-                <input
-                  type="checkbox"
-                  id="ephemeral-mode"
-                  checked={ephemeralMode}
-                  onChange={(e) => setEphemeralMode(e.target.checked)}
-                  className="mt-0.5 w-5 h-5 rounded border-accent/30 bg-ink-800 text-accent focus:ring-2 focus:ring-accent focus:ring-offset-0 cursor-pointer"
-                  style={{
-                    accentColor: '#06b6d4'
-                  }}
-                />
-                <div className="flex-1">
-                  <label htmlFor="ephemeral-mode" className="block text-base font-medium text-white cursor-pointer mb-1">
-                    Ephemeral mode <span className="text-accent text-sm">(recommended)</span>
-                  </label>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Your data is processed in memory and deleted immediately after generating your report. No transaction data is stored.
-                  </p>
-                </div>
+              {/* Privacy Notice */}
+              <div className="flex items-start gap-3 p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl">
+                <Icon name="ShieldCheck" size={20} className="text-violet-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Your data is processed in memory and deleted immediately after your report is generated. Nothing is stored.
+                </p>
               </div>
 
               {/* Upload Progress */}
@@ -244,7 +229,7 @@ export default function Upload() {
                     aria-label={`Upload progress: ${uploadProgress}%`}
                   >
                     <div
-                      className="h-full bg-accent transition-all duration-300 rounded-full"
+                      className="h-full bg-gradient-brand transition-all duration-300 rounded-full"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>

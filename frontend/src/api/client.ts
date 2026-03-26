@@ -16,6 +16,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
+const UPLOAD_TIMEOUT_MS = 120000; // 2 min — PDF processing can be slow
 
 // ============================================================================
 // Types
@@ -182,9 +183,8 @@ export async function uploadCSV(request: UploadRequest): Promise<UploadResponse>
     
     const response = await withRetry(() =>
       apiClient.post<UploadResponse>('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: UPLOAD_TIMEOUT_MS,
       })
     );
     

@@ -8,7 +8,7 @@ export interface ChipProps {
   variant?: ChipVariant;
   size?: ChipSize;
   selected?: boolean;
-  confidence?: number; // 0-1 for confidence variant
+  confidence?: number;
   className?: string;
   onClick?: () => void;
 }
@@ -20,28 +20,28 @@ export const Chip: React.FC<ChipProps> = ({
   selected = false,
   confidence,
   className = '',
-  onClick
+  onClick,
 }) => {
-  const baseStyles = 'inline-flex items-center gap-2 rounded-pill transition-all duration-200';
-  
+  const baseStyles = 'inline-flex items-center gap-1.5 rounded-full font-medium transition-all duration-200';
+
   const sizeStyles = {
-    sm: 'px-2 py-1 text-micro',
-    md: 'px-3 py-1.5 text-small',
-    small: 'px-2 py-1 text-micro', // Alias for sm
+    sm:    'px-2.5 py-0.5 text-micro',
+    md:    'px-3 py-1 text-small',
+    small: 'px-2.5 py-0.5 text-micro',
   };
-  
+
   const variantStyles = {
-    category: selected 
-      ? 'bg-accent-secondary text-ink-950 border border-accent-secondary'
-      : 'bg-transparent text-slate-300 border border-line-700 hover:border-slate-500',
-    confidence: 'bg-transparent text-slate-300 border border-line-700',
-    flag: 'bg-ink-800 text-slate-300 border border-line-700',
-    neutral: 'bg-ink-800 text-slate-300 border border-line-700',
-    accent: 'bg-accent bg-opacity-10 text-accent border border-accent',
+    category: selected
+      ? 'bg-accent/20 text-accent-light border border-accent/50'
+      : 'bg-ink-700/60 text-slate-300 border border-line-700 hover:border-line-600',
+    confidence: 'bg-ink-700/60 text-slate-300 border border-line-700',
+    flag:    'bg-ink-700/60 text-slate-400 border border-line-700',
+    neutral: 'bg-ink-700/60 text-slate-300 border border-line-700',
+    accent:  'bg-accent/10 text-accent-light border border-accent/30',
   };
-  
-  const interactiveStyles = onClick ? 'cursor-pointer hover:bg-ink-800' : '';
-  
+
+  const interactiveStyles = onClick ? 'cursor-pointer hover:bg-ink-700' : '';
+
   return (
     <span
       className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${interactiveStyles} ${className}`}
@@ -58,9 +58,9 @@ export const Chip: React.FC<ChipProps> = ({
       <span>{label}</span>
       {variant === 'confidence' && confidence !== undefined && (
         <span className="flex items-center gap-1">
-          <span className="w-12 h-1.5 bg-ink-800 rounded-full overflow-hidden">
-            <span 
-              className="block h-full bg-accent-secondary transition-all duration-300"
+          <span className="w-10 h-1.5 bg-ink-700 rounded-full overflow-hidden">
+            <span
+              className="block h-full bg-gradient-to-r from-violet-500 to-accent transition-all duration-300"
               style={{ width: `${confidence * 100}%` }}
             />
           </span>

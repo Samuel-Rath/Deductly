@@ -87,8 +87,9 @@ def setup_logging():
     console_handler.setFormatter(SecureJSONFormatter())
     logger.addHandler(console_handler)
     
-    # File handler for errors (if not ephemeral)
+    # File handler for errors (persistent mode only)
     if not SecurityConfig.EPHEMERAL_MODE_DEFAULT:
+        os.makedirs('logs', exist_ok=True)
         error_handler = logging.FileHandler('logs/errors.log')
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(SecureJSONFormatter())
@@ -153,8 +154,8 @@ def log_security_event(event_type: str, severity: str, **kwargs):
 
 def log_audit(action: str, job_id: str, **kwargs):
     """
-    Log an audit trail event
-    
+    Log an audit trail event.
+
     Args:
         action: Action performed (upload, download, delete, etc.)
         job_id: Job identifier
@@ -170,24 +171,3 @@ def log_audit(action: str, job_id: str, **kwargs):
             **kwargs
         }
     )
-
-
-# Example usage:
-"""
-from backend.logging_config import log_event, log_error, log_security_event, log_audit
-
-# Log normal events
-log_event('upload_started', job_id=job_id, file_size=file_size, income_year=income_year)
-
-# Log errors
-try:
-    process_file()
-except Exception as e:
-    log_error('processing_error', e, job_id=job_id)
-
-# Log security events
-log_security_event('rate_limit_exceeded', 'medium', ip_address=client_ip, endpoint='/api/upload')
-
-# Log audit trail
-log_audit('report_downloaded', job_id=job_id, format='pdf', ip_address=client_ip)
-"""

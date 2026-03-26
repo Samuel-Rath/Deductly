@@ -8,10 +8,12 @@ Validates: Requirements 11.1-11.5
 """
 
 import os
-import uuid
+import re
+import io
+import shutil
 import time
 import tempfile
-import io
+import uuid
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -22,8 +24,9 @@ from fastapi.responses import FileResponse
 from backend.models.schemas import (
     UploadResponse,
     JobStatusResponse,
-    ErrorResponse
+    ErrorResponse,
 )
+from backend.security_config import SecurityConfig
 from backend.storage.storage_service import StorageService
 from backend.storage.database import Database
 from backend.processing.pipeline import ProcessingPipeline
@@ -31,9 +34,6 @@ from backend.processing.pdf_parser import PDFParser
 from backend.logging_config import log_event, log_error, log_security_event, log_audit
 from backend.monitoring import metrics_collector
 
-# Configuration
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-ALLOWED_CONTENT_TYPES = ["text/csv", "application/vnd.ms-excel", "application/pdf"]
 REPORTS_DIR = Path("backend/reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
@@ -70,27 +70,27 @@ async def upload_csv(
     Raises:
         HTTPException: 400 if file validation fails
     """
-    # Validate file type
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    # Validate file type (single source of truth: SecurityConfig)
+    if file.content_type not in SecurityConfig.ALLOWED_FILE_TYPES:
         log_security_event(
             'invalid_file_type',
             'low',
             content_type=file.content_type,
-            upload_filename=file.filename
+            upload_filename=file.filename,
         )
         metrics_collector.record_security_event('invalid_file')
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "invalid_file_type",
-                "message": f"Only CSV and PDF files are allowed. Received: {file.content_type}",
-                "details": {"allowed_types": ALLOWED_CONTENT_TYPES}
-            }
+                "message": "Only CSV and PDF files are allowed.",
+                "details": {"allowed_types": SecurityConfig.ALLOWED_FILE_TYPES},
+            },
         )
-    
+
     # Validate file size
     file_content = await file.read()
-    if len(file_content) > MAX_FILE_SIZE:
+    if len(file_content) > SecurityConfig.MAX_UPLOAD_SIZE_BYTES:
         log_security_event(
             'file_too_large',
             'medium',
@@ -103,9 +103,12 @@ async def upload_csv(
             status_code=400,
             detail={
                 "error": "file_too_large",
-                "message": f"File size exceeds maximum of {MAX_FILE_SIZE / (1024*1024)}MB",
-                "details": {"max_size_bytes": MAX_FILE_SIZE, "file_size_bytes": len(file_content)}
-            }
+                "message": f"File size exceeds maximum of {SecurityConfig.MAX_UPLOAD_SIZE_MB}MB",
+                "details": {
+                    "max_size_bytes": SecurityConfig.MAX_UPLOAD_SIZE_BYTES,
+                    "file_size_bytes": len(file_content),
+                },
+            },
         )
     
     # Validate income year format (if provided)
@@ -305,8 +308,7 @@ async def upload_csv(
             # Extract ATO citation from RAG reason if present
             ato_citation = None
             if is_rag and ct.reason:
-                import re as _re
-                m = _re.search(r"\| ATO: ([^|]+)", ct.reason)
+                m = re.search(r"\| ATO: ([^|]+)", ct.reason)
                 if m:
                     ato_citation = m.group(1).strip()
             return {
@@ -369,7 +371,6 @@ async def upload_csv(
         
         # In ephemeral mode, clean up generated files immediately after sending response
         if ephemeral_mode:
-            import shutil
             try:
                 shutil.rmtree(job_dir)
             except Exception as cleanup_error:

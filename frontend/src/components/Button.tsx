@@ -17,20 +17,43 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-ink-950 disabled:opacity-50 disabled:cursor-not-allowed';
-  
+  const baseStyles = [
+    'relative inline-flex items-center justify-center',
+    'font-medium transition-all duration-200',
+    'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-ink-950',
+    'disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none',
+  ].join(' ');
+
   const variantStyles = {
-    primary: 'bg-white text-ink-950 hover:bg-slate-300 active:bg-slate-500 shadow-soft hover:shadow-soft-lg',
-    secondary: 'bg-transparent text-white border border-line-700 hover:border-slate-500 hover:bg-ink-800 active:bg-ink-900',
-    tertiary: 'bg-transparent text-white hover:text-slate-300 active:text-slate-500'
+    // Gradient fill button
+    primary: [
+      'text-white',
+      'bg-gradient-to-r from-violet-600 via-accent to-blue-500',
+      'bg-[length:200%_auto] hover:bg-right-center',
+      'shadow-soft hover:shadow-glow',
+      'hover:scale-[1.02] active:scale-[0.99]',
+    ].join(' '),
+
+    // Glass outlined button
+    secondary: [
+      'text-white glass border border-line-700',
+      'hover:border-accent/40 hover:bg-white/[0.04]',
+      'active:bg-white/[0.02] active:scale-[0.99]',
+    ].join(' '),
+
+    // Ghost text button
+    tertiary: [
+      'text-slate-400 hover:text-white',
+      'active:text-slate-300',
+    ].join(' '),
   };
-  
+
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-small rounded-lg',
-    md: 'px-4 py-2 text-body rounded-lg',
-    lg: 'px-6 py-3 text-h3 rounded-xl'
+    sm: 'px-3 py-1.5 text-small rounded-lg gap-1.5',
+    md: 'px-5 py-2.5 text-body rounded-xl gap-2',
+    lg: 'px-7 py-3.5 text-h3 rounded-xl gap-2',
   };
-  
+
   return (
     <button
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}

@@ -4,6 +4,95 @@
 
 @layer base {
   body {
-    @apply bg-ink-950 text-white font-sans;
+    @apply bg-ink-950 text-white font-sans antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #060d28;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1b2d5a;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a4278;
+  }
+}
+
+@layer utilities {
+  /* Gradient text — violet → indigo → blue */
+  .text-gradient {
+    background: linear-gradient(135deg, #a78bfa 0%, #818cf8 45%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Bright gradient text for hero headings */
+  .text-gradient-bright {
+    background: linear-gradient(135deg, #c4b5fd 0%, #a5b4fc 50%, #93c5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gradient background — primary brand gradient */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #3b82f6 100%);
+  }
+
+  /* Hero mesh — layered radial glows on deep navy */
+  .bg-hero-mesh {
+    background:
+      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(124,58,237,0.5), transparent),
+      radial-gradient(ellipse 55% 40% at -5%  70%, rgba(99,102,241,0.35), transparent),
+      radial-gradient(ellipse 55% 40% at 105% 70%, rgba(59,130,246,0.3), transparent),
+      #03071e;
+  }
+
+  /* Glass card surface */
+  .glass {
+    background: rgba(12, 24, 64, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Gradient border via pseudo-element mask */
+  .border-gradient {
+    position: relative;
+    background-clip: padding-box;
+    border: 1px solid transparent;
+    background-image: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(59,130,246,0.08) 100%);
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(99,102,241,0.3), rgba(59,130,246,0.2));
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Animated gradient shimmer for buttons */
+  .btn-shimmer {
+    background-size: 200% auto;
+    transition: background-position 0.4s ease;
+  }
+  .btn-shimmer:hover {
+    background-position: right center;
   }
 }

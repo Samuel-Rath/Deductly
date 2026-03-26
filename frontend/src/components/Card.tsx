@@ -5,31 +5,34 @@ export interface CardProps {
   className?: string;
   elevated?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  glow?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   className = '',
   elevated = false,
-  padding = 'md'
+  padding = 'md',
+  glow = false,
 }) => {
   const paddingStyles = {
     none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8'
+    sm:   'p-4',
+    md:   'p-6',
+    lg:   'p-8',
   };
-  
+
   return (
     <div
-      className={`
-        bg-ink-900 
-        border border-line-700 
-        rounded-xl
-        ${elevated ? 'shadow-soft-lg' : 'shadow-soft'}
-        ${paddingStyles[padding]}
-        ${className}
-      `}
+      className={[
+        'glass rounded-xl border transition-all duration-200',
+        glow
+          ? 'border-accent/30 shadow-glow'
+          : 'border-line-700 hover:border-line-600',
+        elevated ? 'shadow-soft-lg' : 'shadow-card',
+        paddingStyles[padding],
+        className,
+      ].join(' ')}
     >
       {children}
     </div>

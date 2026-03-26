@@ -25,9 +25,16 @@ class SecurityConfig:
     # File Upload Security
     MAX_UPLOAD_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
     MAX_UPLOAD_SIZE_BYTES: int = MAX_UPLOAD_SIZE_MB * 1024 * 1024
-    
-    ALLOWED_FILE_TYPES: List[str] = ["text/csv", "application/csv", "text/plain"]
-    ALLOWED_FILE_EXTENSIONS: List[str] = [".csv"]
+
+    # Single source of truth for allowed upload types (CSV + PDF)
+    ALLOWED_FILE_TYPES: List[str] = [
+        "text/csv",
+        "application/csv",
+        "text/plain",
+        "application/vnd.ms-excel",   # Some browsers send this for .csv
+        "application/pdf",
+    ]
+    ALLOWED_FILE_EXTENSIONS: List[str] = [".csv", ".pdf"]
     
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"

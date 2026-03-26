@@ -1,6 +1,6 @@
 """
 Monitoring and Metrics Collection
-Implements application metrics and health checks
+Implements application metrics and health checks.
 """
 
 import time
@@ -10,6 +10,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from backend.security_config import SecurityConfig
+
+# Cap on stored response time samples — prevents unbounded memory growth
+_MAX_RESPONSE_TIMES = 1000
 
 
 @dataclass
@@ -50,11 +53,16 @@ class MetricsCollector:
         self.error_counts: Dict[str, int] = defaultdict(int)
     
     def record_request(self, endpoint: str, duration: float, status_code: int):
-        """Record a request"""
+        """Record a request."""
         self.metrics.total_requests += 1
+
+        # Keep only the most recent samples to bound memory usage
         self.metrics.response_times.append(duration)
+        if len(self.metrics.response_times) > _MAX_RESPONSE_TIMES:
+            self.metrics.response_times = self.metrics.response_times[-_MAX_RESPONSE_TIMES:]
+
         self.request_times[endpoint].append(duration)
-        
+
         if status_code >= 400:
             self.metrics.failed_requests += 1
             self.error_counts[f"{endpoint}_{status_code}"] += 1
@@ -205,29 +213,7 @@ class RequestTimer:
         if exc_type is not None:
             self.status_code = 500
         metrics_collector.record_request(self.endpoint, duration, self.status_code)
-    
+
     def set_status(self, status_code: int):
-        """Set response status code"""
+        """Set response status code."""
         self.status_code = status_code
-
-
-# Example usage:
-"""
-from backend.monitoring import metrics_collector, RequestTimer, get_health
-
-# Time a request
-with RequestTimer('/api/upload') as timer:
-    # Process request
-    result = process_upload()
-    timer.set_status(200)
-
-# Record metrics
-metrics_collector.record_upload(success=True, file_size=1024000)
-metrics_collector.record_job(success=True, processing_time=5.2)
-metrics_collector.record_security_event('rate_limit')
-
-# Get health status
-health = get_health()
-if health['status'] != 'healthy':
-    send_alert(health)
-"""

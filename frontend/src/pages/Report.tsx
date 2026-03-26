@@ -42,24 +42,6 @@ export default function Report() {
   
   const [reportData, setReportData] = useState<any>(normalizeReportData(stateReportData))
   
-  // Debug logging
-  console.log('Report component state:', {
-    stateReportData: !!stateReportData,
-    reportData: !!reportData,
-    summary: !!reportData?.summary,
-    candidates: reportData?.candidates?.length,
-    needs_review: reportData?.needs_review?.length,
-    excluded: reportData?.excluded?.length,
-    jobId
-  })
-  
-  // Log the actual data structure
-  if (reportData) {
-    console.log('Full report data:', reportData)
-    console.log('Summary:', reportData.summary)
-    console.log('First candidate:', reportData.candidates?.[0])
-  }
-
   // Fetch job status with polling - only if we don't already have report data
   const { data: jobStatus, isLoading, error: jobError } = useJobStatus(jobId || '', {
     enabled: !!jobId && !stateReportData,
@@ -122,9 +104,9 @@ export default function Report() {
   }
 
   const getConfidenceLabel = (confidence: number) => {
-    if (confidence >= 0.80) return { label: 'High', color: 'bg-accent' }
-    if (confidence >= 0.60) return { label: 'Medium', color: 'bg-slate-500' }
-    return { label: 'Low', color: 'bg-slate-700' }
+    if (confidence >= 0.80) return { label: 'High',   color: 'bg-gradient-brand' }
+    if (confidence >= 0.60) return { label: 'Medium', color: 'bg-accent/70' }
+    return { label: 'Low', color: 'bg-slate-600' }
   }
 
   const totalTransactions = (summary?.confidenceDistribution?.high ?? 0) + 
@@ -216,7 +198,7 @@ export default function Report() {
                     aria-label={`Processing progress: ${jobStatus.progress}%`}
                   >
                     <div
-                      className="h-full bg-accent transition-all duration-300"
+                      className="h-full bg-gradient-brand transition-all duration-300"
                       style={{ width: `${jobStatus.progress}%` }}
                     />
                   </div>
@@ -791,199 +773,211 @@ export default function Report() {
           onClose={() => setSelectedTransaction(null)}
           title="Transaction Details"
         >
-          {selectedTransaction && (() => {
-            const transaction = [...candidates, ...needsReview].find(t => t.id === selectedTransaction)
-            if (!transaction) return null
-
-            const confidenceInfo = getConfidenceLabel(transaction.confidence)
-            const [showMoreDetail, setShowMoreDetail] = useState(false)
-
-            return (
-              <div className="space-y-6">
-                {/* Transaction Summary */}
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-micro font-medium text-slate-500 mb-1">
-                      MERCHANT
-                    </div>
-                    <div className="text-h3 font-semibold text-white">
-                      {transaction.merchant}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-micro font-medium text-slate-500 mb-1">
-                      DESCRIPTION
-                    </div>
-                    <div className="text-small text-slate-300">
-                      {transaction.description}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-micro font-medium text-slate-500 mb-1">
-                        DATE
-                      </div>
-                      <div className="text-small text-white">
-                        {formatDate(transaction.date)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-micro font-medium text-slate-500 mb-1">
-                        AMOUNT
-                      </div>
-                      <div className="text-small text-white">
-                        {formatCurrency(transaction.amount)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Category and Confidence */}
-                <div className="border-t border-line-700 pt-6 space-y-4">
-                  {transaction.category && (
-                    <div>
-                      <div className="text-micro font-medium text-slate-500 mb-2">
-                        CATEGORY
-                      </div>
-                      <Chip label={transaction.category} variant="category" size="md" />
-                    </div>
-                  )}
-                  
-                  <div>
-                    <div className="text-micro font-medium text-slate-500 mb-2">
-                      CONFIDENCE
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-small text-white">
-                        {confidenceInfo.label} ({(transaction.confidence * 100).toFixed(0)}%)
-                      </span>
-                      <div className="flex-1 h-2 bg-ink-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${confidenceInfo.color}`}
-                          style={{ width: `${transaction.confidence * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Matched Rule and Reason */}
-                <div className="border-t border-line-700 pt-6 space-y-4">
-                  <div>
-                    <div className="text-micro font-medium text-slate-500 mb-2">
-                      CLASSIFICATION REASON
-                    </div>
-                    <div className="text-small text-slate-300">
-                      {transaction.reason}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Evidence Checklist */}
-                {transaction.evidence && transaction.evidence.length > 0 && (
-                  <div className="border-t border-line-700 pt-6">
-                    <div className="text-micro font-medium text-slate-500 mb-3">
-                      EVIDENCE REQUIRED
-                    </div>
-                    <div className="space-y-2">
-                      {transaction.evidence.map((evidence, idx) => (
-                        <div key={idx} className="flex items-start space-x-2">
-                          <div className="w-5 h-5 rounded border border-line-700 bg-ink-800 flex items-center justify-center mt-0.5">
-                            <Icon name="Check" size={12} className="text-slate-500" />
-                          </div>
-                          <div className="text-small text-slate-300">
-                            {evidence}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Flags */}
-                {transaction.flags && transaction.flags.length > 0 && (
-                  <div className="border-t border-line-700 pt-6">
-                    <div className="text-micro font-medium text-slate-500 mb-3">
-                      SPECIAL REQUIREMENTS
-                    </div>
-                    <div className="space-y-2">
-                      {transaction.flags.map((flag, idx) => (
-                        <div key={idx} className="flex items-start space-x-2">
-                          <div className="w-5 h-5 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-0.5">
-                            <Icon name="AlertTriangle" size={12} className="text-accent" />
-                          </div>
-                          <div>
-                            <div className="text-small text-white font-medium">
-                              {flag === 'percentage_required' && 'Percentage Required'}
-                              {flag === 'method_required' && 'Method Required'}
-                              {flag === 'needs_review' && 'Needs Review'}
-                            </div>
-                            <div className="text-micro text-slate-300 mt-1">
-                              {flag === 'percentage_required' && 'You must calculate and document the work-related percentage of this expense.'}
-                              {flag === 'method_required' && 'Choose an appropriate method and maintain required records.'}
-                              {flag === 'needs_review' && 'Low confidence classification - please review and confirm.'}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* More Detail Expansion */}
-                <div className="border-t border-line-700 pt-6">
-                  <button
-                    onClick={() => setShowMoreDetail(!showMoreDetail)}
-                    className="flex items-center justify-between w-full text-small font-medium text-white hover:text-accent transition-colors"
-                  >
-                    <span>More detail</span>
-                    <Icon 
-                      name="ChevronDown" 
-                      size={20} 
-                      className={`transition-transform ${showMoreDetail ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  
-                  {showMoreDetail && (
-                    <div className="mt-4 space-y-4 text-small text-slate-300">
-                      <div>
-                        <div className="font-medium text-white mb-1">
-                          About this classification
-                        </div>
-                        <p>
-                          This transaction was classified using our rules engine, which matches transaction descriptions 
-                          and merchant names against known patterns for Australian tax deductions.
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <div className="font-medium text-white mb-1">
-                          What you need to do
-                        </div>
-                        <p>
-                          Review this classification and confirm it's accurate for your situation. Keep the required 
-                          evidence listed above. This is a likely deductible candidate - final confirmation is your responsibility.
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <div className="font-medium text-white mb-1">
-                          Record retention
-                        </div>
-                        <p>
-                          Generally, keep records for 5 years from the date you lodge your tax return. Some records 
-                          may need to be kept longer depending on your circumstances.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
+          {selectedTransaction && (
+            <TransactionDetail
+              transaction={[...candidates, ...needsReview].find(t => t.id === selectedTransaction) ?? null}
+              formatDate={formatDate}
+              formatCurrency={formatCurrency}
+              getConfidenceLabel={getConfidenceLabel}
+            />
+          )}
         </Drawer>
       </div>
       )}
+    </div>
+  )
+}
+
+// Sub-component so useState is always called at component level (not inside an IIFE)
+function TransactionDetail({ transaction, formatDate, formatCurrency, getConfidenceLabel }: {
+  transaction: any
+  formatDate: (d: string) => string
+  formatCurrency: (n: number) => string
+  getConfidenceLabel: (c: number) => { label: string; color: string }
+}) {
+  const [showMoreDetail, setShowMoreDetail] = useState(false)
+
+  if (!transaction) return null
+
+  const confidenceInfo = getConfidenceLabel(transaction.confidence)
+
+  return (
+    <div className="space-y-6">
+      {/* Transaction Summary */}
+      <div className="space-y-3">
+        <div>
+          <div className="text-micro font-medium text-slate-500 mb-1">
+            MERCHANT
+          </div>
+          <div className="text-h3 font-semibold text-white">
+            {transaction.merchant}
+          </div>
+        </div>
+        <div>
+          <div className="text-micro font-medium text-slate-500 mb-1">
+            DESCRIPTION
+          </div>
+          <div className="text-small text-slate-300">
+            {transaction.description}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-micro font-medium text-slate-500 mb-1">
+              DATE
+            </div>
+            <div className="text-small text-white">
+              {formatDate(transaction.date)}
+            </div>
+          </div>
+          <div>
+            <div className="text-micro font-medium text-slate-500 mb-1">
+              AMOUNT
+            </div>
+            <div className="text-small text-white">
+              {formatCurrency(transaction.amount)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category and Confidence */}
+      <div className="border-t border-line-700 pt-6 space-y-4">
+        {transaction.category && (
+          <div>
+            <div className="text-micro font-medium text-slate-500 mb-2">
+              CATEGORY
+            </div>
+            <Chip label={transaction.category} variant="category" size="md" />
+          </div>
+        )}
+
+        <div>
+          <div className="text-micro font-medium text-slate-500 mb-2">
+            CONFIDENCE
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-small text-white">
+              {confidenceInfo.label} ({(transaction.confidence * 100).toFixed(0)}%)
+            </span>
+            <div className="flex-1 h-2 bg-ink-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${confidenceInfo.color}`}
+                style={{ width: `${transaction.confidence * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Matched Rule and Reason */}
+      <div className="border-t border-line-700 pt-6 space-y-4">
+        <div>
+          <div className="text-micro font-medium text-slate-500 mb-2">
+            CLASSIFICATION REASON
+          </div>
+          <div className="text-small text-slate-300">
+            {transaction.reason}
+          </div>
+        </div>
+      </div>
+
+      {/* Evidence Checklist */}
+      {transaction.evidence && transaction.evidence.length > 0 && (
+        <div className="border-t border-line-700 pt-6">
+          <div className="text-micro font-medium text-slate-500 mb-3">
+            EVIDENCE REQUIRED
+          </div>
+          <div className="space-y-2">
+            {transaction.evidence.map((evidence: string, idx: number) => (
+              <div key={idx} className="flex items-start space-x-2">
+                <div className="w-5 h-5 rounded border border-line-700 bg-ink-800 flex items-center justify-center mt-0.5">
+                  <Icon name="Check" size={12} className="text-slate-500" />
+                </div>
+                <div className="text-small text-slate-300">
+                  {evidence}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Flags */}
+      {transaction.flags && transaction.flags.length > 0 && (
+        <div className="border-t border-line-700 pt-6">
+          <div className="text-micro font-medium text-slate-500 mb-3">
+            SPECIAL REQUIREMENTS
+          </div>
+          <div className="space-y-2">
+            {transaction.flags.map((flag: string, idx: number) => (
+              <div key={idx} className="flex items-start space-x-2">
+                <div className="w-5 h-5 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-0.5">
+                  <Icon name="AlertTriangle" size={12} className="text-accent" />
+                </div>
+                <div>
+                  <div className="text-small text-white font-medium">
+                    {flag === 'percentage_required' && 'Percentage Required'}
+                    {flag === 'method_required' && 'Method Required'}
+                    {flag === 'needs_review' && 'Needs Review'}
+                    {flag === 'occupation_dependent' && 'Occupation Dependent'}
+                  </div>
+                  <div className="text-micro text-slate-300 mt-1">
+                    {flag === 'percentage_required' && 'Calculate and document the work-related percentage of this expense.'}
+                    {flag === 'method_required' && 'Choose an appropriate method and maintain required records.'}
+                    {flag === 'needs_review' && 'Low confidence — please review and confirm this classification.'}
+                    {flag === 'occupation_dependent' && 'Deductibility depends on your occupation. Confirm with a registered tax agent.'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* More Detail Expansion */}
+      <div className="border-t border-line-700 pt-6">
+        <button
+          onClick={() => setShowMoreDetail(!showMoreDetail)}
+          className="flex items-center justify-between w-full text-small font-medium text-white hover:text-accent transition-colors"
+        >
+          <span>More detail</span>
+          <Icon
+            name="ChevronDown"
+            size={20}
+            className={`transition-transform ${showMoreDetail ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {showMoreDetail && (
+          <div className="mt-4 space-y-4 text-small text-slate-300">
+            <div>
+              <div className="font-medium text-white mb-1">About this classification</div>
+              <p>
+                This transaction was classified using keyword matching and ATO-grounded rules
+                for Australian fitness-related tax deductions.
+              </p>
+            </div>
+
+            <div>
+              <div className="font-medium text-white mb-1">What you need to do</div>
+              <p>
+                Review this classification and confirm it applies to your situation. Keep the
+                evidence listed above. Deductibility may depend on your occupation — consult a
+                registered tax agent if unsure.
+              </p>
+            </div>
+
+            <div>
+              <div className="font-medium text-white mb-1">Record retention</div>
+              <p>
+                Keep records for 5 years from the date you lodge your tax return. The ATO may
+                request evidence at any time during that period.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -61,9 +61,8 @@ export default function Privacy() {
                 </ul>
                 <div className="mt-4 p-4 bg-accent bg-opacity-10 border border-accent rounded-lg">
                   <p className="text-small text-white">
-                    <span className="font-semibold">Ephemeral mode is enabled by default</span> to maximize 
-                    your privacy. You can disable it during upload if you want to store derived fields for 
-                    future reference.
+                    <span className="font-semibold">Ephemeral mode is always on.</span> Your data is never
+                    written to disk and is discarded as soon as your report is generated.
                   </p>
                 </div>
               </div>
@@ -121,9 +120,8 @@ export default function Privacy() {
 
               <div className="mt-4 p-4 bg-ink-800 border border-line-700 rounded-lg">
                 <p className="text-small text-slate-300">
-                  <span className="font-semibold text-white">When ephemeral mode is disabled:</span> Only 
-                  derived fields (merchant name, category, confidence score, flags) are stored. Raw CSV 
-                  data is still never persisted.
+                  <span className="font-semibold text-white">No opt-out:</span> Ephemeral mode cannot be
+                  disabled. This is intentional — your financial data should never leave your session.
                 </p>
               </div>
             </div>
@@ -172,10 +170,10 @@ export default function Privacy() {
                     <span className="text-small font-semibold text-white">3</span>
                   </div>
                   <div>
-                    <div className="text-small font-semibold text-white">Classification</div>
+                    <div className="text-small font-semibold text-white">Rule Classification</div>
                     <div className="text-small text-slate-300">
-                      Remaining transactions are matched against rules and assigned categories with 
-                      confidence scores.
+                      Transactions are matched against fitness-specific ATO rules. Confidence scores
+                      are assigned based on keyword matching and rule logic.
                     </div>
                   </div>
                 </div>
@@ -185,10 +183,23 @@ export default function Privacy() {
                     <span className="text-small font-semibold text-white">4</span>
                   </div>
                   <div>
+                    <div className="text-small font-semibold text-white">AI Analysis (optional)</div>
+                    <div className="text-small text-slate-300">
+                      Fitness-related transactions are analysed against the ATO knowledge base using
+                      Claude AI. PII is redacted from descriptions before any data leaves the server.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 rounded-full bg-ink-800 border border-line-700 flex items-center justify-center flex-shrink-0">
+                    <span className="text-small font-semibold text-white">5</span>
+                  </div>
+                  <div>
                     <div className="text-small font-semibold text-white">Report Generation</div>
                     <div className="text-small text-slate-300">
-                      PDF, CSV, and JSON reports are created with all classification details and 
-                      evidence requirements.
+                      A report is generated with deduction candidates, confidence scores, ATO citations,
+                      and evidence requirements. Data is discarded immediately after.
                     </div>
                   </div>
                 </div>
@@ -247,9 +258,9 @@ export default function Privacy() {
 
               <div className="mt-4 p-4 bg-accent bg-opacity-10 border border-accent rounded-lg">
                 <p className="text-small text-white">
-                  <span className="font-semibold">Future feature:</span> Automatic redaction of sensitive 
-                  patterns will be available in a future update. For now, manually review reports before 
-                  sharing.
+                  <span className="font-semibold">Already implemented:</span> BSB codes, account numbers,
+                  and card numbers are automatically redacted from transaction descriptions before any
+                  AI analysis. Raw descriptions are never sent to external APIs.
                 </p>
               </div>
               </div>
