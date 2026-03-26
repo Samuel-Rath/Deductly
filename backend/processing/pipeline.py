@@ -21,6 +21,9 @@ from backend.processing.fuzzy_matcher import FuzzyMatcher
 from backend.processing.report_generator import ReportGenerator
 from backend.processing.audit_trail import AuditTrailBuilder
 from backend.storage.storage_service import StorageService
+from backend.rag.knowledge_base import ATOKnowledgeBase
+from backend.rag.rag_engine import RAGEngine
+from backend.rag.llm_classifier import LLMClassifier
 
 
 class ProcessingPipeline:
@@ -38,45 +41,55 @@ class ProcessingPipeline:
     def __init__(
         self,
         rules_path: str = "backend/config/rules.json",
+        knowledge_path: str = "backend/config/ato_fitness_knowledge.json",
         confidence_threshold: float = 0.60,
-        storage_service: Optional[StorageService] = None
+        storage_service: Optional[StorageService] = None,
+        use_rag: bool = False,
     ):
         """
         Initialize the processing pipeline.
-        
+
         Args:
             rules_path: Path to rules configuration file
+            knowledge_path: Path to ATO fitness knowledge base
             confidence_threshold: Minimum confidence for classification
             storage_service: Optional storage service for persistence
+            use_rag: Enable RAG-powered fitness transaction analysis (requires ANTHROPIC_API_KEY)
         """
         self.confidence_threshold = confidence_threshold
         self.storage_service = storage_service
-        
-        # Initialize components
+
+        # Core processing components
         self.csv_parser = CSVParser()
         self.exclusion_engine = ExclusionEngine()
-        
-        # Load rules
+
+        # Rules engine + fuzzy matcher
         self.rules_engine = RulesEngine.load_rules(rules_path)
-        
-        # Initialize fuzzy matcher with canonical merchants from rules
         canonical_merchants = set()
         for rule in self.rules_engine.rules:
             canonical_merchants.update(rule.merchants)
         self.fuzzy_matcher = FuzzyMatcher(list(canonical_merchants))
-        
-        # Initialize classification engine
+
         self.classification_engine = ClassificationEngine(
             rules_engine=self.rules_engine,
             fuzzy_matcher=self.fuzzy_matcher,
-            confidence_threshold=confidence_threshold
+            confidence_threshold=confidence_threshold,
         )
-        
-        # Initialize report generator
+
         self.report_generator = ReportGenerator(confidence_threshold=confidence_threshold)
-        
-        # Initialize audit trail builder
         self.audit_builder = AuditTrailBuilder()
+
+        # RAG fitness classifier (optional)
+        self.llm_classifier: Optional[LLMClassifier] = None
+        if use_rag:
+            kb = ATOKnowledgeBase(knowledge_path)
+            rag_engine = RAGEngine(knowledge_base=kb)
+            if rag_engine.available:
+                self.llm_classifier = LLMClassifier(
+                    rag_engine=rag_engine,
+                    confidence_threshold=0.40,
+                    override_threshold=confidence_threshold,
+                )
     
     def process(
         self,
@@ -130,11 +143,15 @@ class ProcessingPipeline:
             candidates, excluded = self._apply_exclusions(parsed_transactions)
             
             # Step 4: Record exclusion checks in audit trail
-            self._record_exclusions(transactions, excluded)
-            
-            # Step 5: Classify deduction candidates
+            self._record_exclusions(parsed_transactions, excluded)
+
+            # Step 5: Classify deduction candidates (rule-based)
             classified = self._classify_candidates(candidates)
-            
+
+            # Step 5b: RAG enhancement for fitness transactions (if enabled)
+            if self.llm_classifier:
+                classified = self.llm_classifier.enhance(classified)
+
             # Step 6: Record classification in audit trail
             self._record_classifications(classified)
             

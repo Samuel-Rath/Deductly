@@ -34,6 +34,8 @@ class DeductionCategory(str, Enum):
     TRAVEL = "travel"
     DONATIONS = "donations"
     BANK_FEES = "bank_fees"
+    # Fitness-related — classified by RAG engine
+    FITNESS_RELATED = "fitness_related"
 
 
 class EvidenceType(str, Enum):

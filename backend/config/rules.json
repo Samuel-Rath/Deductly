@@ -119,6 +119,54 @@
       "evidence_checklist": ["receipt"],
       "flags": [],
       "enabled": true
+    },
+    {
+      "rule_id": "R011",
+      "version": "1.0",
+      "category": "fitness_related",
+      "priority": 50,
+      "confidence": 0.20,
+      "keywords": ["gym", "anytime fitness", "goodlife", "fitness first", "f45", "crossfit", "jetts", "snap fitness", "personal trainer", "pt session", "yoga studio", "pilates studio", "bootcamp"],
+      "merchants": ["Anytime Fitness", "Goodlife Health Clubs", "Fitness First", "F45", "CrossFit", "Jetts Fitness", "Snap Fitness", "Vision PT"],
+      "evidence_checklist": ["receipt", "diary"],
+      "flags": ["needs_review", "occupation_dependent", "rag_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R012",
+      "version": "1.0",
+      "category": "fitness_related",
+      "priority": 45,
+      "confidence": 0.15,
+      "keywords": ["supplement", "protein powder", "whey", "creatine", "pre-workout", "bcaa", "myprotein", "bulk nutrients", "protein king", "nutrition warehouse"],
+      "merchants": ["MyProtein", "Bulk Nutrients", "GNC", "Nutrition Warehouse", "Protein King"],
+      "evidence_checklist": ["receipt"],
+      "flags": ["needs_review", "occupation_dependent", "rag_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R013",
+      "version": "1.0",
+      "category": "fitness_related",
+      "priority": 48,
+      "confidence": 0.18,
+      "keywords": ["rebel sport", "lululemon", "nike", "adidas", "under armour", "2xu", "asics", "activewear", "sportswear", "running shoes", "gym equipment", "dumbbells", "kettlebell", "garmin", "fitbit", "athletes foot", "decathlon"],
+      "merchants": ["Rebel Sport", "Lululemon", "Nike", "Adidas", "Under Armour", "2XU", "Asics", "Athlete's Foot", "Decathlon"],
+      "evidence_checklist": ["receipt"],
+      "flags": ["needs_review", "occupation_dependent", "rag_required"],
+      "enabled": true
+    },
+    {
+      "rule_id": "R014",
+      "version": "1.0",
+      "category": "training_education",
+      "priority": 88,
+      "confidence": 0.80,
+      "keywords": ["first aid", "cpr", "hltaid", "fitness certification", "cert iii fitness", "cert iv fitness", "ausactive", "fitness australia", "cec", "continuing education fitness", "personal trainer cert"],
+      "merchants": ["Fitness Australia", "AUSACTIVE", "St John Ambulance", "Red Cross First Aid"],
+      "evidence_checklist": ["receipt", "invoice"],
+      "flags": [],
+      "enabled": true
     }
   ]
 }
