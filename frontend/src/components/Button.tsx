@@ -28,7 +28,7 @@ export const Button: React.FC<ButtonProps> = ({
     // Gradient fill button
     primary: [
       'text-white',
-      'bg-gradient-to-r from-violet-600 via-accent to-blue-500',
+      'bg-gradient-to-r from-accent via-blue-600 to-blue-500',
       'bg-[length:200%_auto] hover:bg-right-center',
       'shadow-soft hover:shadow-glow',
       'hover:scale-[1.02] active:scale-[0.99]',

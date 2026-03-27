@@ -172,7 +172,7 @@ export default function Privacy() {
                   <div>
                     <div className="text-small font-semibold text-white">Rule Classification</div>
                     <div className="text-small text-slate-300">
-                      Transactions are matched against fitness-specific ATO rules. Confidence scores
+                      Transactions are matched against ATO deduction rules across all work-related categories. Confidence scores
                       are assigned based on keyword matching and rule logic.
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function Privacy() {
                   <div>
                     <div className="text-small font-semibold text-white">AI Analysis (optional)</div>
                     <div className="text-small text-slate-300">
-                      Fitness-related transactions are analysed against the ATO knowledge base using
+                      Deduction candidates are analysed against the ATO knowledge base using
                       Claude AI. PII is redacted from descriptions before any data leaves the server.
                     </div>
                   </div>

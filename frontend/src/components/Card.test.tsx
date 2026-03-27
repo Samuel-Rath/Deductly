@@ -15,19 +15,20 @@ describe('Card', () => {
   it('applies base styles', () => {
     const { container } = render(<Card>Content</Card>);
     const card = container.firstChild as HTMLElement;
-    expect(card).toHaveClass('bg-ink-900', 'border', 'border-line-700', 'rounded-card');
+    // Card uses glass + rounded-xl + border
+    expect(card).toHaveClass('glass', 'rounded-xl', 'border');
   });
 
   it('applies elevated style when elevated prop is true', () => {
     const { container } = render(<Card elevated>Content</Card>);
     const card = container.firstChild as HTMLElement;
-    expect(card).toHaveClass('shadow-lg');
+    expect(card).toHaveClass('shadow-soft-lg');
   });
 
-  it('does not apply elevated style by default', () => {
+  it('does not apply elevated shadow by default', () => {
     const { container } = render(<Card>Content</Card>);
     const card = container.firstChild as HTMLElement;
-    expect(card).not.toHaveClass('shadow-lg');
+    expect(card).not.toHaveClass('shadow-soft-lg');
   });
 
   describe('padding variants', () => {
@@ -60,5 +61,11 @@ describe('Card', () => {
     const { container } = render(<Card className="custom-class">Content</Card>);
     const card = container.firstChild as HTMLElement;
     expect(card).toHaveClass('custom-class');
+  });
+
+  it('applies glow styles when glow prop is true', () => {
+    const { container } = render(<Card glow>Content</Card>);
+    const card = container.firstChild as HTMLElement;
+    expect(card).toHaveClass('shadow-glow');
   });
 });

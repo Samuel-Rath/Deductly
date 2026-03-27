@@ -4,101 +4,71 @@ import { BrowserRouter } from 'react-router-dom'
 import Privacy from './Privacy'
 
 describe('Privacy Page', () => {
-  it('renders page title and description', () => {
+  const renderPrivacy = () =>
     render(
       <BrowserRouter>
         <Privacy />
       </BrowserRouter>
     )
 
+  // Helper to assert text appears at least once (avoids multiple-element errors)
+  const hasText = (pattern: RegExp | string) =>
+    screen.getAllByText(pattern).length > 0
+
+  it('renders page title and description', () => {
+    renderPrivacy()
     expect(screen.getByText('Privacy & Data Handling')).toBeInTheDocument()
-    expect(screen.getByText(/Understand how your data is processed/i)).toBeInTheDocument()
+    expect(hasText(/Understand how your data is processed/i)).toBe(true)
   })
 
   it('explains what data is processed', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
+    renderPrivacy()
     expect(screen.getByText('What data is processed')).toBeInTheDocument()
-    expect(screen.getByText(/Transaction dates/i)).toBeInTheDocument()
-    expect(screen.getByText(/Transaction descriptions/i)).toBeInTheDocument()
-    expect(screen.getByText(/Transaction amounts/i)).toBeInTheDocument()
+    expect(hasText(/Transaction dates/i)).toBe(true)
+    expect(hasText(/Transaction descriptions/i)).toBe(true)
+    expect(hasText(/Transaction amounts/i)).toBe(true)
   })
 
   it('explains what is stored by default', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
+    renderPrivacy()
     expect(screen.getByText('What is stored by default')).toBeInTheDocument()
-    expect(screen.getByText(/ephemeral mode/i)).toBeInTheDocument()
-    expect(screen.getByText(/Raw CSV data is never written to disk/i)).toBeInTheDocument()
+    expect(hasText(/ephemeral mode/i)).toBe(true)
+    expect(hasText(/Raw CSV data is never written to disk/i)).toBe(true)
   })
 
   it('explains ephemeral mode', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
+    renderPrivacy()
     expect(screen.getByText('Ephemeral mode explained')).toBeInTheDocument()
-    expect(screen.getByText(/No persistent storage/i)).toBeInTheDocument()
-    expect(screen.getByText(/Memory-only processing/i)).toBeInTheDocument()
-    expect(screen.getByText(/Download and delete/i)).toBeInTheDocument()
+    expect(screen.getByText('No persistent storage')).toBeInTheDocument()
+    expect(screen.getByText('Memory-only processing')).toBeInTheDocument()
+    expect(screen.getByText('Download and delete')).toBeInTheDocument()
   })
 
   it('explains how reports are generated', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
+    renderPrivacy()
     expect(screen.getByText('How reports are generated')).toBeInTheDocument()
-    expect(screen.getByText(/Normalisation/i)).toBeInTheDocument()
-    expect(screen.getByText(/Exclusion/i)).toBeInTheDocument()
-    expect(screen.getByText(/Classification/i)).toBeInTheDocument()
-    expect(screen.getByText(/Report Generation/i)).toBeInTheDocument()
+    expect(screen.getByText('Normalisation')).toBeInTheDocument()
+    expect(screen.getByText('Exclusion')).toBeInTheDocument()
+    expect(screen.getByText('Report Generation')).toBeInTheDocument()
   })
 
   it('provides redaction recommendations', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
+    renderPrivacy()
     expect(screen.getByText('Redaction recommendations')).toBeInTheDocument()
-    expect(screen.getByText(/Account numbers and BSB codes/i)).toBeInTheDocument()
-    expect(screen.getByText(/Personal reference numbers/i)).toBeInTheDocument()
-    expect(screen.getByText(/Sensitive merchant names/i)).toBeInTheDocument()
+    expect(screen.getByText('Account numbers and BSB codes')).toBeInTheDocument()
+    expect(screen.getByText('Personal reference numbers')).toBeInTheDocument()
+    expect(screen.getByText('Sensitive merchant names')).toBeInTheDocument()
   })
 
   it('mentions no authentication required', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
-    expect(screen.getByText(/No authentication required/i)).toBeInTheDocument()
-    expect(screen.getByText(/does not require account creation/i)).toBeInTheDocument()
+    renderPrivacy()
+    expect(screen.getByText('No authentication required')).toBeInTheDocument()
+    expect(hasText(/does not require account creation/i)).toBe(true)
   })
 
   it('mentions open source nature', () => {
-    render(
-      <BrowserRouter>
-        <Privacy />
-      </BrowserRouter>
-    )
-
-    expect(screen.getByText(/Open source/i)).toBeInTheDocument()
-    expect(screen.getByText(/review the code/i)).toBeInTheDocument()
+    renderPrivacy()
+    expect(screen.getByText('Open source')).toBeInTheDocument()
+    expect(hasText(/review the code/i)).toBe(true)
   })
 })

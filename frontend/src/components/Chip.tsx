@@ -60,7 +60,7 @@ export const Chip: React.FC<ChipProps> = ({
         <span className="flex items-center gap-1">
           <span className="w-10 h-1.5 bg-ink-700 rounded-full overflow-hidden">
             <span
-              className="block h-full bg-gradient-to-r from-violet-500 to-accent transition-all duration-300"
+              className="block h-full bg-gradient-to-r from-blue-700 to-blue-400 transition-all duration-300"
               style={{ width: `${confidence * 100}%` }}
             />
           </span>

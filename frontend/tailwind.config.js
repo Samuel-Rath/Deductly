@@ -7,41 +7,64 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Deep navy backgrounds — fintech premium
+        // Banking dark backgrounds (dark mode as default)
         ink: {
-          950: '#03071e',   // body background
-          900: '#060d28',   // section backgrounds
-          800: '#0c1840',   // card backgrounds
-          700: '#152050',   // elevated / hover state
+          950: '#0D1424',   // deepest background
+          900: '#0F172A',   // body / section background
+          800: '#1E2937',   // card surface
+          700: '#243447',   // elevated / hover state
         },
-        // Borders
+        // Borders — desaturated so cards don't glow blue
         line: {
-          700: '#1b2d5a',   // default borders
-          600: '#2a4278',   // hover / focus borders
+          700: '#1F2D3D',   // default borders (near-neutral dark)
+          600: '#2A3F54',   // hover / focus borders
         },
         // Text
         slate: {
-          50:  '#f8fafc',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
+          50:  '#F1F5F9',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
         },
-        // Accent: indigo (solid fallback for gradient system)
+        // Primary brand accent — Corporate Blue
         accent: {
-          DEFAULT: '#6366f1',   // indigo-500
-          hover:   '#4f46e5',   // indigo-600
-          light:   '#818cf8',   // indigo-400
+          DEFAULT: '#1E40AF',   // corporate blue
+          hover:   '#1434A0',   // deeper on hover
+          light:   '#60A5FA',   // bright blue for text on dark bg
         },
-        // Gradient palette stops (used in custom utilities)
-        violet: {
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
+        // Deep Trust Blue — hero gradients, logo, CTA shadows
+        trust: {
+          900: '#0A2540',
+          800: '#0D3060',
         },
+        // Blue spectrum — gradients and chart lines
         blue: {
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
+          400: '#93C5FD',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+        },
+        // Positive / income / growth
+        green: {
+          400: '#4ADE80',
+          700: '#15803D',
+          800: '#166534',
+        },
+        // Negative / expense / alert
+        red: {
+          400: '#F87171',
+          700: '#B91C1C',
+          800: '#991B1B',
+        },
+        // Warning — credit card / mid-risk
+        amber: {
+          400: '#F59E0B',
+          500: '#B45309',
+        },
+        // Chart category — loans / other
+        teal: {
+          400: '#2DD4BF',
+          600: '#0F766E',
         },
       },
       fontFamily: {
@@ -70,17 +93,19 @@ export default {
         '24': '192px',
       },
       backgroundImage: {
-        'gradient-brand':      'linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #3b82f6 100%)',
-        'gradient-brand-soft': 'linear-gradient(135deg, #a78bfa 0%, #818cf8 50%, #60a5fa 100%)',
-        'gradient-card':       'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(59,130,246,0.03) 100%)',
+        'gradient-brand':      'linear-gradient(135deg, #1E40AF 0%, #2563EB 55%, #3B82F6 100%)',
+        'gradient-brand-soft': 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #60A5FA 100%)',
+        'gradient-card':       'linear-gradient(135deg, rgba(30,64,175,0.08) 0%, rgba(59,130,246,0.03) 100%)',
+        'gradient-positive':   'linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%)',
       },
       boxShadow: {
-        'soft':        '0 2px 12px rgba(0,0,0,0.25)',
-        'soft-lg':     '0 4px 32px rgba(0,0,0,0.35)',
-        'glow':        '0 0 24px rgba(99,102,241,0.3)',
-        'glow-lg':     '0 0 48px rgba(99,102,241,0.45)',
-        'glow-violet': '0 0 32px rgba(124,58,237,0.4)',
-        'card':        '0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px rgba(99,102,241,0.08)',
+        'soft':        '0 2px 8px rgba(0,0,0,0.35)',
+        'soft-lg':     '0 8px 24px rgba(0,0,0,0.45)',
+        'glow':        '0 0 16px rgba(30,64,175,0.18)',
+        'glow-lg':     '0 0 32px rgba(30,64,175,0.22)',
+        'glow-violet': '0 0 20px rgba(37,99,235,0.16)',
+        'glow-green':  '0 0 16px rgba(21,128,61,0.2)',
+        'card':        '0 1px 4px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04)',
       },
       borderRadius: {
         'sm':   '6px',

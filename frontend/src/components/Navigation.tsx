@@ -24,13 +24,8 @@ export default function Navigation() {
           <div className="flex items-center justify-between h-16">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-glow-violet shrink-0">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 13L8 3L13 13H10L8 9L6 13H3Z" fill="white" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-gradient group-hover:opacity-90 transition-opacity">
+            <Link to="/" className="flex items-center group">
+              <span className="text-xl font-bold text-white tracking-tight group-hover:text-slate-300 transition-colors">
                 Deductly
               </span>
             </Link>
@@ -52,7 +47,7 @@ export default function Navigation() {
                   {isActive(path) && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className="absolute -bottom-px left-2 right-2 h-px rounded-full bg-gradient-to-r from-violet-400 to-blue-400"
+                      className="absolute -bottom-px left-2 right-2 h-px rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
                     />
                   )}
                 </Link>
@@ -62,7 +57,7 @@ export default function Navigation() {
             {/* CTA */}
             <Link
               to="/upload"
-              className="px-5 py-2 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-violet-600 via-accent to-blue-500 shadow-soft hover:shadow-glow transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              className="px-5 py-2 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-accent via-blue-600 to-blue-500 shadow-soft hover:shadow-glow transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
             >
               Get Started
             </Link>

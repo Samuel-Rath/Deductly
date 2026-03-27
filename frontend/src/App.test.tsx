@@ -6,7 +6,7 @@ describe('App', () => {
   it('renders without crashing', () => {
     render(<App />)
     // App renders the landing page by default
-    expect(screen.getByText(/Turn your bank CSV into an evidence-ready deduction report/i)).toBeInTheDocument()
+    expect(screen.getByText(/Turn Bank Statements Into/i)).toBeInTheDocument()
   })
 
   it('renders navigation', () => {

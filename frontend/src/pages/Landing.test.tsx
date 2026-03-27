@@ -21,19 +21,35 @@ describe('Landing Page', () => {
       </BrowserRouter>
     )
 
-    expect(screen.getByText(/Turn your bank CSV into an evidence-ready deduction report/i)).toBeInTheDocument()
+    expect(screen.getByText(/Turn Bank Statements Into/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tax-Ready/i)).toBeInTheDocument()
   })
 
-  it('renders trust strip with privacy, explainability, and income year', () => {
+  it('renders trust signals', () => {
     render(
       <BrowserRouter>
         <Landing />
       </BrowserRouter>
     )
 
-    expect(screen.getByText('Privacy')).toBeInTheDocument()
-    expect(screen.getByText('Explainability')).toBeInTheDocument()
-    expect(screen.getByText('Australian Income Year')).toBeInTheDocument()
+    // "No account needed" appears in both trust signals and stats strip
+    expect(screen.getAllByText(/No account needed/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Data never stored/i)).toBeInTheDocument()
+    expect(screen.getByText(/ATO-cited analysis/i)).toBeInTheDocument()
+  })
+
+  it('renders why Deductly features section', () => {
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText('Why Deductly')).toBeInTheDocument()
+    expect(screen.getByText('Privacy First')).toBeInTheDocument()
+    expect(screen.getByText('AI-Grounded')).toBeInTheDocument()
+    expect(screen.getByText('Confidence Scores')).toBeInTheDocument()
+    expect(screen.getByText('ATO Citations')).toBeInTheDocument()
   })
 
   it('renders how it works section with three steps', () => {
@@ -43,26 +59,13 @@ describe('Landing Page', () => {
       </BrowserRouter>
     )
 
-    expect(screen.getByText('How it works')).toBeInTheDocument()
-    expect(screen.getByText('Upload')).toBeInTheDocument()
-    expect(screen.getByText('Classify')).toBeInTheDocument()
-    expect(screen.getByText('Export')).toBeInTheDocument()
+    expect(screen.getByText('How It Works')).toBeInTheDocument()
+    expect(screen.getByText('Upload Your Statement')).toBeInTheDocument()
+    expect(screen.getByText('AI Analyses Transactions')).toBeInTheDocument()
+    expect(screen.getByText('Download Your Report')).toBeInTheDocument()
   })
 
-  it('renders example report preview', () => {
-    render(
-      <BrowserRouter>
-        <Landing />
-      </BrowserRouter>
-    )
-
-    expect(screen.getByText('Example report preview')).toBeInTheDocument()
-    expect(screen.getByText('LIKELY DEDUCTIBLE')).toBeInTheDocument()
-    expect(screen.getByText('NEEDS REVIEW')).toBeInTheDocument()
-    expect(screen.getByText('EXCLUDED')).toBeInTheDocument()
-  })
-
-  it('navigates to upload page when CTA button is clicked', async () => {
+  it('navigates to upload page when primary CTA is clicked', async () => {
     const user = userEvent.setup()
     render(
       <BrowserRouter>
@@ -70,9 +73,33 @@ describe('Landing Page', () => {
       </BrowserRouter>
     )
 
-    const uploadButton = screen.getAllByText('Upload CSV')[0]
-    await user.click(uploadButton)
+    const buttons = screen.getAllByText('Analyse My Statement')
+    await user.click(buttons[0])
 
     expect(mockNavigate).toHaveBeenCalledWith('/upload')
+  })
+
+  it('navigates to rules page when View ATO Rules is clicked', async () => {
+    const user = userEvent.setup()
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    await user.click(screen.getByText('View ATO Rules'))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/rules')
+  })
+
+  it('renders stats strip with key metrics', () => {
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText('Deduction Categories')).toBeInTheDocument()
+    expect(screen.getByText('Composite Confidence')).toBeInTheDocument()
   })
 })

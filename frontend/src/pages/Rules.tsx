@@ -3,85 +3,84 @@ import { Card, Chip, AnimatedSection, Icon } from '../components'
 
 const ruleCategories = [
   {
-    category: 'Gym & Fitness Memberships',
-    description: 'Gym, fitness centre, and pool memberships — deductible if fitness is required for your job (e.g. personal trainer, police, military)',
-    keywords: ['gym', 'fitness', 'anytime fitness', 'goodlife', 'snap fitness', 'planet fitness', 'f45', 'crossfit', 'aquatic centre'],
-    merchants: ['Anytime Fitness', 'Goodlife Health Clubs', 'Snap Fitness', 'F45 Training', 'Genesis Gym'],
-    confidence: 0.20,
-    evidence: ['Receipt or bank statement', 'Employment contract showing fitness requirement'],
-    flags: ['occupation_dependent', 'needs_review'],
+    category: 'Work-Related Travel & Vehicles',
+    description: 'Car expenses, public transport, flights, and accommodation for travel required for work — commuting to a regular workplace is not deductible',
+    keywords: ['uber', 'didi', 'ola', 'taxi', 'transurban', 'citylink', 'eastlink', 'linkt', 'myki', 'opal', 'go card', 'qantas', 'jetstar', 'virgin australia', 'rex'],
+    merchants: ['Uber', 'DiDi', 'Transurban / LinktT', 'Qantas', 'Jetstar', 'Virgin Australia'],
+    confidence: 0.55,
+    evidence: ['Logbook or km records for car', 'Receipts for fares, flights, accommodation', 'Work travel itinerary or employer confirmation'],
+    flags: ['needs_review'],
     examples: [
-      { description: 'ANYTIME FITNESS MEMBERSHIP', matched: 'anytime fitness keyword' },
-      { description: 'F45 TRAINING MONTHLY FEE', matched: 'f45 keyword' },
+      { description: 'UBER TRIP SYD123456', matched: 'uber keyword' },
+      { description: 'QANTAS AIRWAYS BOOKING', matched: 'qantas keyword' },
     ],
     version: '1.0',
   },
   {
-    category: 'Personal Training',
-    description: 'Personal trainer fees — deductible when directly required for maintaining fitness standards in your occupation',
-    keywords: ['personal trainer', 'personal training', 'pt session', 'fitness coach', 'strength coach'],
-    merchants: ['Local PT studios', 'Online coaching platforms'],
-    confidence: 0.25,
-    evidence: ['Invoice from trainer', 'Proof of occupation fitness requirement'],
-    flags: ['occupation_dependent', 'needs_review'],
+    category: 'Home Office Expenses',
+    description: 'Internet, phone, electricity, and stationery used while working from home — only the work-use proportion is deductible',
+    keywords: ['telstra', 'optus', 'tpg', 'aussie broadband', 'superloop', 'tangerine', 'vodafone', 'internode', 'officeworks', 'ikea', 'harvey norman'],
+    merchants: ['Telstra', 'Optus', 'TPG Telecom', 'Aussie Broadband', 'Officeworks'],
+    confidence: 0.60,
+    evidence: ['Internet/phone invoices', 'Hours worked from home record', 'Floor plan if claiming occupancy costs (actual cost method)'],
+    flags: ['needs_review'],
     examples: [
-      { description: 'PT SESSION JOHN SMITH FITNESS', matched: 'personal trainer keyword' },
-      { description: 'PERSONAL TRAINING MONTHLY', matched: 'personal training keyword' },
+      { description: 'TELSTRA MONTHLY ACCOUNT', matched: 'telstra keyword' },
+      { description: 'OFFICEWORKS PTY LTD', matched: 'officeworks keyword' },
     ],
     version: '1.0',
   },
   {
-    category: 'Sports & Fitness Equipment',
-    description: 'Equipment purchased for fitness training — may be deductible for professional athletes or where fitness is a job condition',
-    keywords: ['rebel sport', 'amart sports', 'rogue fitness', 'power rack', 'barbell', 'dumbbells', 'resistance bands', 'foam roller'],
-    merchants: ['Rebel Sport', 'Amart Sports', 'Rogue Fitness', 'Decathlon'],
-    confidence: 0.18,
-    evidence: ['Receipt', 'Evidence equipment is used for income-earning activity'],
-    flags: ['occupation_dependent', 'needs_review'],
+    category: 'Tools, Equipment & Technology',
+    description: 'Laptops, phones, subscriptions, and software used primarily for work — items used more than 50% for income-earning activity',
+    keywords: ['microsoft', 'apple', 'adobe', 'jb hi-fi', 'harvey norman', 'officeworks', 'canva', 'atlassian', 'slack', 'zoom', 'dropbox', 'aws', 'google workspace', 'xero', 'myob'],
+    merchants: ['Apple', 'JB Hi-Fi', 'Officeworks', 'Microsoft', 'Adobe', 'Harvey Norman'],
+    confidence: 0.55,
+    evidence: ['Receipt or invoice', 'Estimate of work-use percentage', 'Description of how the item is used in your role'],
+    flags: ['needs_review'],
     examples: [
-      { description: 'REBEL SPORT PTY LTD', matched: 'rebel sport keyword' },
-      { description: 'PURCHASE RESISTANCE BANDS', matched: 'resistance bands keyword' },
+      { description: 'MICROSOFT 365 SUBSCRIPTION', matched: 'microsoft keyword' },
+      { description: 'JB HI-FI SOLUTIONS PTY LTD', matched: 'jb hi-fi keyword' },
     ],
     version: '1.0',
   },
   {
-    category: 'Activewear & Fitness Clothing',
-    description: 'Fitness clothing (e.g. Lululemon, Nike) — generally not deductible unless it is protective or a compulsory uniform',
-    keywords: ['lululemon', 'lorna jane', '2xu', 'under armour', 'activewear', 'compression'],
-    merchants: ['Lululemon', 'Lorna Jane', '2XU', 'Under Armour'],
-    confidence: 0.10,
-    evidence: ['Receipt', 'Evidence of compulsory uniform or protective clothing requirement'],
-    flags: ['occupation_dependent', 'needs_review'],
+    category: 'Self-Education & Professional Development',
+    description: 'Courses, conferences, workshops, and textbooks directly related to your current role — must maintain or improve skills in your existing job',
+    keywords: ['udemy', 'coursera', 'tafe', 'university', 'linkedin learning', 'pluralsight', 'conference', 'workshop', 'seminar', 'eventbrite', 'humanitix', 'trybooking'],
+    merchants: ['TAFE', 'Udemy', 'Coursera', 'LinkedIn Learning', 'Eventbrite', 'University bookshops'],
+    confidence: 0.70,
+    evidence: ['Invoice or receipt', 'Course description and completion certificate', 'Statement of relevance to your current role'],
     examples: [
-      { description: 'LULULEMON AUSTRALIA', matched: 'lululemon keyword' },
-      { description: 'LORNA JANE PTY LTD', matched: 'lorna jane keyword' },
+      { description: 'UDEMY IE COURSE PURCHASE', matched: 'udemy keyword' },
+      { description: 'EVENTBRITE CONFERENCE REG', matched: 'eventbrite keyword' },
     ],
     version: '1.0',
   },
   {
-    category: 'Fitness Certifications & First Aid',
-    description: 'Fitness industry certifications, CPR/First Aid — deductible if required for your current fitness-related role',
-    keywords: ['first aid', 'cpr', 'fitness australia', 'cert iii', 'cert iv', 'hltaid', 'reps accreditation'],
-    merchants: ['Fitness Australia', 'St John Ambulance', 'Australian Red Cross', 'TAFE'],
+    category: 'Professional Memberships & Subscriptions',
+    description: 'Union fees, professional body memberships, industry association fees, and trade publications directly related to your occupation',
+    keywords: ['cpa australia', 'chartered accountants', 'law society', 'ama', 'aicd', 'hia', 'master builders', 'aia australia', 'sia', 'membership fee', 'annual subscription'],
+    merchants: ['CPA Australia', 'Chartered Accountants ANZ', 'Law Society', 'AMA', 'HIA', 'AICD'],
     confidence: 0.80,
-    evidence: ['Receipt or invoice', 'Course completion certificate'],
+    evidence: ['Membership invoice or receipt', 'Confirmation that the body is directly related to your current occupation'],
     examples: [
-      { description: 'ST JOHN AMBULANCE FIRST AID', matched: 'first aid keyword' },
-      { description: 'FITNESS AUSTRALIA MEMBERSHIP', matched: 'fitness australia keyword' },
+      { description: 'CPA AUSTRALIA MEMBERSHIP FEE', matched: 'cpa australia keyword' },
+      { description: 'LAW SOCIETY ANNUAL SUBSCRIPTION', matched: 'law society keyword' },
     ],
     version: '1.0',
   },
   {
-    category: 'Supplements & Sports Nutrition',
-    description: 'Protein, vitamins, and sports supplements — generally not deductible; narrow exception for professional athletes on specialist medical advice',
-    keywords: ['protein', 'supplements', 'creatine', 'bcaa', 'nutrition warehouse', 'musashi', 'optimum nutrition'],
-    merchants: ['Nutrition Warehouse', 'Bulk Nutrients', 'Chemist Warehouse', 'GNC'],
-    confidence: 0.15,
-    evidence: ['Receipt', 'Medical/dietary advice from registered professional'],
+    category: 'Work Clothing & Protective Equipment',
+    description: 'Compulsory uniforms, occupation-specific protective clothing, and safety gear — conventional clothing worn at work is not deductible',
+    keywords: ['workwear', 'hi-vis', 'safety boots', 'hard hat', 'ppe', 'bunnings', 'total tools', 'blackwoods', 'wurth', 'hard yakka', 'king gee'],
+    merchants: ['Bunnings Warehouse', 'Total Tools', 'Blackwoods', 'Hard Yakka', 'King Gee'],
+    confidence: 0.45,
+    evidence: ['Receipt', 'Evidence of compulsory uniform policy or occupational safety/hygiene requirement'],
     flags: ['occupation_dependent', 'needs_review'],
     examples: [
-      { description: 'NUTRITION WAREHOUSE ONLINE', matched: 'nutrition warehouse keyword' },
-      { description: 'BULK NUTRIENTS PTY LTD', matched: 'protein/supplements keyword' },
+      { description: 'BUNNINGS WAREHOUSE PTY LTD', matched: 'bunnings keyword' },
+      { description: 'HARD YAKKA ONLINE STORE', matched: 'hard yakka keyword' },
     ],
     version: '1.0',
   },
@@ -121,7 +120,7 @@ const exclusionRules = [
   {
     name: 'General Food & Groceries',
     patterns: ['WOOLWORTHS', 'COLES', 'ALDI', 'IGA', 'GROCERY'],
-    reason: 'General food and groceries are private expenses even if you follow a fitness diet',
+    reason: 'General food and groceries are private expenses, even when consumed during work hours',
     examples: ['WOOLWORTHS SUPERMARKET', 'COLES ONLINE'],
   },
 ]
@@ -218,9 +217,7 @@ export default function Rules() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
-                        <Chip variant="neutral" size="small">
-                          v{rule.version}
-                        </Chip>
+                        <Chip variant="neutral" size="small" label={`v${rule.version}`} />
                         <Icon 
                           name="ChevronDown" 
                           size={20} 
@@ -240,9 +237,7 @@ export default function Rules() {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {rule.keywords.map((keyword, idx) => (
-                              <Chip key={idx} variant="neutral" size="small">
-                                {keyword}
-                              </Chip>
+                              <Chip key={idx} variant="neutral" size="small" label={keyword} />
                             ))}
                           </div>
                         </div>
@@ -254,9 +249,7 @@ export default function Rules() {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {rule.merchants.map((merchant, idx) => (
-                              <Chip key={idx} variant="neutral" size="small">
-                                {merchant}
-                              </Chip>
+                              <Chip key={idx} variant="neutral" size="small" label={merchant} />
                             ))}
                           </div>
                         </div>
@@ -286,9 +279,7 @@ export default function Rules() {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {rule.evidence.map((ev, idx) => (
-                              <Chip key={idx} variant="neutral" size="small">
-                                {ev}
-                              </Chip>
+                              <Chip key={idx} variant="neutral" size="small" label={ev} />
                             ))}
                           </div>
                         </div>
@@ -301,9 +292,7 @@ export default function Rules() {
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {rule.flags.map((flag, idx) => (
-                                <Chip key={idx} variant="accent" size="small">
-                                  {flag}
-                                </Chip>
+                                <Chip key={idx} variant="accent" size="small" label={flag} />
                               ))}
                             </div>
                           </div>
@@ -364,9 +353,7 @@ export default function Rules() {
                         </div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {rule.patterns.map((pattern, pidx) => (
-                            <Chip key={pidx} variant="neutral" size="small">
-                              {pattern}
-                            </Chip>
+                            <Chip key={pidx} variant="neutral" size="small" label={pattern} />
                           ))}
                         </div>
                       </div>
@@ -414,7 +401,7 @@ export default function Rules() {
                     <div className="space-y-3 mb-4">
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small font-semibold text-white mb-1">Keyword Score (up to 30%)</div>
-                        <div className="text-micro text-slate-300">How strongly the transaction description and merchant match fitness-related keywords across 10 groups (gym, personal training, supplements, equipment, activewear, etc.)</div>
+                        <div className="text-micro text-slate-300">How strongly the transaction description and merchant match work-related keywords across deduction categories (travel, home office, equipment, education, memberships, clothing, etc.)</div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small font-semibold text-white mb-1">RAG Grounding Score (up to 40%)</div>
@@ -441,7 +428,7 @@ export default function Rules() {
                           <div className="h-full bg-accent" style={{ width: '90%' }} />
                         </div>
                         <p className="text-micro text-slate-300 mt-2">
-                          Clear occupational requirement — e.g. first aid certification for a fitness instructor
+                          Clear occupational requirement — e.g. professional body membership, self-education course directly tied to your current role
                         </p>
                       </div>
 
@@ -454,7 +441,7 @@ export default function Rules() {
                           <div className="h-full bg-slate-500" style={{ width: '70%' }} />
                         </div>
                         <p className="text-micro text-slate-300 mt-2">
-                          Probable fitness expense — confirm your occupation qualifies
+                          Probable work expense — confirm the work-use proportion or occupational nexus with your tax agent
                         </p>
                       </div>
 
@@ -467,7 +454,7 @@ export default function Rules() {
                           <div className="h-full bg-slate-700" style={{ width: '45%' }} />
                         </div>
                         <p className="text-micro text-slate-300 mt-2">
-                          Ambiguous — most fitness expenses are occupation-dependent and require professional advice
+                          Ambiguous — likely mixed personal and work use; requires substantiation and advice from a registered tax agent
                         </p>
                       </div>
                     </div>
@@ -484,18 +471,18 @@ export default function Rules() {
                     <div className="space-y-2">
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small text-white font-mono mb-1">
-                          EFTPOS ANYTIME FITNESS SYDNEY NSW
+                          EFTPOS OFFICEWORKS SYDNEY NSW
                         </div>
                         <div className="text-micro text-slate-300">
-                          → Normalised to "Anytime Fitness" (removes EFTPOS prefix and location)
+                          → Normalised to "Officeworks" (removes EFTPOS prefix and location)
                         </div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small text-white font-mono mb-1">
-                          DD REBEL SPORT PTY LTD 12345
+                          DD MICROSOFT CORPORATION 98765
                         </div>
                         <div className="text-micro text-slate-300">
-                          → Normalised to "Rebel Sport" (removes DD prefix and reference number)
+                          → Normalised to "Microsoft" (removes DD prefix and reference number)
                         </div>
                       </div>
                     </div>
@@ -506,10 +493,10 @@ export default function Rules() {
                       Important Disclaimer
                     </h4>
                     <p className="text-small text-slate-300">
-                      Fitness expense deductibility is highly occupation-dependent under Australian tax law.
+                      Deductibility depends on the direct nexus between the expense and your income-earning activity under Australian tax law.
                       This tool provides indicative analysis only — always confirm with a registered tax agent
-                      before claiming deductions. The ATO may disallow claims that don't meet the nexus
-                      requirement between the expense and your income-earning activity.
+                      before claiming deductions. The ATO may disallow claims that lack sufficient substantiation
+                      or a clear connection to your specific role.
                     </p>
                   </div>
                 </div>

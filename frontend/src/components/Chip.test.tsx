@@ -13,25 +13,25 @@ describe('Chip', () => {
     it('renders category variant with default styles', () => {
       const { container } = render(<Chip label="Category" variant="category" />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('bg-transparent', 'border-line-700');
+      expect(chip).toHaveClass('border-line-700');
     });
 
-    it('renders selected category variant', () => {
+    it('renders selected category variant with accent styles', () => {
       const { container } = render(<Chip label="Category" variant="category" selected />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('bg-accent-secondary', 'text-ink-950');
+      expect(chip).toHaveClass('text-accent-light');
     });
 
     it('renders confidence variant', () => {
       const { container } = render(<Chip label="High" variant="confidence" confidence={0.85} />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('bg-transparent', 'border-line-700');
+      expect(chip).toHaveClass('border-line-700');
     });
 
     it('renders flag variant', () => {
       const { container } = render(<Chip label="Method Required" variant="flag" />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('bg-ink-800', 'border-line-700');
+      expect(chip).toHaveClass('border-line-700');
     });
   });
 
@@ -51,13 +51,13 @@ describe('Chip', () => {
     it('renders small size', () => {
       const { container } = render(<Chip label="Small" size="sm" />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('px-2', 'py-1', 'text-micro');
+      expect(chip).toHaveClass('px-2.5', 'text-micro');
     });
 
     it('renders medium size by default', () => {
       const { container } = render(<Chip label="Medium" />);
       const chip = container.firstChild as HTMLElement;
-      expect(chip).toHaveClass('px-3', 'py-1.5', 'text-small');
+      expect(chip).toHaveClass('px-3', 'text-small');
     });
   });
 
@@ -65,10 +65,10 @@ describe('Chip', () => {
     it('calls onClick when clicked', async () => {
       const handleClick = vi.fn();
       const user = userEvent.setup();
-      
+
       render(<Chip label="Clickable" onClick={handleClick} />);
       const chip = screen.getByRole('button', { name: /clickable/i });
-      
+
       await user.click(chip);
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
@@ -76,10 +76,10 @@ describe('Chip', () => {
     it('is keyboard accessible with Enter key', async () => {
       const handleClick = vi.fn();
       const user = userEvent.setup();
-      
+
       render(<Chip label="Clickable" onClick={handleClick} />);
       const chip = screen.getByRole('button', { name: /clickable/i });
-      
+
       chip.focus();
       await user.keyboard('{Enter}');
       expect(handleClick).toHaveBeenCalledTimes(1);
@@ -88,10 +88,10 @@ describe('Chip', () => {
     it('is keyboard accessible with Space key', async () => {
       const handleClick = vi.fn();
       const user = userEvent.setup();
-      
+
       render(<Chip label="Clickable" onClick={handleClick} />);
       const chip = screen.getByRole('button', { name: /clickable/i });
-      
+
       chip.focus();
       await user.keyboard(' ');
       expect(handleClick).toHaveBeenCalledTimes(1);

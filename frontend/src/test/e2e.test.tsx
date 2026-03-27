@@ -8,7 +8,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { BrowserRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '../api/queryClient'
 import App from '../App'
@@ -24,11 +23,10 @@ describe('End-to-End User Journey', () => {
   })
 
   const renderApp = () => {
+    // App already contains its own BrowserRouter — do not wrap again
     return render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <App />
       </QueryClientProvider>
     )
   }

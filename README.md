@@ -1,86 +1,400 @@
-# Tax Deduction Analyzer (Australia)
+# Deductly — Australian Tax Deduction Analyser
 
-A privacy-first web application that processes Australian bank transaction CSV files and generates comprehensive deduction candidate reports for the Australian income year (1 July to 30 June).
+A privacy-first web application that parses Australian bank statements (CSV and PDF) and generates ATO-grounded deduction candidate reports. Upload your bank statement and receive an itemised analysis of potential work-related deductions across all major ATO categories — with composite confidence scores, evidence checklists, ATO citations, and a full audit trail.
 
-## 🔒 Security & Privacy First
+> **Disclaimer:** Deductly provides indicative analysis only and does not constitute tax advice. Always verify classifications with a registered tax agent or the ATO before lodging a claim.
 
-This application is designed with **privacy and security as core principles**:
+---
 
-- **Ephemeral Mode by Default**: Raw CSV data is never persisted to disk
-- **Memory-Only Processing**: All transaction analysis happens in memory
-- **Automatic Data Redaction**: Sensitive information (account numbers, BSB codes) is automatically redacted from reports
-- **No Third-Party Analytics**: Zero tracking or external data sharing
-- **HTTPS Only**: All communications encrypted in transit
-- **Input Validation**: Comprehensive validation on all user inputs
-- **Rate Limiting**: Protection against abuse and DoS attacks
-- **CORS Protection**: Strict origin policies
-- **Secure Headers**: CSP, HSTS, X-Frame-Options, and more
+## Table of Contents
 
-## 🏗️ Architecture
+1. [How the System Works](#how-the-system-works)
+2. [The RAG Pipeline](#the-rag-pipeline)
+3. [Confidence Scoring](#confidence-scoring)
+4. [Deduction Categories](#deduction-categories)
+5. [Architecture](#architecture)
+6. [Quick Start](#quick-start)
+7. [API Reference](#api-reference)
+8. [Configuration](#configuration)
+9. [Testing](#testing)
+10. [Privacy & Security](#privacy--security)
+11. [Deployment](#deployment)
 
-### Backend (Python FastAPI)
-- **Processing Pipeline**: CSV Parser → Exclusion Engine → Classification Engine → Report Generator
-- **API Layer**: RESTful endpoints with comprehensive error handling
-- **Storage**: Optional SQLite (ephemeral mode by default)
-- **Security**: Input validation, rate limiting, file type/size restrictions
+---
 
-### Frontend (React + TypeScript)
-- **Modern Stack**: React 18, TypeScript, Tailwind CSS
-- **State Management**: React Query for API state
-- **Routing**: React Router for navigation
-- **Security**: XSS protection, secure API communication
+## How the System Works
 
-## 📋 Features
+### End-to-End Flow
 
-### Core Functionality
-- ✅ CSV upload and parsing (supports major Australian banks)
-- ✅ Transaction normalization and enrichment
-- ✅ Intelligent exclusion of non-deductible items
-- ✅ AI-powered classification with confidence scoring
-- ✅ Evidence checklist generation (ATO-aligned)
-- ✅ PDF, CSV, and JSON report generation
-- ✅ Comprehensive audit trail
+```
+Bank Statement (CSV or PDF)
+        │
+        ▼
+┌───────────────────┐
+│  File Validation  │  Type check (CSV/PDF), size limit, format sniff
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│  Parser           │  CSV: multi-bank format detection + column mapping
+│  (CSV / PDF)      │  PDF: pdfplumber primary, PyPDF2 fallback
+└─────────┬─────────┘
+          │  List[NormalisedTransaction]
+          ▼
+┌───────────────────┐
+│  Exclusion Engine │  Filters transfers, ATM withdrawals, mortgage
+└─────────┬─────────┘  repayments, ATO payments, salary credits
+          │  List[NormalisedTransaction] (candidates only)
+          ▼
+┌───────────────────┐
+│  Rules Engine     │  10 priority-ordered rules × keyword + fuzzy
+│  + Fuzzy Matcher  │  merchant matching → ClassifiedTransaction
+└─────────┬─────────┘
+          │  List[ClassifiedTransaction] (rule-based confidence)
+          ▼
+┌───────────────────────────────────┐
+│  RAG + LLM Enhancement (optional) │  See "The RAG Pipeline" below
+└─────────┬─────────────────────────┘
+          │  List[ClassifiedTransaction] (RAG-enriched)
+          ▼
+┌───────────────────┐
+│  Report Generator │  PDF (ReportLab) · CSV · JSON audit trail
+└───────────────────┘
+```
 
-### Privacy Features
-- ✅ Ephemeral mode (no data persistence)
-- ✅ Automatic sensitive data redaction
-- ✅ Configurable data retention
-- ✅ Transparent data handling documentation
+### Transaction Lifecycle
 
-### Australian Tax Compliance
-- ✅ Income year support (1 July - 30 June)
-- ✅ ATO-aligned evidence requirements
-- ✅ Record retention guidance (5-year rule)
-- ✅ Method-required flagging (car, WFH, travel)
-- ✅ Donation eligibility checks (DGR status)
+Every transaction passes through five states recorded in the audit trail:
 
-## 🚀 Quick Start
+| State | Description |
+|---|---|
+| **Normalised** | Date, merchant, amount, payment rail, recurring flag extracted |
+| **Excluded** | Pattern matched an exclusion rule (transfer, ATM, loan, etc.) |
+| **Classified** | Matched a deduction rule; assigned category + confidence |
+| **RAG-enhanced** | Fitness-related transactions also processed through the RAG pipeline |
+| **Finalised** | Placed in one of three report buckets: Deductible / Needs Review / Excluded |
+
+### Report Buckets
+
+| Bucket | Condition |
+|---|---|
+| **Likely Deductible** | Confidence ≥ threshold (default 0.60) and no `needs_review` flag |
+| **Needs Review** | Confidence < threshold, or has `needs_review` / `method_required` / `percentage_required` flag |
+| **Excluded** | Matched an exclusion rule before classification |
+
+---
+
+## The RAG Pipeline
+
+Retrieval-Augmented Generation (RAG) is applied to transactions that the keyword heuristic identifies as potentially fitness-related. It augments the rule-based classification with ATO-grounded reasoning from Claude AI.
+
+### Why RAG?
+
+Fitness expense deductibility under Australian tax law is highly context-dependent — the same gym membership is deductible for a police officer required to maintain fitness standards but not for a software developer. A static rule cannot capture this nuance. RAG retrieves the relevant ATO guidance and passes it to Claude alongside the redacted transaction, enabling occupation-aware reasoning.
+
+### Step-by-Step RAG Process
+
+```
+Transaction (description, merchant, amount)
+        │
+        ▼ Redact PII (BSB codes, account numbers, card numbers)
+        │
+        ▼ Step 1 — Keyword Score (0–30)
+┌───────────────────────────────────────────────────────────────┐
+│  ATOKnowledgeBase.keyword_confidence(description, merchant)   │
+│                                                               │
+│  Checks 11 fitness keyword groups:                            │
+│    gym · personal_training · supplements · equipment          │
+│    activewear · sports_stores · wearables · memberships       │
+│    fitness_apps · medical_fitness · certifications            │
+│                                                               │
+│  Specificity-weighted: multi-word phrases (e.g. "personal     │
+│  trainer") score higher than single words (e.g. "gym").       │
+│  Capped at 0.30 → rescaled to integer 0–30.                   │
+└───────────────────────────────────────────────────────────────┘
+        │  keyword_score ∈ [0, 30]
+        ▼
+        ▼ Step 2 — Retrieve ATO Context (top-k chunks)
+┌───────────────────────────────────────────────────────────────┐
+│  ATOKnowledgeBase.retrieve(query, k=5)                        │
+│                                                               │
+│  Uses TF-IDF-style scoring — no ML, no embeddings:           │
+│    • Tokenise query and each chunk (title + content + tags)   │
+│    • Score = Σ IDF(term) for matching terms                   │
+│    • +2.0 bonus per exact keyword-list match                  │
+│    • Return top-k chunks sorted descending by score           │
+│                                                               │
+│  Knowledge base: 17 ATO chunks covering gym memberships,      │
+│  personal training, supplements, equipment, activewear,       │
+│  fitness professionals, athletes, police/military, certif-    │
+│  ications, and sports medicine.  Each chunk includes:         │
+│    id · title · ato_reference · deductible (bool)             │
+│    occupation_dependent (bool) · keywords · content           │
+│    who_can_claim · who_cannot_claim · evidence_required       │
+└───────────────────────────────────────────────────────────────┘
+        │  chunks: List[Dict] (top-5 most relevant)
+        ▼
+        ▼ Step 3 — RAG Grounding Score (0–40)
+┌───────────────────────────────────────────────────────────────┐
+│  Evaluates whether the retrieved chunks support a claim:      │
+│                                                               │
+│  support = count(chunks where deductible == True)             │
+│  against = count(chunks where deductible == False)            │
+│                                                               │
+│  score = (support/total × 40) − (against/total × 10)         │
+│  Bounded to [0, 40]                                           │
+│                                                               │
+│  Interpretation: If the most relevant ATO guidance says "this │
+│  is not deductible", the grounding score is suppressed even   │
+│  if a keyword matched.                                        │
+└───────────────────────────────────────────────────────────────┘
+        │  rag_grounding ∈ [0, 40]
+        ▼
+        ▼ Step 4 — Call Claude (model: claude-haiku-4-5-20251001)
+┌───────────────────────────────────────────────────────────────┐
+│  System prompt: Expert Australian tax accountant persona.     │
+│  Conservative stance — most fitness expenses are private.     │
+│                                                               │
+│  User message contains:                                       │
+│    • Redacted transaction (description, merchant, amount)     │
+│    • Top-5 retrieved ATO knowledge chunks (truncated at 600   │
+│      characters each)                                         │
+│                                                               │
+│  Claude returns strict JSON:                                  │
+│    is_fitness_related · is_potentially_deductible             │
+│    occupation_dependent · category · confidence (0–100)       │
+│    reason · ato_citation · conditions · evidence_required     │
+│                                                               │
+│  claude_score = int((claude_confidence / 100) × 30)  → 0–30  │
+└───────────────────────────────────────────────────────────────┘
+        │  claude_score ∈ [0, 30]
+        ▼
+        ▼ Step 5 — Composite Score
+┌───────────────────────────────────────────────────────────────┐
+│  composite = min(keyword_score + rag_grounding + claude_score, 100)
+│  confidence_float = composite / 100   →  0.0 – 1.0           │
+│                                                               │
+│  Component breakdown is preserved and surfaced in the report: │
+│    [RAG] reason | ATO: citation                               │
+│    | Score: keyword=X/30 grounding=Y/40 claude=Z/30          │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Graceful Degradation
+
+If `ANTHROPIC_API_KEY` is not set or the `anthropic` package is unavailable, `RAGEngine.available` is `False`. In this mode:
+- Steps 2–4 are skipped.
+- The fallback result uses `confidence = keyword_score` only.
+- `is_potentially_deductible` defaults to `False` (conservative).
+- The reason field explicitly notes that RAG is unavailable.
+
+The rule-based classification still runs for all transactions regardless of RAG availability.
+
+### LLM Classifier Merge Strategy
+
+After RAG analysis, `LLMClassifier.enhance()` merges the RAG result back into the `ClassifiedTransaction`:
+
+| Condition | Behaviour |
+|---|---|
+| Transaction is not fitness-related | Pass through unchanged |
+| Existing confidence ≥ override threshold (0.60) AND not fitness-related | Pass through unchanged (rule did well) |
+| RAG confidence > existing confidence | Use RAG category + confidence |
+| RAG confidence ≤ existing confidence | Keep original category + confidence |
+| Always | Append RAG reason, ATO citation, score breakdown, and disclaimer |
+| Always | Merge RAG evidence requirements into checklist (no duplicates) |
+| Always | Add `rag_analysed` flag |
+| `occupation_dependent = True` | Add `occupation_dependent` flag |
+| `is_potentially_deductible = False` | Add `needs_review` flag |
+
+---
+
+## Confidence Scoring
+
+### Rule-Based (All Transactions)
+
+Each classification rule in `rules.json` carries a base confidence (0.60–0.95). The final confidence from rule matching is:
+- The rule's base confidence, weighted by the fuzzy merchant match score.
+- Transactions below the threshold (default 0.60) are flagged `needs_review`.
+
+### RAG-Composite (Fitness Transactions Only)
+
+```
+Final = keyword(0–30) + grounding(0–40) + claude(0–30)  ≤ 100
+        ───────────────────────────────────────────────
+        Divided by 100 → 0.0 – 1.0 ClassifiedTransaction.confidence
+```
+
+| Range | Label | Interpretation |
+|---|---|---|
+| 0.80 – 1.00 | High | Clear nexus, low ambiguity |
+| 0.60 – 0.79 | Medium | Likely but verify occupation/usage |
+| < 0.60 | Low | Needs professional review |
+
+---
+
+## Deduction Categories
+
+The rule engine covers six primary ATO work-related deduction categories plus four supporting categories:
+
+| Category | Rule ID | Base Confidence | Examples |
+|---|---|---|---|
+| Work Software & Subscriptions | R001 | 0.95 | Adobe, Microsoft 365, GitHub, JetBrains |
+| Professional Memberships | R002 | 0.90 | CPA Australia, Law Society, AMA |
+| Self-Education & Training | R003 | 0.85 | Udemy, TAFE, conference registrations |
+| Work Equipment & Technology | R004 | 0.80 | JB Hi-Fi, Apple, Officeworks tools |
+| Phone & Internet | R005 | 0.70 | Telstra, Optus, TPG (work-use %) |
+| Working From Home | R006 | 0.65 | Internet, electricity (requires WFH method) |
+| Work-Related Travel | R007 | 0.75 | Uber, Qantas, Transurban (logbook required) |
+| Donations to DGR | R008 | 0.85 | Registered charities (DGR status check) |
+| Bank Fees | R009 | high | Account keeping fees on income accounts |
+| Fitness-Related | RAG | composite | Processed through RAG pipeline |
+
+### Exclusion Rules
+
+Applied before classification; excluded transactions do not appear in deduction candidates:
+
+| Rule | Patterns |
+|---|---|
+| Transfers | OSKO, PAYID, BPAY, TRANSFER TO/FROM |
+| Cash Withdrawals | ATM WITHDRAWAL, CASH OUT |
+| Loan Repayments | MORTGAGE, HOME LOAN, CAR LOAN |
+| Tax Payments | ATO PAYMENT, AUSTRALIAN TAXATION OFFICE |
+| Superannuation | SUPERANNUATION, HOSTPLUS, AUSTRALIAN SUPER |
+| Salary / Income Credits | SALARY, WAGES, PAYROLL (credit direction only) |
+
+---
+
+## Architecture
+
+### Backend (`/backend`) — Python 3.11 + FastAPI
+
+```
+backend/
+├── api/
+│   └── endpoints.py          # POST /api/upload, GET /api/jobs/{id}, downloads
+├── config/
+│   ├── rules.json             # 10+ classification rules
+│   └── ato_fitness_knowledge.json  # 17 ATO knowledge chunks
+├── models/
+│   └── schemas.py             # Pydantic models: NormalisedTransaction,
+│                              #   ClassifiedTransaction, ReportData, etc.
+├── processing/
+│   ├── pipeline.py            # Main orchestration: parse → exclude → classify → RAG → report
+│   ├── csv_parser.py          # Multi-bank CSV format detection and parsing
+│   ├── pdf_parser.py          # pdfplumber + PyPDF2 dual-engine PDF extraction
+│   ├── classification_engine.py  # Rule-based classification
+│   ├── exclusion_engine.py    # Pre-classification exclusion filter
+│   ├── rules_engine.py        # Rule matching and priority evaluation
+│   ├── fuzzy_matcher.py       # Merchant name canonicalisation (rapidfuzz)
+│   ├── report_generator.py    # PDF (ReportLab), CSV, JSON report generation
+│   ├── audit_trail.py         # Per-transaction audit event recording
+│   └── redaction_service.py   # BSB codes, account numbers, card numbers
+├── rag/
+│   ├── knowledge_base.py      # ATOKnowledgeBase: TF-IDF retrieval, keyword scoring
+│   ├── rag_engine.py          # RAGEngine: retrieve → score → Claude → composite
+│   └── llm_classifier.py      # LLMClassifier: enhance ClassifiedTransactions with RAG
+├── storage/
+│   ├── database.py            # SQLite schema and migrations
+│   └── storage_service.py     # Ephemeral vs. persistent storage abstraction
+├── middleware/
+│   └── security.py            # Rate limiting, API key, security headers
+├── main.py                    # FastAPI app, CORS, middleware, lifespan
+└── tests/                     # 35 test files, 338 tests
+```
+
+### Frontend (`/frontend`) — React 18 + TypeScript + Vite
+
+```
+frontend/src/
+├── pages/
+│   ├── Landing.tsx            # Hero, features, how-it-works, stats
+│   ├── Upload.tsx             # File upload, income year, analysis trigger
+│   ├── Report.tsx             # Deduction report display + downloads
+│   ├── Rules.tsx              # Deduction rules reference
+│   └── Privacy.tsx            # Privacy policy and data handling
+├── components/
+│   ├── Navigation.tsx         # Top navigation bar
+│   ├── Button.tsx             # Primary / secondary / tertiary variants
+│   ├── Card.tsx               # Glass-morphism card container
+│   ├── Chip.tsx               # Category badge / confidence chip
+│   ├── Drawer.tsx             # Transaction detail side panel
+│   ├── AnimatedSection.tsx    # Scroll-triggered reveal animations
+│   └── ...
+├── api/
+│   ├── client.ts              # Axios HTTP client
+│   └── hooks.ts               # React Query hooks (useUpload, useJobStatus)
+└── hooks/
+    └── useParallax.ts         # Framer Motion parallax scroll hook
+```
+
+### Data Flow Diagram
+
+```
+Browser                    FastAPI                    Anthropic API
+  │                           │                            │
+  │  POST /api/upload          │                            │
+  │  (multipart/form-data)     │                            │
+  ├──────────────────────────>│                            │
+  │                           │                            │
+  │                    ┌──────┴──────────────────────┐     │
+  │                    │  1. Validate file            │     │
+  │                    │  2. Parse CSV/PDF            │     │
+  │                    │  3. Exclude non-candidates   │     │
+  │                    │  4. Classify (rules)         │     │
+  │                    │  5. [if use_rag=true]        │     │
+  │                    │     Redact PII               │     │
+  │                    │     Retrieve ATO chunks      │     │
+  │                    │     ────────────────────────>│     │
+  │                    │     Claude response          │     │
+  │                    │     <────────────────────────│     │
+  │                    │     Merge into classification│     │
+  │                    │  6. Generate reports         │     │
+  │                    └──────┬──────────────────────-┘     │
+  │                           │                            │
+  │  UploadResponse (inline)   │                            │
+  │<──────────────────────────│                            │
+  │                           │                            │
+  │  GET /api/jobs/{id}/       │                            │
+  │  download/pdf              │                            │
+  ├──────────────────────────>│                            │
+  │  PDF report                │                            │
+  │<──────────────────────────│                            │
+```
+
+---
+
+## Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
-- npm or yarn
+- (Optional) Anthropic API key for RAG-enhanced fitness classification
 
-### Backend Setup
+### Backend
 
 ```bash
 cd backend
 
-# Create virtual environment
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run tests
-pytest
+# Configure environment (copy and edit)
+cp .env.example .env
+# Set ANTHROPIC_API_KEY to enable RAG (optional — degrades gracefully without it)
+
+# Run all tests
+pytest -v
 
 # Start development server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
@@ -88,8 +402,12 @@ cd frontend
 # Install dependencies
 npm install
 
-# Run tests
-npm test
+# Configure environment
+cp .env.example .env.local
+# Set VITE_API_BASE_URL=http://localhost:8000
+
+# Run all tests
+npm test -- --run
 
 # Start development server
 npm run dev
@@ -98,225 +416,141 @@ npm run dev
 npm run build
 ```
 
-## 🔐 Security Configuration
-
 ### Environment Variables
-
-Create `.env` files for both backend and frontend:
 
 **Backend `.env`:**
 ```env
+# Required for AI-powered RAG analysis
+ANTHROPIC_API_KEY=sk-ant-...
+
 # Security
-SECRET_KEY=your-secret-key-here-min-32-chars
-ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+SECRET_KEY=your-secret-key-here-minimum-32-characters
+ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
+
+# Upload limits
 MAX_UPLOAD_SIZE_MB=10
 RATE_LIMIT_PER_MINUTE=10
 
-# Database (optional)
-DATABASE_URL=sqlite:///./deductions.db
+# Privacy
 EPHEMERAL_MODE=true
-
-# Redaction
 ENABLE_REDACTION=true
+
+# Optional: custom redaction patterns (comma-separated regex)
 REDACTION_PATTERNS=\d{6}-\d{6,10},\d{3}-\d{3}
-
-# CORS
-CORS_ALLOW_CREDENTIALS=false
-CORS_MAX_AGE=600
 ```
 
-**Frontend `.env`:**
+**Frontend `.env.local`:**
 ```env
-VITE_API_BASE_URL=https://api.yourdomain.com
+VITE_API_BASE_URL=http://localhost:8000
 VITE_MAX_FILE_SIZE_MB=10
-VITE_ENABLE_ANALYTICS=false
 ```
 
-### Security Headers
+---
 
-The application implements comprehensive security headers:
+## API Reference
 
-```python
-# Content Security Policy
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.yourdomain.com; frame-ancestors 'none'
+### `POST /api/upload`
 
-# Other Security Headers
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Referrer-Policy: strict-origin-when-cross-origin
-Permissions-Policy: geolocation=(), microphone=(), camera=()
-```
+Upload a bank statement (CSV or PDF) for analysis.
 
-## 🌐 Deployment
+**Request:** `multipart/form-data`
 
-### Netlify Deployment (Frontend)
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `file` | File | required | CSV or PDF bank statement |
+| `income_year` | string | auto-detected | e.g. `"2025-2026"` |
+| `ephemeral_mode` | bool | `true` | Delete data after response |
+| `confidence_threshold` | float | `0.60` | Minimum confidence for "Likely Deductible" bucket |
+| `use_rag` | bool | `true` | Enable RAG pipeline for fitness transactions |
 
-1. **Build Configuration** (`netlify.toml`):
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-   - Security headers configured
-   - Redirects for SPA routing
-
-2. **Environment Variables**:
-   - Set `VITE_API_BASE_URL` to your backend API URL
-   - Enable HTTPS only
-
-3. **Deploy**:
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
-
-# Login
-netlify login
-
-# Deploy
-netlify deploy --prod
-```
-
-### Backend Deployment Options
-
-#### Option 1: Railway / Render / Fly.io
-- Supports Python/FastAPI natively
-- Auto-scaling and HTTPS
-- Environment variable management
-- Database support
-
-#### Option 2: AWS Lambda + API Gateway
-- Serverless architecture
-- Pay-per-use pricing
-- Auto-scaling
-- Requires Mangum adapter
-
-#### Option 3: Docker Container (Any Platform)
-```bash
-# Build
-docker build -t tax-deduction-analyzer-backend .
-
-# Run
-docker run -p 8000:8000 --env-file .env tax-deduction-analyzer-backend
-```
-
-## 📊 Data Retention & Privacy
-
-### Default Behavior (Ephemeral Mode)
-- Raw CSV data: **Never stored**
-- Transaction data: **Memory only, cleared after processing**
-- Reports: **Generated and available for download, then deleted**
-- Job metadata: **Minimal (job ID, status, timestamps only)**
-
-### Persistent Mode (Optional)
-- Raw CSV data: **Still never stored**
-- Derived fields only: **Merchant, category, confidence, flags**
-- User control: **Can be disabled per-upload**
-- Retention: **Configurable, default 30 days**
-
-### What We Never Store
-- Account numbers
-- BSB codes
-- Full transaction descriptions (only derived merchant names)
-- Personal identifying information
-- Raw CSV file contents
-
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd backend
-pytest -v --cov=. --cov-report=html
-```
-
-**Coverage**: 97% (216 tests passed)
-
-### Frontend Tests
-```bash
-cd frontend
-npm test -- --run
-```
-
-**Coverage**: 118 tests passed
-
-### Property-Based Tests
-The application includes 23 property-based tests using Hypothesis to verify correctness properties across all inputs.
-
-## 📖 API Documentation
-
-### Endpoints
-
-#### POST /api/upload
-Upload a CSV file for processing.
-
-**Request:**
+**Response `200`:**
 ```json
 {
-  "income_year": "2023-2024",
-  "ephemeral_mode": true,
-  "confidence_threshold": 0.60
-}
-```
-
-**Response:**
-```json
-{
-  "job_id": "uuid",
-  "status": "queued",
-  "message": "Upload successful"
-}
-```
-
-#### GET /api/jobs/{job_id}
-Get job status and progress.
-
-**Response:**
-```json
-{
-  "job_id": "uuid",
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
-  "progress": 100,
+  "message": "Processing complete",
+  "report": {
+    "summary": {
+      "total_deductible": "1249.85",
+      "total_needs_review": "312.40",
+      "total_excluded": "6850.00",
+      "category_totals": {
+        "work_software": "549.00",
+        "professional_memberships": "549.00",
+        "training_education": "151.85"
+      },
+      "confidence_distribution": {
+        "high": 8,
+        "medium": 3,
+        "low": 1
+      }
+    },
+    "candidates": [ /* ClassifiedTransaction[] */ ],
+    "excluded": [ /* ExcludedTransaction[] */ ],
+    "audit_trail": [ /* AuditEntry[] */ ],
+    "income_year": "2025-2026",
+    "generated_at": "2026-03-26T14:23:01Z"
+  },
   "report_urls": {
-    "pdf": "/api/jobs/{job_id}/download/pdf",
-    "csv": "/api/jobs/{job_id}/download/csv",
+    "pdf":  "/api/jobs/{job_id}/download/pdf",
+    "csv":  "/api/jobs/{job_id}/download/csv",
     "json": "/api/jobs/{job_id}/download/json"
   }
 }
 ```
 
-#### GET /api/jobs/{job_id}/download/{format}
-Download generated report (pdf, csv, or json).
+### `GET /api/jobs/{job_id}`
 
-### Rate Limits
-- 10 requests per minute per IP
-- 100 MB total upload per hour per IP
-- Configurable via environment variables
+Poll job status (for async processing of large files).
 
-### Error Responses
-All errors follow consistent structure:
+**Response `200`:**
 ```json
 {
-  "error": "error_code",
-  "message": "Human-readable message",
+  "job_id": "550e8400-...",
+  "status": "completed",
+  "progress": 100,
+  "report_urls": { "pdf": "...", "csv": "...", "json": "..." }
+}
+```
+
+`status` values: `queued` · `processing` · `completed` · `failed`
+
+### `GET /api/jobs/{job_id}/download/{format}`
+
+Download generated report. `format` is one of `pdf`, `csv`, `json`.
+
+### `GET /health`
+
+Health check — returns `{"status": "ok"}`.
+
+### Error Format
+
+All errors use a consistent structure:
+```json
+{
+  "error": "file_too_large",
+  "message": "File exceeds 10 MB limit",
   "details": {}
 }
 ```
 
-## 🔧 Configuration
+| HTTP Status | Error Code | When |
+|---|---|---|
+| 400 | `invalid_file_type` | Not CSV or PDF |
+| 400 | `file_too_large` | Exceeds `MAX_UPLOAD_SIZE_MB` |
+| 400 | `parse_error` | Could not parse the file |
+| 404 | `job_not_found` | Unknown `job_id` |
+| 429 | `rate_limit_exceeded` | Too many requests |
+| 500 | `processing_error` | Internal pipeline error |
 
-### CSV Format Support
-Supports major Australian banks:
-- Commonwealth Bank (CommBank)
-- National Australia Bank (NAB)
-- Westpac
-- ANZ
-- ING
+---
 
-Required columns (flexible naming):
-- Date (date, transaction date, etc.)
-- Description (description, details, etc.)
-- Amount (amount, debit, credit, etc.)
+## Configuration
 
-### Classification Rules
-Rules are configured in `backend/config/rules.json`:
+### Classification Rules (`backend/config/rules.json`)
+
+Each rule defines a deduction category:
+
 ```json
 {
   "rule_id": "R001",
@@ -324,77 +558,208 @@ Rules are configured in `backend/config/rules.json`:
   "category": "work_software",
   "priority": 100,
   "confidence": 0.95,
-  "keywords": ["adobe", "microsoft 365"],
-  "merchants": ["Adobe", "Microsoft"],
+  "keywords": ["adobe", "microsoft 365", "github", "jetbrains", "atlassian"],
+  "merchants": ["Adobe", "Microsoft", "GitHub", "JetBrains"],
   "evidence_checklist": ["receipt"],
-  "flags": []
+  "flags": [],
+  "enabled": true
 }
 ```
 
-### Redaction Patterns
-Configure in environment variables:
-```env
-REDACTION_PATTERNS=\d{6}-\d{6,10},\d{3}-\d{3},BSB:\s*\d{3}-\d{3}
+Rules are evaluated in descending priority order. The first matching rule wins.
+
+### ATO Knowledge Base (`backend/config/ato_fitness_knowledge.json`)
+
+17 chunks covering fitness deduction nuances. Each chunk:
+
+```json
+{
+  "id": "gym_general",
+  "title": "Gym Memberships — General Employee Rule",
+  "ato_reference": "ATO ID 2007/182; Section 8-1 ITAA 1997",
+  "category": "fitness_gym",
+  "deductible": false,
+  "occupation_dependent": true,
+  "keywords": ["gym", "fitness centre", "anytime fitness"],
+  "content": "Gym memberships for general employees are private expenses...",
+  "who_can_claim": ["police officers", "firefighters", "fitness instructors"],
+  "who_cannot_claim": ["general employees", "office workers"],
+  "evidence_required": ["receipt", "employer letter", "diary"]
+}
 ```
 
-## 🛡️ Security Best Practices
+The `deductible` boolean drives the RAG grounding score (Step 3 above).
 
-### For Deployment
-1. ✅ Use HTTPS only (enforce with HSTS)
-2. ✅ Set strong SECRET_KEY (min 32 characters)
-3. ✅ Configure CORS with specific origins
-4. ✅ Enable rate limiting
-5. ✅ Set appropriate file size limits
-6. ✅ Use environment variables for secrets
-7. ✅ Enable security headers
-8. ✅ Regular dependency updates
-9. ✅ Monitor logs for suspicious activity
-10. ✅ Implement backup strategy (if using persistent mode)
+### CSV Format Support
 
-### For Users
-1. ✅ Use ephemeral mode for maximum privacy
-2. ✅ Download reports immediately
-3. ✅ Verify HTTPS connection
-4. ✅ Don't share job IDs
-5. ✅ Review Privacy page for data handling details
+Deductly auto-detects the column layout of major Australian banks:
 
-## 📝 License
+| Bank | Format | Date Style |
+|---|---|---|
+| Commonwealth Bank | `Date, Description, Amount` | `DD/MM/YYYY` |
+| NAB | `Transaction Date, Details, Debit, Credit` | `DD/MM/YYYY` |
+| Westpac | `Date, Narrative, Debit Amount, Credit Amount` | `DD/MM/YYYY` |
+| ANZ | `Date, Description, Amount` | `DD/MM/YYYY` |
+| ING | `Date, Description, Credit, Debit` | `DD/MM/YYYY` |
 
-[Your License Here]
+Any CSV with recognisable date, description, and amount columns will be accepted.
 
-## 🤝 Contributing
+---
 
-[Contributing Guidelines]
+## Testing
 
-## 📞 Support
+### Backend — 338 Tests
 
-For issues or questions:
-- GitHub Issues: [Your Repo]
-- Email: [Your Email]
-- Documentation: [Your Docs URL]
+```bash
+cd backend
+pytest -v                          # all tests
+pytest -v --cov=. --cov-report=html  # with coverage report
+pytest tests/test_rag_engine.py -v   # RAG tests only
+```
 
-## ⚠️ Disclaimer
+**Test coverage by module:**
 
-This application provides analysis tools only and does not constitute tax advice. Users should:
-- Verify all classifications with a qualified tax professional
-- Maintain original records as required by the ATO
-- Understand that "likely deductible" means user confirmation is required
-- Consult the ATO or a tax agent for specific guidance
+| Module | Tests | Type |
+|---|---|---|
+| `rag/knowledge_base.py` | 52 | Unit |
+| `rag/rag_engine.py` | 37 | Unit (Anthropic client mocked) |
+| `rag/llm_classifier.py` | 33 | Unit (RAGEngine mocked) |
+| `processing/csv_parser.py` | ~30 | Unit + property-based |
+| `processing/pdf_parser.py` | ~20 | Unit |
+| `processing/classification_engine.py` | ~25 | Unit |
+| `processing/exclusion_engine.py` | ~15 | Unit |
+| `processing/pipeline.py` | ~20 | Integration |
+| `api/endpoints.py` | ~20 | Integration (TestClient) |
+| Property-based (Hypothesis) | 23 | Property |
 
-## 🔄 Changelog
+**Key property invariants tested:**
+- Confidence scores always in `[0.0, 1.0]`
+- Audit trail entry exists for every input transaction
+- Audit trail is deterministic across runs
+- Derived fields only ever written to storage (never raw CSV)
+- Sensitive data (BSB, account numbers) never appears in output
+- Exclusion rules applied before classification
+- Every candidate has a non-empty evidence checklist
 
-### Version 1.0.0 (2024)
-- Initial release
-- Core processing pipeline
-- PDF/CSV/JSON report generation
-- Ephemeral mode
-- Automatic redaction
-- Australian tax compliance features
+### Frontend — 118 Tests
 
-## 👤 Author
+```bash
+cd frontend
+npm test -- --run               # all tests
+npm test -- --run --coverage    # with coverage
+```
+
+Tests cover all pages (`Landing`, `Upload`, `Report`, `Rules`, `Privacy`) and all components (`Button`, `Card`, `Chip`, `Drawer`, `Table`, `Input`, `Modal`), plus end-to-end user journeys via `e2e.test.tsx`.
+
+### Running Both Suites
+
+```bash
+# From project root
+cd backend && pytest -q && cd ../frontend && npm test -- --run
+```
+
+---
+
+## Privacy & Security
+
+### Ephemeral Mode (Always On)
+
+Raw bank statement data is **never stored to disk**. All processing happens in memory. When the API response is sent, the in-memory data is discarded. The only persistent artefact is a minimal job record (job ID, status, timestamps) — no transaction data.
+
+### What Is Never Stored
+
+- Account numbers or BSB codes
+- Full transaction descriptions
+- Raw CSV or PDF file contents
+- Any personal identifying information
+
+### Redaction Before AI Calls
+
+Before any transaction data is sent to the Anthropic API, the `RedactionService` strips:
+- BSB codes (pattern `\d{3}-\d{3}`)
+- Account numbers (pattern `\d{6}-\d{6,10}`)
+- Card numbers (custom patterns, configurable)
+
+Merchant names and keyword signals are preserved so the RAG analysis remains useful.
+
+### Security Controls
+
+| Control | Detail |
+|---|---|
+| Rate limiting | 10 requests/minute per IP (configurable) |
+| File validation | Type + size check before any processing |
+| CORS | Strict origin allowlist |
+| Security headers | CSP, HSTS, X-Frame-Options, X-XSS-Protection, Referrer-Policy |
+| Input validation | Pydantic models on all API inputs |
+| No analytics | Zero third-party tracking or telemetry |
+
+---
+
+## Deployment
+
+### Frontend — Netlify
+
+```bash
+# Install CLI
+npm install -g netlify-cli
+
+# Build and deploy
+cd frontend && npm run build
+netlify deploy --prod --dir=dist
+```
+
+Set `VITE_API_BASE_URL` in Netlify environment variables.
+
+### Backend Options
+
+**Railway / Render / Fly.io** (recommended for simplicity):
+- Python/FastAPI supported natively
+- Set all environment variables in the platform dashboard
+- Enable HTTPS (automatic on all three platforms)
+
+**Docker:**
+```bash
+docker build -t deductly-backend .
+docker run -p 8000:8000 --env-file .env deductly-backend
+```
+
+**AWS Lambda** (serverless):
+- Requires the `mangum` adapter
+- Add `handler = Mangum(app)` to `main.py`
+- Deploy via SAM or Serverless Framework
+
+### Production Checklist
+
+- [ ] `ANTHROPIC_API_KEY` set for RAG analysis
+- [ ] `SECRET_KEY` is at least 32 characters and random
+- [ ] `ALLOWED_ORIGINS` contains only your frontend domain
+- [ ] `EPHEMERAL_MODE=true` (default — do not disable unless needed)
+- [ ] HTTPS enforced (HSTS header configured)
+- [ ] Rate limiting enabled
+- [ ] `DEBUG=false` / Swagger UI disabled
+- [ ] File size limit appropriate (`MAX_UPLOAD_SIZE_MB`)
+
+---
+
+## Changelog
+
+### v1.1.0
+- Expanded from fitness-only to all ATO work-related deduction categories
+- Added RAG pipeline documentation
+- Added comprehensive RAG unit tests (122 new tests)
+- Redesigned UI: banking-appropriate colour scheme (Deep Trust Blue + Growth Green)
+- Removed ephemeral mode toggle — always on by default
+- Fixed React Rules of Hooks violation in transaction drawer
+
+### v1.0.0
+- Initial release: CSV parsing, rule-based classification, PDF/CSV/JSON reports, ephemeral mode
+
+---
+
+## Author
 
 **Samuel Rath**
 
 ---
 
-*Built with privacy and security as core principles*
+*Built with privacy and security as core principles. Not tax advice.*

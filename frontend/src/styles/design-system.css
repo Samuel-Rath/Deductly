@@ -1,40 +1,52 @@
-/* Deductly Design System — Fintech Navy + Violet/Indigo */
+/* Deductly Design System — Banking Trust Blue + Growth Green */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
 
 :root {
-  /* Gradient accent system */
-  --accent:       #6366f1;   /* indigo-500  */
-  --accent-hover: #4f46e5;   /* indigo-600  */
-  --accent-light: #818cf8;   /* indigo-400  */
-  --violet:       #7c3aed;   /* violet-600  */
-  --blue:         #3b82f6;   /* blue-500    */
+  /* Primary brand — Corporate Blue spectrum */
+  --accent:       #1E40AF;   /* corporate blue   */
+  --accent-hover: #1434A0;   /* deeper on hover  */
+  --accent-light: #60A5FA;   /* bright for text  */
+  --trust:        #0A2540;   /* deep trust navy  */
+  --blue:         #3B82F6;   /* bright blue stop */
+
+  /* Positive / growth */
+  --green:        #15803D;   /* growth green     */
+  --green-light:  #4ADE80;   /* bright green     */
+
+  /* Negative / expense */
+  --red:          #B91C1C;   /* alert red        */
+  --red-light:    #F87171;   /* soft red         */
+
+  /* Warning */
+  --amber:        #B45309;   /* amber warning    */
 
   /* Gradient shortcuts */
-  --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #3b82f6 100%);
-  --gradient-text:  linear-gradient(135deg, #a78bfa 0%, #818cf8 50%, #60a5fa 100%);
+  --gradient-brand:    linear-gradient(135deg, #1E40AF 0%, #2563EB 55%, #3B82F6 100%);
+  --gradient-positive: linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%);
+  --gradient-text:     linear-gradient(135deg, #93C5FD 0%, #60A5FA 50%, #3B82F6 100%);
 
-  /* Deep navy backgrounds */
-  --ink-950: #03071e;
-  --ink-900: #060d28;
-  --ink-800: #0c1840;
-  --ink-700: #152050;
+  /* Dark backgrounds (default — analytics-optimised dark mode) */
+  --ink-950: #0D1424;
+  --ink-900: #0F172A;
+  --ink-800: #1E2937;
+  --ink-700: #243447;
 
   /* Borders */
-  --border:       #1b2d5a;
-  --border-hover: #2a4278;
+  --border:       #263C5A;
+  --border-hover: #2E4E78;
 
   /* Text */
-  --slate-50:  #f8fafc;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
+  --slate-50:  #F1F5F9;
+  --slate-300: #CBD5E1;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
 
   /* Shadows */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.25);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.3);
-  --shadow-lg:   0 10px 32px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 24px rgba(99,102,241,0.3);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:   0 10px 32px rgba(0,0,0,0.45);
+  --shadow-glow: 0 0 24px rgba(30,64,175,0.4);
 
   /* Spacing System (8px base) */
   --space-1:  8px;

@@ -137,7 +137,7 @@ export default function Upload() {
             <div className="space-y-6">
               {/* Drag and Drop Zone */}
               <div>
-                <label className="block text-base font-medium text-white mb-3">
+                <label htmlFor="bank-statement-input" className="block text-base font-medium text-white mb-3">
                   Bank Statement
                 </label>
                 <div
@@ -166,6 +166,7 @@ export default function Upload() {
                   `}
                 >
                   <input
+                    id="bank-statement-input"
                     ref={fileInputRef}
                     type="file"
                     accept=".csv,.pdf"
