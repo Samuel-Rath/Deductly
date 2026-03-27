@@ -13,37 +13,37 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0F172A;
+    background: #111318;
   }
   ::-webkit-scrollbar-thumb {
-    background: #263C5A;
+    background: #2A2D38;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #2E4E78;
+    background: #3A3F52;
   }
 }
 
 @layer utilities {
-  /* Gradient text — rich blue, not neon */
+  /* Gradient text — warm gold, not neon */
   .text-gradient {
-    background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 50%, #2563EB 100%);
+    background: linear-gradient(135deg, #F0C04A 0%, #D4970A 50%, #B8860B 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Subtle pearl-blue for hero accent words */
+  /* Bright gold for hero accent words */
   .text-gradient-bright {
-    background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%);
+    background: linear-gradient(135deg, #FDE68A 0%, #F0C04A 50%, #D4970A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Gradient background — primary brand gradient (blue spectrum) */
+  /* Gradient background — primary brand gradient (gold spectrum) */
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 55%, #3B82F6 100%);
+    background: linear-gradient(135deg, #B8860B 0%, #D4970A 55%, #F0C04A 100%);
   }
 
   /* Positive gradient — growth green */
@@ -51,18 +51,18 @@
     background: linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%);
   }
 
-  /* Hero mesh — subtle depth, not glowing */
+  /* Hero mesh — warm depth */
   .bg-hero-mesh {
     background:
-      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(30,64,175,0.14), transparent),
-      radial-gradient(ellipse 55% 40% at -5%  70%, rgba(10,37,64,0.22), transparent),
-      radial-gradient(ellipse 55% 40% at 105% 70%, rgba(59,130,246,0.09), transparent),
-      #0F172A;
+      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(184,134,11,0.10), transparent),
+      radial-gradient(ellipse 55% 40% at -5%  70%, rgba(20,16,8,0.28), transparent),
+      radial-gradient(ellipse 55% 40% at 105% 70%, rgba(212,151,10,0.06), transparent),
+      #111318;
   }
 
-  /* Glass card surface — more opaque for clarity, less blue tint */
+  /* Glass card surface — warm tint */
   .glass {
-    background: rgba(26, 35, 50, 0.82);
+    background: rgba(22, 24, 32, 0.84);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
@@ -72,7 +72,7 @@
     position: relative;
     background-clip: padding-box;
     border: 1px solid transparent;
-    background-image: linear-gradient(135deg, rgba(30,64,175,0.12) 0%, rgba(59,130,246,0.06) 100%);
+    background-image: linear-gradient(135deg, rgba(184,134,11,0.10) 0%, rgba(212,151,10,0.04) 100%);
   }
   .border-gradient::before {
     content: '';
@@ -80,7 +80,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(31,45,61,0.9), rgba(30,64,175,0.3), rgba(59,130,246,0.15));
+    background: linear-gradient(135deg, rgba(42,45,56,0.9), rgba(184,134,11,0.35), rgba(212,151,10,0.15));
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);

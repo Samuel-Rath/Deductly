@@ -6,7 +6,7 @@ export default function Privacy() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <AnimatedSection className="mb-8">
-          <h1 className="text-h1 font-semibold text-white mb-2">
+          <h1 className="font-display text-h1 font-semibold text-white mb-2">
             Privacy & Data Handling
           </h1>
           <p className="text-body text-slate-300">

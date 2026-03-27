@@ -119,8 +119,8 @@ export default function Landing() {
               >
                 {/* Badge */}
                 <motion.div variants={staggerItem}>
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-accent/10 border border-accent/25 text-accent-light mb-8">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-accent/10 border border-accent/30 text-accent-light mb-8 font-mono tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-light animate-pulse" />
                     Australian Tax Deductions
                   </span>
                 </motion.div>
@@ -128,7 +128,7 @@ export default function Landing() {
                 {/* Heading */}
                 <motion.h1
                   variants={staggerItem}
-                  className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6"
+                  className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6"
                 >
                   <span className="text-white">Turn Bank Statements Into </span>
                   <span className="text-gradient-bright">Tax-Ready</span>
@@ -235,7 +235,7 @@ export default function Landing() {
                           <div className="flex items-center gap-1.5">
                             <div className="w-12 h-1 bg-ink-700 rounded-full overflow-hidden">
                               <motion.div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-700 to-blue-400"
+                                className="h-full rounded-full bg-gradient-to-r from-gold-700 to-gold-400"
                                 initial={{ width: '0%' }}
                                 animate={{ width: `${row.conf}%` }}
                                 transition={{ delay: 1.3 + i * 0.18, duration: 0.5 }}
@@ -267,7 +267,7 @@ export default function Landing() {
                     transition={{ delay: 2.1, duration: 0.4 }}
                     className="absolute -top-5 -right-5 glass border border-line-700 rounded-xl px-4 py-3 shadow-soft flex items-center gap-2"
                   >
-                    <Brain size={16} className="text-accent-light" />
+                    <Brain size={16} className="text-gold-400" />
                     <span className="text-sm font-semibold text-white">AI-Powered</span>
                   </motion.div>
                 </div>
@@ -298,12 +298,12 @@ export default function Landing() {
 
       {/* ── Features ──────────────────────────────────────────────────────── */}
       <section className="py-28 bg-ink-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/[0.04] via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gold-600/[0.04] via-transparent to-transparent pointer-events-none" />
 
         <div className="container mx-auto px-6 relative">
           <AnimatedSection variant="blur-up" className="text-center mb-16">
-            <p className="text-sm font-semibold text-accent-light tracking-widest uppercase mb-3">Why Deductly</p>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-3">Why Deductly</p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
               Everything You Need for Tax Time
             </h2>
             <p className="text-lg text-slate-400 max-w-2xl mx-auto">
@@ -342,7 +342,7 @@ export default function Landing() {
               <AnimatedSection key={f.title} delay={f.delay} variant="scale">
                 <TiltCard className="h-full">
                   <div className="h-full glass border border-line-700 hover:border-accent/40 hover:shadow-glow rounded-xl p-6 transition-all duration-300 group">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-700/20 to-blue-500/10 border border-line-600 flex items-center justify-center mb-5 text-accent-light group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-600/20 to-gold-500/10 border border-line-600 flex items-center justify-center mb-5 text-accent-light group-hover:scale-110 transition-transform duration-300">
                       {f.icon}
                     </div>
                     <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
@@ -362,8 +362,8 @@ export default function Landing() {
 
         <div className="container mx-auto px-6 relative z-10">
           <AnimatedSection variant="blur-up" className="text-center mb-16">
-            <p className="text-sm font-semibold text-accent-light tracking-widest uppercase mb-3">Process</p>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-3">Process</p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
               How It Works
             </h2>
             <p className="text-lg text-slate-400 max-w-xl mx-auto">
@@ -421,7 +421,7 @@ export default function Landing() {
 
       {/* ── Stats strip ───────────────────────────────────────────────────── */}
       <section className="py-16 bg-ink-900 border-y border-line-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/[0.03] via-transparent to-blue-900/[0.03] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gold-600/[0.03] via-transparent to-gold-600/[0.03] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.div
             className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center"
@@ -437,7 +437,7 @@ export default function Landing() {
               { value: 'Free', label: 'No Account Needed'      },
             ].map((s) => (
               <motion.div key={s.label} variants={staggerItem}>
-                <div className="text-3xl font-bold text-gradient mb-1">{s.value}</div>
+                <div className="text-3xl font-mono font-bold text-gradient mb-1">{s.value}</div>
                 <div className="text-sm text-slate-500">{s.label}</div>
               </motion.div>
             ))}
@@ -461,8 +461,8 @@ export default function Landing() {
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-ink-700/60 via-transparent to-transparent pointer-events-none" />
               <div className="relative">
                 <AnimatedSection variant="blur-up" delay={0.1}>
-                  <p className="text-sm font-semibold text-accent-light tracking-widest uppercase mb-4">Get Started</p>
-                  <h2 className="text-4xl md:text-5xl font-bold text-white mb-5">
+                  <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-4">Get Started</p>
+                  <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-5">
                     Ready to Find Your Deductions?
                   </h2>
                   <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">

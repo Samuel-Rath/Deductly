@@ -25,7 +25,7 @@ export default function Navigation() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center group">
-              <span className="text-xl font-bold text-white tracking-tight group-hover:text-slate-300 transition-colors">
+              <span className="font-display text-xl font-bold text-gradient tracking-tight">
                 Deductly
               </span>
             </Link>
@@ -47,7 +47,7 @@ export default function Navigation() {
                   {isActive(path) && (
                     <motion.div
                       layoutId="nav-indicator"
-                      className="absolute -bottom-px left-2 right-2 h-px rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
+                      className="absolute -bottom-px left-2 right-2 h-px rounded-full bg-gradient-to-r from-gold-400 to-gold-600"
                     />
                   )}
                 </Link>
@@ -57,7 +57,7 @@ export default function Navigation() {
             {/* CTA */}
             <Link
               to="/upload"
-              className="px-5 py-2 text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-accent via-blue-600 to-blue-500 shadow-soft hover:shadow-glow transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              className="px-5 py-2 text-sm font-semibold text-ink-950 rounded-xl bg-gradient-brand shadow-soft hover:shadow-glow transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
             >
               Get Started
             </Link>

@@ -5,10 +5,10 @@ import { Button } from './Button'
 
 describe('Button', () => {
   describe('variants', () => {
-    it('renders primary variant with white text', () => {
+    it('renders primary variant with dark text on gold background', () => {
       render(<Button variant="primary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button).toHaveClass('text-white')
+      expect(button).toHaveClass('text-ink-950')
     })
 
     it('renders primary variant with gradient background', () => {
@@ -38,7 +38,7 @@ describe('Button', () => {
     it('defaults to primary variant when no variant specified', () => {
       render(<Button>Default</Button>)
       const button = screen.getByRole('button', { name: /default/i })
-      expect(button).toHaveClass('text-white')
+      expect(button).toHaveClass('text-ink-950')
     })
   })
 

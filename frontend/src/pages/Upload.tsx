@@ -125,7 +125,7 @@ export default function Upload() {
     <div className="pt-24 container mx-auto px-6 py-12">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-h1 font-semibold text-white mb-2">
+          <h1 className="font-display text-h1 font-semibold text-white mb-2">
             Upload Your Bank Statement
           </h1>
           <p className="text-body text-slate-300">
@@ -219,7 +219,7 @@ export default function Upload() {
                 <div role="status" aria-live="polite" aria-label="Upload progress" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
                   <div className="flex justify-between text-sm text-slate-300 mb-3">
                     <span className="font-medium">Uploading and processing...</span>
-                    <span className="font-semibold text-accent">{uploadProgress}%</span>
+                    <span className="font-mono font-semibold text-accent-light">{uploadProgress}%</span>
                   </div>
                   <div 
                     className="w-full h-2 bg-ink-900 rounded-full overflow-hidden"

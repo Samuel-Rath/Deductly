@@ -236,7 +236,7 @@ export default function Report() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-h1 font-semibold text-white mb-2">
+            <h1 className="font-display text-h1 font-semibold text-white mb-2">
               Deduction Report
             </h1>
             <p className="text-body text-slate-300">
@@ -339,10 +339,10 @@ export default function Report() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <div className="space-y-2">
-              <div className="text-micro font-medium text-slate-500">
+              <div className="font-mono text-micro font-medium text-slate-500">
                 LIKELY DEDUCTIBLE
               </div>
-              <div className="text-h1 font-semibold text-white">
+              <div className="font-mono text-h1 font-semibold text-white">
                 {formatCurrency(summary.totalDeductible)}
               </div>
               <div className="text-small text-slate-300">
@@ -353,10 +353,10 @@ export default function Report() {
 
           <Card>
             <div className="space-y-2">
-              <div className="text-micro font-medium text-slate-500">
+              <div className="font-mono text-micro font-medium text-slate-500">
                 NEEDS REVIEW
               </div>
-              <div className="text-h1 font-semibold text-slate-300">
+              <div className="font-mono text-h1 font-semibold text-slate-300">
                 {formatCurrency(summary.totalNeedsReview)}
               </div>
               <div className="text-small text-slate-300">
@@ -367,10 +367,10 @@ export default function Report() {
 
           <Card>
             <div className="space-y-2">
-              <div className="text-micro font-medium text-slate-500">
+              <div className="font-mono text-micro font-medium text-slate-500">
                 EXCLUDED
               </div>
-              <div className="text-h1 font-semibold text-slate-500">
+              <div className="font-mono text-h1 font-semibold text-slate-500">
                 {formatCurrency(summary.totalExcluded)}
               </div>
               <div className="text-small text-slate-300">
@@ -381,10 +381,10 @@ export default function Report() {
 
           <Card>
             <div className="space-y-2">
-              <div className="text-micro font-medium text-slate-500">
+              <div className="font-mono text-micro font-medium text-slate-500">
                 TOTAL ANALYSED
               </div>
-              <div className="text-h1 font-semibold text-white">
+              <div className="font-mono text-h1 font-semibold text-white">
                 {totalTransactions}
               </div>
               <div className="text-small text-slate-300">
