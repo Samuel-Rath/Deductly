@@ -5,74 +5,71 @@
 @layer base {
   body {
     @apply bg-ink-900 text-white font-sans antialiased;
+    /* Warm baseline — inherit line-height from Tailwind fontSize tokens */
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* Focus rings — high-visibility amber, meets WCAG 3:1 on dark surfaces */
+  :focus-visible {
+    outline: 2px solid #F5C842;
+    outline-offset: 3px;
+    border-radius: 4px;
   }
-  ::-webkit-scrollbar-track {
-    background: #111318;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #2A2D38;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #3A3F52;
-  }
+
+  /* Custom scrollbar — warm toned */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: #171512; }
+  ::-webkit-scrollbar-thumb  { background: #363129; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #46403A; }
 }
 
 @layer utilities {
-  /* Gradient text — warm gold, not neon */
+  /* ── Gradient text — warm jewel gold ─────────────────────────────────── */
   .text-gradient {
-    background: linear-gradient(135deg, #F0C04A 0%, #D4970A 50%, #B8860B 100%);
+    background: linear-gradient(135deg, #F5C842 0%, #D4970A 50%, #C8900A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Bright gold for hero accent words */
+  /* Brighter gradient for large hero headings */
   .text-gradient-bright {
-    background: linear-gradient(135deg, #FDE68A 0%, #F0C04A 50%, #D4970A 100%);
+    background: linear-gradient(135deg, #FEF3C7 0%, #F5C842 45%, #D4970A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Gradient background — primary brand gradient (gold spectrum) */
+  /* ── Brand gradient fill ──────────────────────────────────────────────── */
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #B8860B 0%, #D4970A 55%, #F0C04A 100%);
+    background: linear-gradient(135deg, #C8900A 0%, #D4970A 55%, #F5C842 100%);
   }
 
-  /* Positive gradient — growth green */
   .bg-gradient-positive {
     background: linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%);
   }
 
-  /* Hero mesh — warm depth */
+  /* ── Hero mesh — warm amber depth ────────────────────────────────────── */
   .bg-hero-mesh {
     background:
-      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(184,134,11,0.10), transparent),
-      radial-gradient(ellipse 55% 40% at -5%  70%, rgba(20,16,8,0.28), transparent),
-      radial-gradient(ellipse 55% 40% at 105% 70%, rgba(212,151,10,0.06), transparent),
-      #111318;
+      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(200,144,10,0.13), transparent),
+      radial-gradient(ellipse 55% 40% at -5%  70%, rgba(13,11,9,0.35),    transparent),
+      radial-gradient(ellipse 55% 40% at 105% 70%, rgba(212,151,10,0.07), transparent),
+      #171512;
   }
 
-  /* Glass card surface — warm tint */
+  /* ── Glass card — warm tinted ────────────────────────────────────────── */
   .glass {
-    background: rgba(22, 24, 32, 0.84);
+    background: rgba(26, 22, 16, 0.86);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
-  /* Gradient border via pseudo-element mask */
+  /* ── Gradient border via pseudo-element mask ─────────────────────────── */
   .border-gradient {
     position: relative;
     background-clip: padding-box;
     border: 1px solid transparent;
-    background-image: linear-gradient(135deg, rgba(184,134,11,0.10) 0%, rgba(212,151,10,0.04) 100%);
+    background-image: linear-gradient(135deg, rgba(200,144,10,0.10) 0%, rgba(212,151,10,0.04) 100%);
   }
   .border-gradient::before {
     content: '';
@@ -80,24 +77,64 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(42,45,56,0.9), rgba(184,134,11,0.35), rgba(212,151,10,0.15));
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
+    background: linear-gradient(
+      135deg,
+      rgba(54, 49, 41, 0.90),
+      rgba(200, 144, 10, 0.40),
+      rgba(212, 151, 10, 0.18)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:         linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
   }
 
-  /* Animated gradient shimmer for buttons */
+  /* ── Animated shimmer for buttons ────────────────────────────────────── */
   .btn-shimmer {
     background-size: 200% auto;
     transition: background-position 0.4s ease;
   }
-  .btn-shimmer:hover {
-    background-position: right center;
+  .btn-shimmer:hover { background-position: right center; }
+
+  /* ── Touch-action: manipulation — removes 300ms tap delay ───────────── */
+  .touch-manipulation { touch-action: manipulation; }
+
+  /* ── Skip-to-content — visible on focus only ─────────────────────────── */
+  .skip-link {
+    position: fixed;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    padding: 12px 24px;
+    background: #F5C842;
+    color: #0D0B09;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus {
+    top: 0;
+    outline: none;
+  }
+
+  /* ── Reduced motion — disable all animations when requested ─────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    /* Keep opacity transitions for focus/hover — just remove motion */
+    .motion-safe-only {
+      animation: none !important;
+      transform: none !important;
+    }
   }
 }

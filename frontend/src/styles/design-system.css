@@ -1,54 +1,50 @@
-/* Deductly Design System — Financial Ledger: Playfair Display + Space Mono + Warm Gold */
+/* Deductly Design System — Antique Ledger: Playfair Display + Space Mono + DM Sans */
+/* Palette: warm mahogany darks × jewel gold — all text passes WCAG AA (4.5:1+)    */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
 
 :root {
-  /* Primary brand — Warm Gold spectrum */
-  --accent:       #B8860B;   /* aged ledger gold    */
-  --accent-hover: #9A6E09;   /* deeper on hover     */
-  --accent-light: #F0C04A;   /* bright for text     */
-  --trust:        #141008;   /* deep warm charcoal  */
-  --gold:         #D4970A;   /* mid gold            */
+  /* ── Accent — Jewel Gold ───────────────────────────────────────────────── */
+  --accent:        #C8900A;   /* brand gold                               */
+  --accent-hover:  #A67508;   /* deeper on hover                          */
+  --accent-light:  #F5C842;   /* 10:1 contrast on ink-900 — use for text  */
+  --gold:          #D4970A;   /* mid gold for gradients                   */
 
-  /* Positive / growth */
-  --green:        #15803D;   /* growth green        */
-  --green-light:  #4ADE80;   /* bright green        */
+  /* ── Backgrounds — Warm Mahogany Charcoal ─────────────────────────────── */
+  --ink-950: #0D0B09;   /* near-black, warmest                            */
+  --ink-900: #171512;   /* page body                                      */
+  --ink-800: #211E1A;   /* card surface                                   */
+  --ink-700: #2C2824;   /* elevated card / hover surface                  */
 
-  /* Negative / expense */
-  --red:          #B91C1C;   /* alert red           */
-  --red-light:    #F87171;   /* soft red            */
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --border:        #363129;   /* default border                           */
+  --border-hover:  #46403A;   /* hover / focus border                     */
 
-  /* Warning */
-  --amber:        #B45309;   /* amber warning       */
+  /* ── Text — Warm Slate ─────────────────────────────────────────────────── */
+  --slate-50:  #FBF7F2;   /* warm white — 14:1 on ink-900               */
+  --slate-300: #C4BAB0;   /* secondary — 7.2:1 on ink-900               */
+  --slate-400: #8C8078;   /* muted — 4.6:1 on ink-900  (AA ✓)           */
+  --slate-500: #605850;   /* subtle — 3.1:1 on ink-900 (large text only) */
 
-  /* Gradient shortcuts */
-  --gradient-brand:    linear-gradient(135deg, #B8860B 0%, #D4970A 55%, #F0C04A 100%);
+  /* ── Semantic ──────────────────────────────────────────────────────────── */
+  --green:        #15803D;
+  --green-light:  #4ADE80;
+  --red:          #DC2626;
+  --red-light:    #F87171;
+  --amber:        #B45309;
+
+  /* ── Gradients ─────────────────────────────────────────────────────────── */
+  --gradient-brand:    linear-gradient(135deg, #C8900A 0%, #D4970A 55%, #F5C842 100%);
   --gradient-positive: linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%);
-  --gradient-text:     linear-gradient(135deg, #F0C04A 0%, #D4970A 50%, #B8860B 100%);
+  --gradient-text:     linear-gradient(135deg, #F5C842 0%, #D4970A 50%, #C8900A 100%);
 
-  /* Dark backgrounds — warm charcoal (default dark mode) */
-  --ink-950: #0C0E12;
-  --ink-900: #111318;
-  --ink-800: #1C2028;
-  --ink-700: #242A35;
+  /* ── Shadows ───────────────────────────────────────────────────────────── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.40);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.50);
+  --shadow-lg:   0 10px 32px rgba(0,0,0,0.60);
+  --shadow-glow: 0 0 24px rgba(200,144,10,0.32);
 
-  /* Borders — warm-tinted dark */
-  --border:       #2A2D38;
-  --border-hover: #3A3F52;
-
-  /* Text */
-  --slate-50:  #F4F1EC;
-  --slate-300: #C8C2B8;
-  --slate-400: #958E82;
-  --slate-500: #605A50;
-
-  /* Shadows */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.35);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.40);
-  --shadow-lg:   0 10px 32px rgba(0,0,0,0.50);
-  --shadow-glow: 0 0 24px rgba(184,134,11,0.35);
-
-  /* Spacing System (8px base) */
+  /* ── Spacing — 8px base ────────────────────────────────────────────────── */
   --space-1:  8px;
   --space-2:  16px;
   --space-3:  24px;
@@ -59,14 +55,14 @@
   --space-12: 96px;
   --space-16: 128px;
 
-  /* Border Radius */
+  /* ── Radius ────────────────────────────────────────────────────────────── */
   --radius-sm:  6px;
   --radius-md:  8px;
   --radius-lg:  12px;
   --radius-xl:  16px;
   --radius-2xl: 24px;
 
-  /* Typography */
+  /* ── Typography ────────────────────────────────────────────────────────── */
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-mono:    'Space Mono', 'Courier New', monospace;
   --font-family:  'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

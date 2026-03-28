@@ -1,4 +1,4 @@
-import { useRef, MouseEvent } from 'react'
+import { useRef, useEffect, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   motion,
@@ -65,6 +65,13 @@ function TiltCard({ children, className = '' }: { children: React.ReactNode; cla
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Landing() {
   const navigate = useNavigate()
+
+  // Pre-warm the backend on page load so Render's free tier isn't cold
+  // when the user navigates to /upload. Fire-and-forget — errors are ignored.
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => {/* ignore */})
+  }, [])
 
   // Hero parallax — tracks the hero section scrolling out of view
   const heroRef = useRef<HTMLElement>(null)

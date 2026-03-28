@@ -19,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const baseStyles = [
     'relative inline-flex items-center justify-center',
-    'font-medium transition-all duration-200',
+    'font-medium transition-all duration-200 touch-manipulation',
     'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-ink-950',
     'disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none',
   ].join(' ');

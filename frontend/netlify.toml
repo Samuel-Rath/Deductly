@@ -28,10 +28,10 @@
     Content-Security-Policy = """
       default-src 'self';
       script-src 'self' 'unsafe-inline';
-      style-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       img-src 'self' data: https:;
-      font-src 'self' data:;
-      connect-src 'self' https://*.netlify.app https://api.yourdomain.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      connect-src 'self' https://*.netlify.app https://*.up.railway.app https://*.onrender.com;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';

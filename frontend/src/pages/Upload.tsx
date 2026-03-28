@@ -197,7 +197,7 @@ export default function Upload() {
                   </p>
                 )}
                 {error && (
-                  <div className="mt-3 p-3 bg-red-900/20 border border-red-700 rounded-lg">
+                  <div role="alert" aria-live="polite" className="mt-3 p-3 bg-red-900/20 border border-red-700 rounded-lg">
                     <div className="flex items-start gap-2">
                       <Icon name="AlertCircle" size={18} className="text-red-400 mt-0.5 flex-shrink-0" />
                       <p className="text-sm text-red-300">{error}</p>

@@ -1,4 +1,4 @@
-import { motion, useInView, type TargetAndTransition } from 'framer-motion'
+import { motion, useInView, useReducedMotion, type TargetAndTransition } from 'framer-motion'
 import { useRef, ReactNode } from 'react'
 
 export type AnimationVariant =
@@ -56,7 +56,13 @@ export default function AnimatedSection({
 }: AnimatedSectionProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: threshold })
+  const prefersReducedMotion = useReducedMotion()
   const { hidden, visible } = variants[variant]
+
+  // When reduced-motion is requested, skip all transforms/blur — render immediately visible
+  if (prefersReducedMotion) {
+    return <div ref={ref} className={className}>{children}</div>
+  }
 
   return (
     <motion.div

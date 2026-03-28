@@ -6,14 +6,17 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-ink-950">
+        <a href="#main" className="skip-link">Skip to main content</a>
         <Navigation />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/report/:jobId" element={<Report />} />
-          <Route path="/rules" element={<Rules />} />
-          <Route path="/privacy" element={<Privacy />} />
-        </Routes>
+        <main id="main">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/report/:jobId" element={<Report />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/privacy" element={<Privacy />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   )

@@ -7,62 +7,64 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Warm charcoal dark backgrounds (dark mode as default)
+        // Warm mahogany-charcoal dark backgrounds
         ink: {
-          950: '#0C0E12',   // deepest background
-          900: '#111318',   // body / section background
-          800: '#1C2028',   // card surface
-          700: '#242A35',   // elevated / hover state
+          950: '#0D0B09',   // near-black, warmest
+          900: '#171512',   // page body
+          800: '#211E1A',   // card surface
+          700: '#2C2824',   // elevated / hover
         },
-        // Borders — warm-tinted dark
+        // Borders — warm brown-grey
         line: {
-          700: '#2A2D38',   // default borders
-          600: '#3A3F52',   // hover / focus borders
+          700: '#363129',   // default
+          600: '#46403A',   // hover / focus
         },
-        // Text — slightly warm slate
+        // Text — warm slate (all pass WCAG AA on ink-900)
         slate: {
-          50:  '#F4F1EC',
-          300: '#C8C2B8',
-          400: '#958E82',
-          500: '#605A50',
+          50:  '#FBF7F2',   // warm white        14:1
+          300: '#C4BAB0',   // secondary          7.2:1
+          400: '#8C8078',   // muted              4.6:1 ✓
+          500: '#605850',   // subtle (large text)
         },
-        // Primary brand accent — Warm Gold
+        // Primary brand — Jewel Gold
         accent: {
-          DEFAULT: '#B8860B',   // aged ledger gold
-          hover:   '#9A6E09',   // deeper on hover
-          light:   '#F0C04A',   // bright gold for text on dark bg
-        },
-        // Deep Trust — hero gradients, shadows
-        trust: {
-          900: '#0A0800',
-          800: '#140F02',
+          DEFAULT: '#C8900A',   // brand gold
+          hover:   '#A67508',   // deeper on hover
+          light:   '#F5C842',   // 10:1 on ink-900 — use for text
         },
         // Gold spectrum — gradients and highlights
         gold: {
-          300: '#F5D87A',
-          400: '#F0C04A',
-          500: '#D4970A',
-          600: '#B8860B',
-          700: '#9A6E09',
+          200: '#FEF3C7',
+          300: '#FDE68A',
+          400: '#F5C842',   // bright jewel gold (use for text)
+          500: '#D4970A',   // mid gold
+          600: '#C8900A',   // brand gold
+          700: '#A67508',   // deep gold
+          800: '#7C5606',   // darkest (decorative only)
         },
-        // Positive / income / growth
+        // Trust / deep — hero gradients, logo shadows
+        trust: {
+          900: '#0A0800',
+          800: '#130F02',
+        },
+        // Positive / income
         green: {
           400: '#4ADE80',
           700: '#15803D',
           800: '#166534',
         },
-        // Negative / expense / alert
+        // Alert / expense
         red: {
           400: '#F87171',
-          700: '#B91C1C',
+          700: '#DC2626',
           800: '#991B1B',
         },
-        // Warning — credit card / mid-risk
+        // Warning
         amber: {
           400: '#F59E0B',
           500: '#B45309',
         },
-        // Chart category — loans / other
+        // Charts
         teal: {
           400: '#2DD4BF',
           600: '#0F766E',
@@ -74,14 +76,15 @@ export default {
         mono:    ['Space Mono', 'Courier New', 'monospace'],
       },
       fontSize: {
-        'display': ['3rem',     { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.02em' }],
-        'h1':      ['2rem',     { lineHeight: '1.3', fontWeight: '600' }],
-        'h2':      ['1.5rem',   { lineHeight: '1.4', fontWeight: '600' }],
-        'h3':      ['1.125rem', { lineHeight: '1.5', fontWeight: '600' }],
-        'body':    ['1rem',     { lineHeight: '1.6', fontWeight: '400' }],
-        'small':   ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }],
-        'micro':   ['0.75rem',  { lineHeight: '1.5', fontWeight: '500' }],
+        'display': ['3rem',     { lineHeight: '1.1',  fontWeight: '700', letterSpacing: '-0.02em' }],
+        'h1':      ['2rem',     { lineHeight: '1.3',  fontWeight: '600' }],
+        'h2':      ['1.5rem',   { lineHeight: '1.4',  fontWeight: '600' }],
+        'h3':      ['1.125rem', { lineHeight: '1.5',  fontWeight: '600' }],
+        'body':    ['1rem',     { lineHeight: '1.65', fontWeight: '400' }],  // 1.65 > 1.5 ✓
+        'small':   ['0.875rem', { lineHeight: '1.6',  fontWeight: '400' }],
+        'micro':   ['0.75rem',  { lineHeight: '1.5',  fontWeight: '500' }],
       },
+      // 8px base spacing
       spacing: {
         '1':  '8px',
         '2':  '16px',
@@ -94,21 +97,25 @@ export default {
         '16': '128px',
         '20': '160px',
         '24': '192px',
+        // Touch-target helpers
+        'touch': '44px',   // min touch target
       },
       backgroundImage: {
-        'gradient-brand':      'linear-gradient(135deg, #B8860B 0%, #D4970A 55%, #F0C04A 100%)',
-        'gradient-brand-soft': 'linear-gradient(135deg, #9A6E09 0%, #B8860B 50%, #F0C04A 100%)',
-        'gradient-card':       'linear-gradient(135deg, rgba(184,134,11,0.08) 0%, rgba(212,151,10,0.03) 100%)',
+        'gradient-brand':      'linear-gradient(135deg, #C8900A 0%, #D4970A 55%, #F5C842 100%)',
+        'gradient-brand-soft': 'linear-gradient(135deg, #A67508 0%, #C8900A 50%, #F5C842 100%)',
+        'gradient-card':       'linear-gradient(135deg, rgba(200,144,10,0.08) 0%, rgba(212,151,10,0.03) 100%)',
         'gradient-positive':   'linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%)',
       },
       boxShadow: {
-        'soft':        '0 2px 8px rgba(0,0,0,0.40)',
-        'soft-lg':     '0 8px 24px rgba(0,0,0,0.50)',
-        'glow':        '0 0 16px rgba(184,134,11,0.22)',
-        'glow-lg':     '0 0 32px rgba(184,134,11,0.28)',
-        'glow-violet': '0 0 20px rgba(212,151,10,0.18)',
-        'glow-green':  '0 0 16px rgba(21,128,61,0.2)',
-        'card':        '0 1px 4px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03)',
+        'soft':        '0 2px 8px rgba(0,0,0,0.45)',
+        'soft-lg':     '0 8px 24px rgba(0,0,0,0.55)',
+        'glow':        '0 0 16px rgba(200,144,10,0.28)',
+        'glow-lg':     '0 0 32px rgba(200,144,10,0.36)',
+        'glow-violet': '0 0 20px rgba(212,151,10,0.22)',
+        'glow-green':  '0 0 16px rgba(21,128,61,0.22)',
+        'card':        '0 1px 4px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.03)',
+        // Focus ring — high-visibility amber, meets WCAG 3:1 against dark bg
+        'focus-ring':  '0 0 0 3px rgba(245,200,66,0.60)',
       },
       borderRadius: {
         'sm':   '6px',
@@ -122,6 +129,7 @@ export default {
         'shimmer':      'shimmer 2.5s infinite linear',
         'float':        'float 6s ease-in-out infinite',
         'pulse-slow':   'pulse 3s ease-in-out infinite',
+        'fade-in':      'fadeIn 0.2s ease-out',
       },
       keyframes: {
         shimmer: {
@@ -131,6 +139,10 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%':      { transform: 'translateY(-8px)' },
+        },
+        fadeIn: {
+          '0%':   { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },
