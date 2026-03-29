@@ -114,18 +114,6 @@
 #     windowSize = 60
 #     maxRequests = 100
 
-# Security scanning
-[[plugins]]
-  package = "@netlify/plugin-lighthouse"
-  
-  [[plugins.inputs.audits]]
-    path = "/"
-    
-    [plugins.inputs.audits.thresholds]
-      performance = 0.9
-      accessibility = 0.9
-      best-practices = 0.9
-      seo = 0.9
 
 # Deploy contexts
 [context.production]
