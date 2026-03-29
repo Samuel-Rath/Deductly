@@ -7,7 +7,7 @@ import {
 } from 'framer-motion'
 import { Button, AnimatedSection } from '../components'
 import { HeroBackground } from '../components/ui/hero-bg'
-import { Shield, Zap, FileText, Check, ArrowRight, Upload, Brain, Lock, ShieldCheck } from 'lucide-react'
+import { Shield, Zap, FileText, ArrowRight, Upload, Brain, Lock, ShieldCheck } from 'lucide-react'
 
 // ─── Stagger container ────────────────────────────────────────────────────────
 const staggerContainer = {

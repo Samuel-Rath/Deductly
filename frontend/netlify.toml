@@ -3,14 +3,14 @@
 
 [build]
   # Build settings
-  command = "npm install --include=dev && npm run build"
+  command = "npm install --include=dev && npx vite build"
   publish = "dist"
   
   # Environment variables (set in Netlify UI)
   # VITE_API_BASE_URL - Backend API URL
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   NPM_VERSION = "9"
 
 # SPA routing - redirect all requests to index.html
