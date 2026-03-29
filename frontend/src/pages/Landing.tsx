@@ -6,7 +6,8 @@ import {
   useMotionValue, useMotionTemplate,
 } from 'framer-motion'
 import { Button, AnimatedSection } from '../components'
-import { Shield, Zap, FileText, Check, ArrowRight, Upload, Brain } from 'lucide-react'
+import { HeroBackground } from '../components/ui/hero-bg'
+import { Shield, Zap, FileText, Check, ArrowRight, Upload, Brain, Lock, ShieldCheck } from 'lucide-react'
 
 // ─── Stagger container ────────────────────────────────────────────────────────
 const staggerContainer = {
@@ -80,10 +81,6 @@ export default function Landing() {
     offset: ['start start', 'end start'],
   })
 
-  // Background layers (drift down = depth behind)
-  const orb1Y   = useSpring(useTransform(heroScroll, [0,1], ['0%',  '28%']), { stiffness:55, damping:22 })
-  const orb2Y   = useSpring(useTransform(heroScroll, [0,1], ['0%',  '16%']), { stiffness:55, damping:22 })
-
   // Foreground layers (drift up = feels closer)
   const heroTextY = useSpring(useTransform(heroScroll, [0,1], ['0%', '-12%']), { stiffness:60, damping:25 })
   const cardY     = useSpring(useTransform(heroScroll, [0,1], ['0%', '-20%']), { stiffness:60, damping:25 })
@@ -97,23 +94,39 @@ export default function Landing() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden bg-hero-mesh min-h-[92vh] flex items-center"
+        className="relative overflow-hidden bg-[#0D0B09] min-h-[92vh] flex items-center"
       >
-        {/* Parallax glow orb 1 — very subtle depth */}
-        <motion.div
-          style={{ y: orb1Y }}
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-accent/[0.07] blur-[160px] pointer-events-none"
+        {/* WebGL mesh-gradient background */}
+        <HeroBackground />
+
+        {/* Dot grid texture */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(200,144,10,0.09) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+            opacity: 0.55,
+          }}
         />
-        {/* Parallax glow orb 2 — mid background */}
-        <motion.div
-          style={{ y: orb2Y }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-blue-500/[0.06] blur-[130px] pointer-events-none"
+
+        {/* Top-center beacon — gold light shaft (softened) */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-44 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, rgba(245,200,66,0.32), transparent)' }}
+        />
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{
+            width: '480px',
+            height: '240px',
+            background: 'radial-gradient(ellipse 50% 100% at 50% 0%, rgba(200,144,10,0.09), transparent)',
+          }}
         />
 
         {/* Hero content wrapper — fades + drifts on scroll */}
         <motion.div
           style={{ y: heroTextY, opacity: heroOpacity }}
-          className="container mx-auto px-6 py-24 md:py-32 relative z-10"
+          className="container mx-auto px-6 py-16 md:py-20 relative z-10"
         >
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -124,64 +137,57 @@ export default function Landing() {
                 initial="hidden"
                 animate="visible"
               >
-                {/* Badge */}
-                <motion.div variants={staggerItem}>
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-accent/10 border border-accent/30 text-accent-light mb-8 font-mono tracking-wide">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent-light animate-pulse" />
-                    Australian Tax Deductions
-                  </span>
-                </motion.div>
-
                 {/* Heading */}
                 <motion.h1
                   variants={staggerItem}
-                  className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6"
+                  className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-5"
                 >
-                  <span className="text-white">Turn Bank Statements Into </span>
-                  <span className="text-gradient-bright">Tax-Ready</span>
-                  <span className="text-white"> Reports</span>
+                  <span className="text-white">Find Every Tax Deduction</span>
+                  <br />
+                  <span className="text-gradient-bright">You're Missing</span>
                 </motion.h1>
 
                 {/* Sub-copy */}
-                <motion.p
-                  variants={staggerItem}
-                  className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg"
-                >
-                  Upload your CSV or PDF bank statement and get instant AI-powered analysis of work-related deductions — with ATO citations, confidence scores, and evidence checklists.
-                </motion.p>
+                <motion.div variants={staggerItem} className="max-w-lg mb-8 space-y-2">
+                  <p className="text-lg leading-relaxed" style={{ color: '#E2DDD8' }}>
+                    Upload your CSV or PDF bank statement — instantly uncover every work-related deduction you're entitled to.
+                  </p>
+                  <p className="text-base leading-relaxed" style={{ color: '#A89E96' }}>
+                    AI-powered with ATO citations, confidence scores, and audit-ready evidence checklists.
+                  </p>
+                </motion.div>
 
-                {/* CTA buttons */}
-                <motion.div variants={staggerItem} className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+                {/* CTA + trust signals — grouped as one unit */}
+                <motion.div variants={staggerItem} className="flex flex-col items-start gap-4">
                   <Button
                     variant="primary"
                     size="lg"
                     onClick={() => navigate('/upload')}
-                    className="w-full sm:w-auto group"
+                    className="group"
                   >
-                    Analyse My Statement
+                    Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => navigate('/rules')}
-                    className="w-full sm:w-auto"
-                  >
-                    View ATO Rules
-                  </Button>
-                </motion.div>
-
-                {/* Trust signals */}
-                <motion.div
-                  variants={staggerItem}
-                  className="flex flex-wrap gap-5 text-sm text-slate-500"
-                >
-                  {['No account needed', 'Data never stored', 'ATO-cited analysis'].map((t) => (
-                    <span key={t} className="flex items-center gap-1.5">
-                      <Check size={14} className="text-green-400" strokeWidth={2.5} />
-                      {t}
-                    </span>
-                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { Icon: Lock,        text: 'No data stored',   accent: '#4ADE80' },
+                      { Icon: ShieldCheck, text: 'ATO-aligned',       accent: '#F5C842' },
+                      { Icon: Zap,         text: 'Instant analysis',  accent: '#93C5FD' },
+                    ].map(({ Icon, text, accent }) => (
+                      <span
+                        key={text}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+                        style={{
+                          background: 'rgba(44,40,36,0.80)',
+                          border: '1px solid rgba(64,58,48,0.95)',
+                          color: '#D4CCC4',
+                        }}
+                      >
+                        <Icon size={11} style={{ color: accent }} strokeWidth={2.5} />
+                        {text}
+                      </span>
+                    ))}
+                  </div>
                 </motion.div>
               </motion.div>
 
@@ -198,85 +204,141 @@ export default function Landing() {
                   <motion.div
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                    className="glass border border-line-700 rounded-2xl p-8 shadow-soft-lg"
+                    className="glass rounded-2xl overflow-hidden"
+                    style={{
+                      border: '1px solid rgba(54,49,41,0.85)',
+                      boxShadow: '0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(200,144,10,0.12), inset 0 1px 0 rgba(255,255,255,0.04)',
+                    }}
                   >
-                    {/* Card header */}
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center shrink-0">
-                        <Upload size={18} className="text-white" />
+                    {/* Window chrome */}
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 border-b"
+                      style={{ background: 'rgba(20,16,10,0.70)', borderColor: 'rgba(54,49,41,0.70)' }}
+                    >
+                      <div className="flex gap-1.5">
+                        {['#FF6B6B', '#FFD166', '#06D6A0'].map((c, i) => (
+                          <div key={i} className="w-2.5 h-2.5 rounded-full" style={{ background: c, opacity: 0.72 }} />
+                        ))}
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-white">bank_statement_jul24.pdf</div>
-                        <div className="text-xs text-slate-500">Analysing 247 transactions…</div>
-                      </div>
-                    </div>
-
-                    {/* Animated shimmer progress bar */}
-                    <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden mb-8">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-brand"
-                        initial={{ width: '0%' }}
-                        animate={{ width: '82%' }}
-                        transition={{ duration: 1.8, delay: 0.8, ease: 'easeOut' }}
-                      />
-                    </div>
-
-                    {/* Transaction rows */}
-                    {[
-                      { name: 'Officeworks',        cat: 'Home Office',         conf: 74, amount: '$89.95'  },
-                      { name: 'CPA Australia',      cat: 'Professional Membership', conf: 91, amount: '$549.00' },
-                      { name: 'Qantas Airways',     cat: 'Work Travel',        conf: 67, amount: '$312.40' },
-                    ].map((row, i) => (
-                      <motion.div
-                        key={row.name}
-                        initial={{ opacity: 0, x: 12 }}
-                        animate={{ opacity: 1, x: 0  }}
-                        transition={{ delay: 1.1 + i * 0.18, duration: 0.4 }}
-                        className="flex items-center justify-between py-3 border-b border-line-700 last:border-0"
+                      <div
+                        className="flex-1 flex items-center justify-center gap-1.5 mx-4 py-1 px-3 rounded-md text-xs font-mono"
+                        style={{
+                          background: 'rgba(44,40,36,0.80)',
+                          border: '1px solid rgba(54,49,41,0.55)',
+                          color: '#7A7060',
+                        }}
                       >
-                        <div>
-                          <div className="text-sm font-medium text-white">{row.name}</div>
-                          <div className="text-xs text-slate-500">{row.cat}</div>
+                        <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                        deductly.app/analyse
+                      </div>
+                    </div>
+
+                    {/* Card body */}
+                    <div className="p-6">
+                      {/* File header */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-brand flex items-center justify-center shrink-0">
+                          <Upload size={15} className="text-white" />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-12 h-1 bg-ink-700 rounded-full overflow-hidden">
-                              <motion.div
-                                className="h-full rounded-full bg-gradient-to-r from-gold-700 to-gold-400"
-                                initial={{ width: '0%' }}
-                                animate={{ width: `${row.conf}%` }}
-                                transition={{ delay: 1.3 + i * 0.18, duration: 0.5 }}
-                              />
-                            </div>
-                            <span className="text-xs text-slate-500">{row.conf}%</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-white truncate">bank_statement_jul24.pdf</div>
+                          <div className="text-xs" style={{ color: '#907E6E' }}>Analysing 247 transactions…</div>
+                        </div>
+                        <span
+                          className="text-xs font-mono font-bold px-2 py-0.5 rounded shrink-0"
+                          style={{
+                            background: 'rgba(200,144,10,0.15)',
+                            color: '#F5C842',
+                            border: '1px solid rgba(200,144,10,0.25)',
+                          }}
+                        >
+                          82%
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="h-1.5 rounded-full overflow-hidden mb-5" style={{ background: 'rgba(44,40,36,0.80)' }}>
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-brand"
+                          initial={{ width: '0%' }}
+                          animate={{ width: '82%' }}
+                          transition={{ duration: 1.8, delay: 0.8, ease: 'easeOut' }}
+                        />
+                      </div>
+
+                      {/* Transaction rows */}
+                      {[
+                        { name: 'Officeworks',    cat: 'Home Office',  conf: 74, amount: '$89.95',  catBg: 'rgba(212,151,10,0.15)',  catFg: '#F5C842' },
+                        { name: 'CPA Australia',  cat: 'Professional', conf: 91, amount: '$549.00', catBg: 'rgba(74,222,128,0.12)',  catFg: '#4ADE80' },
+                        { name: 'Qantas Airways', cat: 'Work Travel',  conf: 67, amount: '$312.40', catBg: 'rgba(147,197,253,0.12)', catFg: '#93C5FD' },
+                      ].map((row, i) => (
+                        <motion.div
+                          key={row.name}
+                          initial={{ opacity: 0, x: 12 }}
+                          animate={{ opacity: 1, x: 0  }}
+                          transition={{ delay: 1.1 + i * 0.18, duration: 0.4 }}
+                          className="flex items-center justify-between py-2.5 border-b last:border-0"
+                          style={{ borderColor: 'rgba(54,49,41,0.60)' }}
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-white mb-0.5">{row.name}</div>
+                            <span
+                              className="text-xs px-1.5 py-0.5 rounded font-medium"
+                              style={{ background: row.catBg, color: row.catFg }}
+                            >
+                              {row.cat}
+                            </span>
                           </div>
-                          <span className="text-sm font-semibold text-white tabular-nums">{row.amount}</span>
-                        </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-10 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(44,40,36,0.80)' }}>
+                                <motion.div
+                                  className="h-full rounded-full"
+                                  style={{ background: 'linear-gradient(90deg, #A67508, #F5C842)' }}
+                                  initial={{ width: '0%' }}
+                                  animate={{ width: `${row.conf}%` }}
+                                  transition={{ delay: 1.3 + i * 0.18, duration: 0.5 }}
+                                />
+                              </div>
+                              <span className="text-xs tabular-nums" style={{ color: '#907E6E' }}>{row.conf}%</span>
+                            </div>
+                            <span className="text-sm font-semibold text-white tabular-nums">{row.amount}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+
+                      {/* Summary footer */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 2.2, duration: 0.4 }}
+                        className="flex items-center justify-between pt-3 mt-1"
+                        style={{ borderTop: '1px solid rgba(54,49,41,0.60)' }}
+                      >
+                        <span className="text-xs" style={{ color: '#907E6E' }}>Confirmed + likely</span>
+                        <span className="text-base font-bold font-mono" style={{ color: '#4ADE80' }}>$951.35</span>
                       </motion.div>
-                    ))}
+                    </div>
                   </motion.div>
 
                   {/* Floating badge — total */}
                   <motion.div
                     initial={{ opacity: 0, y: 12, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0,  scale: 1 }}
-                    transition={{ delay: 2.0, duration: 0.4 }}
-                    className="absolute -bottom-5 -left-5 glass border border-line-700 rounded-xl px-4 py-3 shadow-soft"
+                    transition={{ delay: 2.0, duration: 0.45 }}
+                    className="absolute -bottom-5 -left-6 rounded-xl px-4 py-3"
+                    style={{
+                      background: 'rgba(12,9,6,0.94)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(74,222,128,0.32)',
+                      boxShadow: '0 8px 28px rgba(0,0,0,0.65), 0 0 20px rgba(74,222,128,0.10)',
+                    }}
                   >
-                    <div className="text-xs text-slate-500 mb-0.5">Potential deductions</div>
-                    <div className="text-xl font-bold text-green-400">$1,840.50</div>
+                    <div className="text-xs mb-0.5" style={{ color: '#907E6E' }}>You could be missing</div>
+                    <div className="text-2xl font-bold font-mono" style={{ color: '#4ADE80' }}>$1,840.50</div>
+                    <div className="text-xs mt-0.5" style={{ color: '#4ADE80', opacity: 0.65 }}>in deductions</div>
                   </motion.div>
 
-                  {/* Floating badge — AI */}
-                  <motion.div
-                    initial={{ opacity: 0, y: -12, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0,   scale: 1 }}
-                    transition={{ delay: 2.1, duration: 0.4 }}
-                    className="absolute -top-5 -right-5 glass border border-line-700 rounded-xl px-4 py-3 shadow-soft flex items-center gap-2"
-                  >
-                    <Brain size={16} className="text-gold-400" />
-                    <span className="text-sm font-semibold text-white">AI-Powered</span>
-                  </motion.div>
                 </div>
               </motion.div>
 
@@ -292,13 +354,14 @@ export default function Landing() {
           style={{ opacity: useTransform(heroScroll, [0, 0.2], [1, 0]) }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10"
         >
-          <span className="text-xs text-slate-600 tracking-widest uppercase">Scroll</span>
+          <span className="text-xs tracking-widest uppercase" style={{ color: '#46403A' }}>Scroll</span>
           <motion.div
             animate={{ y: [0, 6, 0] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-4 h-6 rounded-full border border-slate-700 flex items-start justify-center pt-1"
+            className="w-4 h-6 rounded-full flex items-start justify-center pt-1"
+            style={{ border: '1px solid rgba(70,64,58,0.65)' }}
           >
-            <div className="w-0.5 h-1.5 rounded-full bg-slate-600" />
+            <div className="w-0.5 h-1.5 rounded-full" style={{ background: '#46403A' }} />
           </motion.div>
         </motion.div>
       </section>
@@ -483,7 +546,7 @@ export default function Landing() {
                     onClick={() => navigate('/upload')}
                     className="group mx-auto"
                   >
-                    Start Analysing Now
+                    Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
                   <p className="mt-6 text-sm text-slate-500">
