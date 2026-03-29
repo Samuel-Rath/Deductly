@@ -3,7 +3,7 @@
 
 [build]
   # Build settings
-  command = "npm run build"
+  command = "npm install --include=dev && npm run build"
   publish = "dist"
   
   # Environment variables (set in Netlify UI)
