@@ -18,10 +18,10 @@ export function HeroBackground() {
           "#311E05",  // dark amber shadow
           "#A67508",  // deeper gold
         ]}
-        speed={0.22}
-        distortion={0.35}
-        swirl={0.12}
-        grainMixer={0.06}
+        speed={0.08}
+        distortion={0.2}
+        swirl={0.06}
+        grainMixer={0.04}
       />
 
       {/* Dark vignette overlay — keeps text readable, deepens edges */}

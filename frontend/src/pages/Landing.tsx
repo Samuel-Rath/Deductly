@@ -2,8 +2,8 @@ import { useRef, useEffect, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   motion,
-  useScroll, useTransform, useSpring,
-  useMotionValue, useMotionTemplate,
+  useScroll, useTransform,
+  useMotionValue, useMotionTemplate, useSpring,
 } from 'framer-motion'
 import { Button, AnimatedSection } from '../components'
 import { HeroBackground } from '../components/ui/hero-bg'
@@ -81,9 +81,9 @@ export default function Landing() {
     offset: ['start start', 'end start'],
   })
 
-  // Foreground layers (drift up = feels closer)
-  const heroTextY = useSpring(useTransform(heroScroll, [0,1], ['0%', '-12%']), { stiffness:60, damping:25 })
-  const cardY     = useSpring(useTransform(heroScroll, [0,1], ['0%', '-20%']), { stiffness:60, damping:25 })
+  // Foreground layers — direct transforms (no spring) so they stay in sync with scroll
+  const heroTextY = useTransform(heroScroll, [0, 1], ['0%', '-12%'])
+  const cardY     = useTransform(heroScroll, [0, 1], ['0%', '-20%'])
 
   // Opacity for hero content fading as it scrolls out
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0])
@@ -125,7 +125,7 @@ export default function Landing() {
 
         {/* Hero content wrapper — fades + drifts on scroll */}
         <motion.div
-          style={{ y: heroTextY, opacity: heroOpacity }}
+          style={{ y: heroTextY, opacity: heroOpacity, willChange: 'transform, opacity' }}
           className="container mx-auto px-4 sm:px-6 py-14 sm:py-16 md:py-20 relative z-10"
         >
           <div className="max-w-6xl mx-auto">
@@ -194,7 +194,7 @@ export default function Landing() {
 
               {/* Right: floating mock UI — parallax upward */}
               <motion.div
-                style={{ y: cardY }}
+                style={{ y: cardY, willChange: 'transform' }}
                 initial={{ opacity: 0, x: 32, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0,  scale: 1 }}
                 transition={{ duration: 0.75, delay: 0.3, ease: EASE }}
@@ -428,8 +428,8 @@ export default function Landing() {
 
       {/* ── How It Works ──────────────────────────────────────────────────── */}
       <section className="py-16 md:py-24 lg:py-28 bg-ink-950 relative overflow-hidden">
-        {/* Background parallax orb */}
-        <ParallaxOrb className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.05] blur-[160px]" speed={0.15} />
+        {/* Static orb — no scroll tracking */}
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.05] blur-[160px] pointer-events-none" />
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <AnimatedSection variant="blur-up" className="text-center mb-10 md:mb-16">
@@ -518,13 +518,9 @@ export default function Landing() {
 
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="py-16 md:py-24 lg:py-28 bg-ink-900 relative overflow-hidden">
-        <ParallaxOrb
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          speed={0.1}
-          inner
-        >
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-[700px] h-[350px] rounded-full bg-accent/[0.06] blur-[140px]" />
-        </ParallaxOrb>
+        </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <AnimatedSection variant="scale">
