@@ -1,0 +1,107 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Skip to main content" [ref=e4] [cursor=pointer]:
+    - /url: "#main"
+  - navigation [ref=e5]:
+    - generic [ref=e8]:
+      - link "Deductly" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e10]: Deductly
+      - generic [ref=e11]:
+        - link "Get Started" [ref=e12] [cursor=pointer]:
+          - /url: /upload
+        - button "Open menu" [ref=e13] [cursor=pointer]
+  - main [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e23]:
+          - heading "Find Every Tax Deduction You're Missing" [level=1] [ref=e24]:
+            - text: Find Every Tax Deduction
+            - text: You're Missing
+          - generic [ref=e25]:
+            - paragraph [ref=e26]: Upload your CSV or PDF bank statement — instantly uncover every work-related deduction you're entitled to.
+            - paragraph [ref=e27]: AI-powered with ATO citations, confidence scores, and audit-ready evidence checklists.
+          - generic [ref=e28]:
+            - button "Find My Deductions" [ref=e29] [cursor=pointer]:
+              - text: Find My Deductions
+              - img [ref=e30]
+            - generic [ref=e32]:
+              - generic [ref=e33]:
+                - img [ref=e34]
+                - text: No data stored
+              - generic [ref=e37]:
+                - img [ref=e38]
+                - text: ATO-aligned
+              - generic [ref=e41]:
+                - img [ref=e42]
+                - text: Instant analysis
+        - generic [ref=e45]: Scroll
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - paragraph [ref=e51]: Why Deductly
+          - heading "Everything You Need for Tax Time" [level=2] [ref=e52]
+          - paragraph [ref=e53]: ATO-grounded AI built for all Australian workers
+        - generic [ref=e54]:
+          - generic [ref=e57]:
+            - img [ref=e59]
+            - heading "Privacy First" [level=3] [ref=e61]
+            - paragraph [ref=e62]: Data is processed in memory and discarded the moment your report is generated. Nothing is ever stored.
+          - generic [ref=e65]:
+            - img [ref=e67]
+            - heading "AI-Grounded" [level=3] [ref=e75]
+            - paragraph [ref=e76]: Claude AI cross-references transactions against the ATO knowledge base with occupation-specific rules across all major deduction categories.
+          - generic [ref=e79]:
+            - img [ref=e81]
+            - heading "Confidence Scores" [level=3] [ref=e83]
+            - paragraph [ref=e84]: Composite 0–100% scoring — keyword matching, RAG grounding, and AI reasoning — fully transparent.
+          - generic [ref=e87]:
+            - img [ref=e89]
+            - heading "ATO Citations" [level=3] [ref=e92]
+            - paragraph [ref=e93]: Every deduction candidate includes the specific ATO ruling or tax determination that supports the claim.
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - paragraph [ref=e97]: Process
+          - heading "How It Works" [level=2] [ref=e98]
+          - paragraph [ref=e99]: Three steps from statement to deduction report
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - generic [ref=e102]: "01"
+            - generic [ref=e103]:
+              - heading "Upload Your Statement" [level=3] [ref=e104]
+              - paragraph [ref=e105]: Drop in a CSV or PDF from any major Australian bank. We auto-detect the format, income year, and bank layout.
+          - generic [ref=e106]:
+            - generic [ref=e107]: "02"
+            - generic [ref=e108]:
+              - heading "AI Analyses Transactions" [level=3] [ref=e109]
+              - paragraph [ref=e110]: Transactions are matched against ATO knowledge base entries and scored by AI. PII is redacted before any external call.
+          - generic [ref=e111]:
+            - generic [ref=e112]: "03"
+            - generic [ref=e113]:
+              - heading "Download Your Report" [level=3] [ref=e114]
+              - paragraph [ref=e115]: Get a full deduction report with ATO citations, evidence checklists, and occupation-dependent flags — ready for your tax agent.
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - generic [ref=e120]: "6"
+          - generic [ref=e121]: Deduction Categories
+        - generic [ref=e122]:
+          - generic [ref=e123]: 100%
+          - generic [ref=e124]: Ephemeral — No Storage
+        - generic [ref=e125]:
+          - generic [ref=e126]: 0–100
+          - generic [ref=e127]: Composite Confidence
+        - generic [ref=e128]:
+          - generic [ref=e129]: Free
+          - generic [ref=e130]: No Account Needed
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - paragraph [ref=e137]: Get Started
+          - heading "Ready to Find Your Deductions?" [level=2] [ref=e138]
+          - paragraph [ref=e139]: Upload your bank statement and get an ATO-grounded deduction report in under a minute
+        - generic [ref=e140]:
+          - button "Find My Deductions" [ref=e141] [cursor=pointer]:
+            - text: Find My Deductions
+            - img [ref=e142]
+          - paragraph [ref=e144]: No account · No storage · No surprises
+```

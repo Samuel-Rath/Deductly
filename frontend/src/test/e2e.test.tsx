@@ -43,7 +43,7 @@ describe('End-to-End User Journey', () => {
 
   it('renders landing page with current headline', () => {
     renderApp()
-    expect(screen.getByText(/Turn Bank Statements Into/i)).toBeInTheDocument()
+    expect(screen.getByText(/Find Every Tax Deduction/i)).toBeInTheDocument()
     expect(screen.getByText('Deductly')).toBeInTheDocument()
   })
 

@@ -1,0 +1,47 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Skip to main content" [ref=e4] [cursor=pointer]:
+    - /url: "#main"
+  - navigation [ref=e5]:
+    - generic [ref=e8]:
+      - link "Deductly" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e10]: Deductly
+      - generic [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+        - link "Upload" [ref=e13] [cursor=pointer]:
+          - /url: /upload
+          - text: Upload
+        - link "Rules" [ref=e15] [cursor=pointer]:
+          - /url: /rules
+        - link "Privacy" [ref=e16] [cursor=pointer]:
+          - /url: /privacy
+      - link "Get Started" [ref=e17] [cursor=pointer]:
+        - /url: /upload
+  - main [ref=e18]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - heading "Upload Your Bank Statement" [level=1] [ref=e22]
+        - paragraph [ref=e23]: We'll analyse your transactions and identify potential tax deductions
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Bank Statement
+          - button "Upload bank statement - drag and drop or click to browse" [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]:
+              - img [ref=e30]
+              - generic [ref=e33]: Drop your file here
+              - generic [ref=e34]: CSV or PDF • or click to browse
+          - paragraph [ref=e35]: Accepts CSV and PDF files • Maximum 10MB
+        - generic [ref=e36]:
+          - img [ref=e37]
+          - paragraph [ref=e40]: Your data is processed in memory and deleted immediately after your report is generated. Nothing is stored.
+        - generic [ref=e41]:
+          - button "Back" [ref=e42] [cursor=pointer]
+          - button "Start Analysis" [disabled]
+      - generic [ref=e43]:
+        - heading "Supported Formats" [level=3] [ref=e44]
+        - paragraph [ref=e45]: We support CSV and PDF bank statements from CommBank, NAB, Westpac, ANZ, and ING. The income year will be automatically detected from your transaction dates.
+```
