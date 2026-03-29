@@ -130,7 +130,7 @@ export default function Rules() {
   const [activeSection, setActiveSection] = useState<'classification' | 'exclusion' | 'confidence'>('classification')
 
   return (
-    <div className="pt-24 container mx-auto px-6 py-12">
+    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <AnimatedSection className="mb-8">
@@ -145,13 +145,14 @@ export default function Rules() {
         <div>
           {/* Section Tabs */}
           <div className="mb-8">
-            <div className="flex space-x-6 border-b border-line-700">
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="flex space-x-2 sm:space-x-6 border-b border-line-700 min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveSection('classification')}
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
-                  ${activeSection === 'classification' 
-                    ? 'text-white' 
+                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  ${activeSection === 'classification'
+                    ? 'text-white'
                     : 'text-slate-500 hover:text-slate-300'
                   }
                 `}
@@ -164,9 +165,9 @@ export default function Rules() {
               <button
                 onClick={() => setActiveSection('exclusion')}
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
-                  ${activeSection === 'exclusion' 
-                    ? 'text-white' 
+                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  ${activeSection === 'exclusion'
+                    ? 'text-white'
                     : 'text-slate-500 hover:text-slate-300'
                   }
                 `}
@@ -179,9 +180,9 @@ export default function Rules() {
               <button
                 onClick={() => setActiveSection('confidence')}
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
-                  ${activeSection === 'confidence' 
-                    ? 'text-white' 
+                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  ${activeSection === 'confidence'
+                    ? 'text-white'
                     : 'text-slate-500 hover:text-slate-300'
                   }
                 `}
@@ -191,6 +192,7 @@ export default function Rules() {
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
                 )}
               </button>
+            </div>
             </div>
           </div>
 

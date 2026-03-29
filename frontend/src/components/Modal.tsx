@@ -22,10 +22,10 @@ export const Modal: React.FC<ModalProps> = ({
   const previousFocusRef = useRef<HTMLElement | null>(null);
   
   const sizeStyles = {
-    sm: 'max-w-md',
-    md: 'max-w-2xl',
-    lg: 'max-w-4xl',
-    xl: 'max-w-6xl'
+    sm: 'w-full sm:max-w-md',
+    md: 'w-full sm:max-w-2xl',
+    lg: 'w-full sm:max-w-4xl',
+    xl: 'w-full sm:max-w-6xl'
   };
   
   useEffect(() => {
@@ -76,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
         tabIndex={-1}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-line-700">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-line-700">
             {title && (
               <h2 id="modal-title" className="text-h2 font-semibold">
                 {title}
@@ -95,7 +95,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {children}
         </div>
       </div>

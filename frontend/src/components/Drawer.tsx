@@ -40,7 +40,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const panelBase = 'absolute w-full max-w-md h-full overflow-y-auto shadow-2xl transition-transform duration-300 ease-in-out';
+  const panelBase = 'absolute w-full sm:max-w-md h-full overflow-y-auto shadow-2xl transition-transform duration-300 ease-in-out';
   const panelPos  = position === 'right' ? 'right-0' : 'left-0';
 
   return (

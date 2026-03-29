@@ -140,7 +140,7 @@ export default function Report() {
   const isLoadingReport = !stateReportData && (isLoading || (jobStatus?.status === 'completed' && !reportData && !reportError))
 
   return (
-    <div className="pt-24 container mx-auto px-6 py-12">
+    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
       {/* Loading State */}
       {isLoadingReport && (
         <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
@@ -336,7 +336,7 @@ export default function Report() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card>
             <div className="space-y-2">
               <div className="font-mono text-micro font-medium text-slate-500">
@@ -395,7 +395,7 @@ export default function Report() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Confidence Distribution Chart */}
           <Card>
             <h3 className="text-h3 font-semibold text-white mb-6">
@@ -565,7 +565,7 @@ export default function Report() {
               aria-labelledby="candidates-tab"
               className="overflow-x-auto"
             >
-              <table className="w-full" aria-label="Deduction candidates">
+              <table className="w-full min-w-[640px]" aria-label="Deduction candidates">
                 <thead>
                   <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
                     <th className="pb-3 pr-4">DATE</th>

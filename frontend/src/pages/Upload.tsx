@@ -122,7 +122,7 @@ export default function Upload() {
     }
 
   return (
-    <div className="pt-24 container mx-auto px-6 py-12">
+    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="font-display text-h1 font-semibold text-white mb-2">
@@ -155,7 +155,7 @@ export default function Upload() {
                     }
                   }}
                   className={`
-                    border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
+                    border-2 border-dashed rounded-xl p-5 sm:p-8 text-center cursor-pointer
                     transition-all duration-200
                     ${isDragging
                       ? 'border-violet-500 bg-violet-500/5 scale-[1.02] shadow-glow-violet'
@@ -238,7 +238,7 @@ export default function Upload() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between gap-4 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
                 <Button
                   variant="secondary"
                   size="md"
@@ -252,7 +252,7 @@ export default function Upload() {
                   size="md"
                   onClick={handleUpload}
                   disabled={!file || isUploading}
-                  className="min-w-[160px]"
+                  className="w-full sm:w-auto sm:min-w-[160px]"
                 >
                   {isUploading ? 'Processing...' : 'Start Analysis'}
                 </Button>

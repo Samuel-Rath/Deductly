@@ -117,8 +117,8 @@ export default function Landing() {
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
           style={{
-            width: '480px',
-            height: '240px',
+            width: 'clamp(280px, 80vw, 480px)',
+            height: 'clamp(140px, 40vw, 240px)',
             background: 'radial-gradient(ellipse 50% 100% at 50% 0%, rgba(200,144,10,0.09), transparent)',
           }}
         />
@@ -126,21 +126,22 @@ export default function Landing() {
         {/* Hero content wrapper — fades + drifts on scroll */}
         <motion.div
           style={{ y: heroTextY, opacity: heroOpacity }}
-          className="container mx-auto px-6 py-16 md:py-20 relative z-10"
+          className="container mx-auto px-4 sm:px-6 py-14 sm:py-16 md:py-20 relative z-10"
         >
           <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-              {/* Left: copy */}
+              {/* Left: copy — centered on mobile/tablet, left on desktop */}
               <motion.div
                 variants={staggerContainer}
                 initial="hidden"
                 animate="visible"
+                className="text-center lg:text-left"
               >
                 {/* Heading */}
                 <motion.h1
                   variants={staggerItem}
-                  className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-5"
+                  className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-4 sm:mb-5"
                 >
                   <span className="text-white">Find Every Tax Deduction</span>
                   <br />
@@ -148,27 +149,27 @@ export default function Landing() {
                 </motion.h1>
 
                 {/* Sub-copy */}
-                <motion.div variants={staggerItem} className="max-w-lg mb-8 space-y-2">
-                  <p className="text-lg leading-relaxed" style={{ color: '#E2DDD8' }}>
+                <motion.div variants={staggerItem} className="max-w-lg mx-auto lg:mx-0 mb-7 sm:mb-8 space-y-2">
+                  <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#E2DDD8' }}>
                     Upload your CSV or PDF bank statement — instantly uncover every work-related deduction you're entitled to.
                   </p>
-                  <p className="text-base leading-relaxed" style={{ color: '#A89E96' }}>
+                  <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#A89E96' }}>
                     AI-powered with ATO citations, confidence scores, and audit-ready evidence checklists.
                   </p>
                 </motion.div>
 
                 {/* CTA + trust signals — grouped as one unit */}
-                <motion.div variants={staggerItem} className="flex flex-col items-start gap-4">
+                <motion.div variants={staggerItem} className="flex flex-col items-center lg:items-start gap-4">
                   <Button
                     variant="primary"
                     size="lg"
                     onClick={() => navigate('/upload')}
-                    className="group"
+                    className="group w-full sm:w-auto"
                   >
                     Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                     {[
                       { Icon: Lock,        text: 'No data stored',   accent: '#4ADE80' },
                       { Icon: ShieldCheck, text: 'ATO-aligned',       accent: '#F5C842' },
@@ -367,22 +368,22 @@ export default function Landing() {
       </section>
 
       {/* ── Features ──────────────────────────────────────────────────────── */}
-      <section className="py-28 bg-ink-900 relative overflow-hidden">
+      <section className="py-16 md:py-24 lg:py-28 bg-ink-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold-600/[0.04] via-transparent to-transparent pointer-events-none" />
 
-        <div className="container mx-auto px-6 relative">
-          <AnimatedSection variant="blur-up" className="text-center mb-16">
+        <div className="container mx-auto px-4 sm:px-6 relative">
+          <AnimatedSection variant="blur-up" className="text-center mb-10 md:mb-16">
             <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-3">Why Deductly</p>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
               Everything You Need for Tax Time
             </h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto">
               ATO-grounded AI built for all Australian workers
             </p>
           </AnimatedSection>
 
           {/* Feature grid — each card tilts on hover */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-6xl mx-auto">
             {[
               {
                 icon: <Shield size={22} />,
@@ -426,24 +427,24 @@ export default function Landing() {
       </section>
 
       {/* ── How It Works ──────────────────────────────────────────────────── */}
-      <section className="py-28 bg-ink-950 relative overflow-hidden">
+      <section className="py-16 md:py-24 lg:py-28 bg-ink-950 relative overflow-hidden">
         {/* Background parallax orb */}
         <ParallaxOrb className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] bg-accent/[0.05] blur-[160px]" speed={0.15} />
 
-        <div className="container mx-auto px-6 relative z-10">
-          <AnimatedSection variant="blur-up" className="text-center mb-16">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <AnimatedSection variant="blur-up" className="text-center mb-10 md:mb-16">
             <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-3">Process</p>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
               How It Works
             </h2>
-            <p className="text-lg text-slate-400 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto">
               Three steps from statement to deduction report
             </p>
           </AnimatedSection>
 
           {/* Steps — slide in from left with stagger */}
           <motion.div
-            className="max-w-3xl mx-auto space-y-4"
+            className="max-w-3xl mx-auto space-y-3 sm:space-y-4"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -469,7 +470,7 @@ export default function Landing() {
               <motion.div
                 key={step.n}
                 variants={staggerItemLeft}
-                className="glass border border-line-700 hover:border-line-600 rounded-2xl p-7 flex items-start gap-6 transition-colors duration-200 group"
+                className="glass border border-line-700 hover:border-line-600 rounded-2xl p-5 sm:p-7 flex items-start gap-4 sm:gap-6 transition-colors duration-200 group"
               >
                 {/* Animated number badge */}
                 <motion.div
@@ -490,7 +491,7 @@ export default function Landing() {
       </section>
 
       {/* ── Stats strip ───────────────────────────────────────────────────── */}
-      <section className="py-16 bg-ink-900 border-y border-line-700 relative overflow-hidden">
+      <section className="py-10 sm:py-16 bg-ink-900 border-y border-line-700 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gold-600/[0.03] via-transparent to-gold-600/[0.03] pointer-events-none" />
         <div className="container mx-auto px-6 relative">
           <motion.div
@@ -516,7 +517,7 @@ export default function Landing() {
       </section>
 
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
-      <section className="py-28 bg-ink-900 relative overflow-hidden">
+      <section className="py-16 md:py-24 lg:py-28 bg-ink-900 relative overflow-hidden">
         <ParallaxOrb
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           speed={0.1}
@@ -527,15 +528,15 @@ export default function Landing() {
 
         <div className="container mx-auto px-6 relative z-10">
           <AnimatedSection variant="scale">
-            <div className="max-w-4xl mx-auto border-gradient rounded-3xl p-14 text-center relative overflow-hidden">
+            <div className="max-w-4xl mx-auto border-gradient rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-14 text-center relative overflow-hidden">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-ink-700/60 via-transparent to-transparent pointer-events-none" />
               <div className="relative">
                 <AnimatedSection variant="blur-up" delay={0.1}>
                   <p className="text-sm font-mono font-bold text-accent-light tracking-widest uppercase mb-4">Get Started</p>
-                  <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-5">
+                  <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-5">
                     Ready to Find Your Deductions?
                   </h2>
-                  <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-base sm:text-lg text-slate-400 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
                     Upload your bank statement and get an ATO-grounded deduction report in under a minute
                   </p>
                 </AnimatedSection>
