@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5C842"/>
+      <stop offset="100%" stop-color="#A67508"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0D0B09"/>
+  <text
+    x="16"
+    y="25"
+    text-anchor="middle"
+    font-family="Georgia, 'Playfair Display', 'Times New Roman', serif"
+    font-size="25"
+    font-weight="700"
+    fill="url(#gold)"
+  >D</text>
+</svg>
