@@ -4,6 +4,7 @@ Implements rate limiting, security headers, and request validation
 """
 
 import time
+import hmac
 import hashlib
 from typing import Dict, Optional, Callable
 from collections import defaultdict
@@ -237,8 +238,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
                 }
             )
         
-        # Validate API key
-        if api_key not in SecurityConfig.API_KEYS:
+        # Validate API key using constant-time comparison to prevent timing attacks
+        if not any(hmac.compare_digest(api_key, valid_key) for valid_key in SecurityConfig.API_KEYS):
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={

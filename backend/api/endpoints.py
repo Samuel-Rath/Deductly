@@ -37,6 +37,17 @@ from backend.monitoring import metrics_collector
 REPORTS_DIR = Path("backend/reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
+_UUID_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+
+
+def _validate_job_id(job_id: str) -> None:
+    """Raise HTTPException if job_id is not a valid UUID (prevents path traversal)."""
+    if not _UUID_RE.match(job_id):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "invalid_job_id", "message": "Invalid job ID format"}
+        )
+
 router = APIRouter(prefix="/api")
 
 
@@ -70,8 +81,11 @@ async def upload_csv(
     Raises:
         HTTPException: 400 if file validation fails
     """
-    # Validate file type (single source of truth: SecurityConfig)
-    if file.content_type not in SecurityConfig.ALLOWED_FILE_TYPES:
+    # Validate file type — check both MIME type and extension (MIME is client-controlled)
+    file_ext = Path(file.filename or "").suffix.lower() if file.filename else ""
+    mime_ok = file.content_type in SecurityConfig.ALLOWED_FILE_TYPES
+    ext_ok = file_ext in SecurityConfig.ALLOWED_FILE_EXTENSIONS
+    if not mime_ok or not ext_ok:
         log_security_event(
             'invalid_file_type',
             'low',
@@ -84,7 +98,7 @@ async def upload_csv(
             detail={
                 "error": "invalid_file_type",
                 "message": "Only CSV and PDF files are allowed.",
-                "details": {"allowed_types": SecurityConfig.ALLOWED_FILE_TYPES},
+                "details": {"allowed_extensions": SecurityConfig.ALLOWED_FILE_EXTENSIONS},
             },
         )
 
@@ -111,15 +125,25 @@ async def upload_csv(
             },
         )
     
-    # Validate income year format (if provided)
+    # Validate income year format (if provided) — must be YYYY-YYYY with consecutive years
+    _INCOME_YEAR_RE = re.compile(r'^\d{4}-\d{4}$')
     if income_year:
-        parts = income_year.split("-")
-        if len(parts) != 2:
+        if not _INCOME_YEAR_RE.match(income_year):
             raise HTTPException(
                 status_code=400,
                 detail={
                     "error": "invalid_income_year",
                     "message": "Income year must be in format YYYY-YYYY (e.g., 2023-2024)",
+                    "details": {"provided": income_year}
+                }
+            )
+        year_start, year_end = int(income_year[:4]), int(income_year[5:])
+        if year_end != year_start + 1 or year_start < 2000 or year_end > 2100:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "invalid_income_year",
+                    "message": "Income year must be consecutive years (e.g., 2023-2024)",
                     "details": {"provided": income_year}
                 }
             )
@@ -160,7 +184,9 @@ async def upload_csv(
         ephemeral_mode=ephemeral_mode,
         confidence_threshold=confidence_threshold
     )
-    
+
+    _temp_path: Optional[str] = None  # track temp file for guaranteed cleanup
+
     try:
         # Update status to processing
         storage.update_job_status(job_id, "processing")
@@ -176,6 +202,7 @@ async def upload_csv(
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
         temp_file.write(file_content)
         temp_file.close()
+        _temp_path = temp_file.name
         
         # If PDF, parse directly to transactions
         pdf_transactions = None
@@ -192,7 +219,6 @@ async def upload_csv(
                     transaction_count=len(pdf_transactions)
                 )
             except Exception as e:
-                os.unlink(temp_file.name)
                 storage.update_job_status(job_id, "failed", error=str(e))
                 log_error('pdf_conversion_failed', e, job_id=job_id)
                 metrics_collector.record_upload(success=False, file_size=len(file_content))
@@ -272,9 +298,6 @@ async def upload_csv(
                     generate_csv=True,
                     generate_json=True
                 )
-        
-        # Clean up temp file
-        os.unlink(temp_file.name)
         
         # Calculate processing time
         processing_time = time.time() - processing_start
@@ -397,14 +420,17 @@ async def upload_csv(
         # Log error
         log_error('processing_failed', e, job_id=job_id)
         
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "error": "processing_failed",
-                "message": f"Failed to process CSV: {str(e)}",
-                "details": {"job_id": job_id}
-            }
-        )
+        detail: dict = {"error": "processing_failed", "message": "An unexpected error occurred during processing.", "details": {"job_id": job_id}}
+        if not SecurityConfig.is_production():
+            detail["message"] = f"Failed to process file: {str(e)}"
+        raise HTTPException(status_code=500, detail=detail)
+    finally:
+        # Always delete the temp file regardless of success or failure
+        if _temp_path is not None:
+            try:
+                os.unlink(_temp_path)
+            except OSError:
+                pass
 
 
 # ============================================================================
@@ -427,6 +453,8 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     Raises:
         HTTPException: 404 if job not found
     """
+    _validate_job_id(job_id)
+
     # Check if reports exist (works for both ephemeral and persistent modes)
     job_dir = REPORTS_DIR / job_id
     
@@ -678,6 +706,8 @@ def _download_report(
     Raises:
         HTTPException: 404 if job or file not found
     """
+    _validate_job_id(job_id)
+
     # Check file exists
     file_path = REPORTS_DIR / job_id / filename
     if not file_path.exists():
