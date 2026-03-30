@@ -70,8 +70,8 @@ export default function Landing() {
   // Pre-warm the backend on page load so Render's free tier isn't cold
   // when the user navigates to /upload. Fire-and-forget — errors are ignored.
   useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-    fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => {/* ignore */ })
+    const apiBase = import.meta.env.VITE_API_BASE_URL
+    if (apiBase) fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => {/* ignore */ })
   }, [])
 
   // Hero parallax — tracks the hero section scrolling out of view
@@ -308,16 +308,6 @@ export default function Landing() {
                         </motion.div>
                       ))}
 
-                      {/* Summary footer */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 2.2, duration: 0.4 }}
-                        className="flex items-center justify-between pt-3 mt-1"
-                        style={{ borderTop: '1px solid rgba(54,49,41,0.60)' }}
-                      >
-                        <span className="text-base font-bold font-mono" style={{ color: '#4ADE80' }}>$951.35</span>
-                      </motion.div>
                     </div>
                   </motion.div>
 
@@ -335,7 +325,7 @@ export default function Landing() {
                     }}
                   >
                     <div className="text-xs mb-0.5" style={{ color: '#907E6E' }}>You could be missing</div>
-                    <div className="text-2xl font-bold font-mono" style={{ color: '#4ADE80' }}>$1,840.50</div>
+                    <div className="text-2xl font-bold font-mono" style={{ color: '#4ADE80' }}>$951.35</div>
                     <div className="text-xs mt-0.5" style={{ color: '#4ADE80', opacity: 0.65 }}>in deductions</div>
                   </motion.div>
 
@@ -556,32 +546,5 @@ export default function Landing() {
       </section>
 
     </div>
-  )
-}
-
-// ─── Parallax background orb (self-contained, no hydration issues) ────────────
-function ParallaxOrb({
-  className = '',
-  speed = 0.2,
-  children,
-  inner = false,
-}: {
-  className?: string
-  speed?: number
-  children?: React.ReactNode
-  inner?: boolean
-}) {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref as React.RefObject<HTMLElement>,
-    offset: ['start end', 'end start'],
-  })
-  const raw = useTransform(scrollYProgress, [0, 1], ['0%', `${Math.round(speed * 100)}%`])
-  const y = useSpring(raw, { stiffness: 50, damping: 20 })
-
-  return (
-    <motion.div ref={ref as any} style={{ y }} className={className}>
-      {inner ? children : <div className="w-full h-full" />}
-    </motion.div>
   )
 }
