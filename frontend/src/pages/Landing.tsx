@@ -16,12 +16,12 @@ const staggerContainer = {
 }
 const EASE: [number, number, number, number] = [0.21, 0.47, 0.32, 0.98]
 const staggerItem = {
-  hidden:  { opacity: 0, y: 28, filter: 'blur(6px)' },
-  visible: { opacity: 1, y: 0,  filter: 'blur(0px)', transition: { duration: 0.6, ease: EASE } },
+  hidden: { opacity: 0, y: 28, filter: 'blur(6px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: EASE } },
 }
 const staggerItemLeft = {
-  hidden:  { opacity: 0, x: -32, filter: 'blur(4px)' },
-  visible: { opacity: 1, x: 0,   filter: 'blur(0px)', transition: { duration: 0.55, ease: EASE } },
+  hidden: { opacity: 0, x: -32, filter: 'blur(4px)' },
+  visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.55, ease: EASE } },
 }
 
 // ─── 3-D Tilt card ────────────────────────────────────────────────────────────
@@ -30,16 +30,16 @@ function TiltCard({ children, className = '' }: { children: React.ReactNode; cla
   const my = useMotionValue(0)
   const rotateX = useTransform(my, [-0.5, 0.5], [7, -7])
   const rotateY = useTransform(mx, [-0.5, 0.5], [-7, 7])
-  const glareX  = useMotionTemplate`${useTransform(mx, [-0.5,0.5],[0,100])}%`
-  const glareY  = useMotionTemplate`${useTransform(my, [-0.5,0.5],[0,100])}%`
+  const glareX = useMotionTemplate`${useTransform(mx, [-0.5, 0.5], [0, 100])}%`
+  const glareY = useMotionTemplate`${useTransform(my, [-0.5, 0.5], [0, 100])}%`
 
   const springRotX = useSpring(rotateX, { stiffness: 200, damping: 25 })
   const springRotY = useSpring(rotateY, { stiffness: 200, damping: 25 })
 
   function onMove(e: MouseEvent<HTMLDivElement>) {
     const r = e.currentTarget.getBoundingClientRect()
-    mx.set((e.clientX - r.left - r.width  / 2) / r.width)
-    my.set((e.clientY - r.top  - r.height / 2) / r.height)
+    mx.set((e.clientX - r.left - r.width / 2) / r.width)
+    my.set((e.clientY - r.top - r.height / 2) / r.height)
   }
   function onLeave() { mx.set(0); my.set(0) }
 
@@ -71,7 +71,7 @@ export default function Landing() {
   // when the user navigates to /upload. Fire-and-forget — errors are ignored.
   useEffect(() => {
     const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-    fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => {/* ignore */})
+    fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => {/* ignore */ })
   }, [])
 
   // Hero parallax — tracks the hero section scrolling out of view
@@ -83,7 +83,7 @@ export default function Landing() {
 
   // Foreground layers — direct transforms (no spring) so they stay in sync with scroll
   const heroTextY = useTransform(heroScroll, [0, 1], ['0%', '-12%'])
-  const cardY     = useTransform(heroScroll, [0, 1], ['0%', '-20%'])
+  const cardY = useTransform(heroScroll, [0, 1], ['0%', '-20%'])
 
   // Opacity for hero content fading as it scrolls out
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0])
@@ -171,9 +171,9 @@ export default function Landing() {
                   </Button>
                   <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                     {[
-                      { Icon: Lock,        text: 'No data stored',   accent: '#4ADE80' },
-                      { Icon: ShieldCheck, text: 'ATO-aligned',       accent: '#F5C842' },
-                      { Icon: Zap,         text: 'Instant analysis',  accent: '#93C5FD' },
+                      { Icon: Lock, text: 'No data stored', accent: '#4ADE80' },
+                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842' },
+                      { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD' },
                     ].map(({ Icon, text, accent }) => (
                       <span
                         key={text}
@@ -196,7 +196,7 @@ export default function Landing() {
               <motion.div
                 style={{ y: cardY, willChange: 'transform' }}
                 initial={{ opacity: 0, x: 32, scale: 0.97 }}
-                animate={{ opacity: 1, x: 0,  scale: 1 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ duration: 0.75, delay: 0.3, ease: EASE }}
                 className="hidden lg:block"
               >
@@ -269,14 +269,14 @@ export default function Landing() {
 
                       {/* Transaction rows */}
                       {[
-                        { name: 'Officeworks',    cat: 'Home Office',  conf: 74, amount: '$89.95',  catBg: 'rgba(212,151,10,0.15)',  catFg: '#F5C842' },
-                        { name: 'CPA Australia',  cat: 'Professional', conf: 91, amount: '$549.00', catBg: 'rgba(74,222,128,0.12)',  catFg: '#4ADE80' },
-                        { name: 'Qantas Airways', cat: 'Work Travel',  conf: 67, amount: '$312.40', catBg: 'rgba(147,197,253,0.12)', catFg: '#93C5FD' },
+                        { name: 'Officeworks', cat: 'Home Office', conf: 74, amount: '$89.95', catBg: 'rgba(212,151,10,0.15)', catFg: '#F5C842' },
+                        { name: 'CPA Australia', cat: 'Professional', conf: 91, amount: '$549.00', catBg: 'rgba(74,222,128,0.12)', catFg: '#4ADE80' },
+                        { name: 'Qantas Airways', cat: 'Work Travel', conf: 67, amount: '$312.40', catBg: 'rgba(147,197,253,0.12)', catFg: '#93C5FD' },
                       ].map((row, i) => (
                         <motion.div
                           key={row.name}
                           initial={{ opacity: 0, x: 12 }}
-                          animate={{ opacity: 1, x: 0  }}
+                          animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 1.1 + i * 0.18, duration: 0.4 }}
                           className="flex items-center justify-between py-2.5 border-b last:border-0"
                           style={{ borderColor: 'rgba(54,49,41,0.60)' }}
@@ -316,7 +316,6 @@ export default function Landing() {
                         className="flex items-center justify-between pt-3 mt-1"
                         style={{ borderTop: '1px solid rgba(54,49,41,0.60)' }}
                       >
-                        <span className="text-xs" style={{ color: '#907E6E' }}>Confirmed + likely</span>
                         <span className="text-base font-bold font-mono" style={{ color: '#4ADE80' }}>$951.35</span>
                       </motion.div>
                     </div>
@@ -325,7 +324,7 @@ export default function Landing() {
                   {/* Floating badge — total */}
                   <motion.div
                     initial={{ opacity: 0, y: 12, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0,  scale: 1 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 2.0, duration: 0.45 }}
                     className="absolute -bottom-5 -left-6 rounded-xl px-4 py-3"
                     style={{
@@ -502,10 +501,10 @@ export default function Landing() {
             viewport={{ once: true, amount: 0.4 }}
           >
             {[
-              { value: '6',    label: 'Deduction Categories'   },
+              { value: '6', label: 'Deduction Categories' },
               { value: '100%', label: 'Ephemeral — No Storage' },
-              { value: '0–100', label: 'Composite Confidence'  },
-              { value: 'Free', label: 'No Account Needed'      },
+              { value: '0–100', label: 'Composite Confidence' },
+              { value: 'Free', label: 'No Account Needed' },
             ].map((s) => (
               <motion.div key={s.label} variants={staggerItem}>
                 <div className="text-3xl font-mono font-bold text-gradient mb-1">{s.value}</div>
@@ -578,7 +577,7 @@ function ParallaxOrb({
     offset: ['start end', 'end start'],
   })
   const raw = useTransform(scrollYProgress, [0, 1], ['0%', `${Math.round(speed * 100)}%`])
-  const y   = useSpring(raw, { stiffness: 50, damping: 20 })
+  const y = useSpring(raw, { stiffness: 50, damping: 20 })
 
   return (
     <motion.div ref={ref as any} style={{ y }} className={className}>
