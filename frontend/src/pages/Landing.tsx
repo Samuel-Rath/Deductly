@@ -235,7 +235,7 @@ export default function Landing() {
                     </div>
 
                     {/* Card body */}
-                    <div className="p-6">
+                    <div className="p-6 pb-12">
                       {/* File header */}
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-gradient-brand flex items-center justify-center shrink-0">
