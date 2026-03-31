@@ -240,7 +240,7 @@ export default function Report() {
               Deduction Report
             </h1>
             <p className="text-body text-slate-300">
-              Income Year: {reportData.income_year} (1 July {reportData.income_year.split('-')[0]} - 30 June {reportData.income_year.split('-')[1]})
+              Income Year: {reportData.income_year} (1 July {reportData.income_year.split('-')[0]} to 30 June {reportData.income_year.split('-')[1]})
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -404,7 +404,7 @@ export default function Report() {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
-                  <span>High (0.80 - 1.00)</span>
+                  <span>High (0.80–1.00)</span>
                   <span>{summary.confidenceDistribution.high} transactions</span>
                 </div>
                 <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
@@ -419,7 +419,7 @@ export default function Report() {
 
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
-                  <span>Medium (0.60 - 0.79)</span>
+                  <span>Medium (0.60–0.79)</span>
                   <span>{summary.confidenceDistribution.medium} transactions</span>
                 </div>
                 <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">

@@ -18,7 +18,7 @@ const ruleCategories = [
   },
   {
     category: 'Home Office Expenses',
-    description: 'Internet, phone, electricity, and stationery used while working from home — only the work-use proportion is deductible',
+    description: 'Internet, phone, electricity, and stationery used while working from home — only the work use proportion is deductible',
     keywords: ['telstra', 'optus', 'tpg', 'aussie broadband', 'superloop', 'tangerine', 'vodafone', 'internode', 'officeworks', 'ikea', 'harvey norman'],
     merchants: ['Telstra', 'Optus', 'TPG Telecom', 'Aussie Broadband', 'Officeworks'],
     confidence: 0.60,
@@ -32,7 +32,7 @@ const ruleCategories = [
   },
   {
     category: 'Tools, Equipment & Technology',
-    description: 'Laptops, phones, subscriptions, and software used primarily for work — items used more than 50% for income-earning activity',
+    description: 'Laptops, phones, subscriptions, and software used primarily for work — items used more than 50% for income earning purposes',
     keywords: ['microsoft', 'apple', 'adobe', 'jb hi-fi', 'harvey norman', 'officeworks', 'canva', 'atlassian', 'slack', 'zoom', 'dropbox', 'aws', 'google workspace', 'xero', 'myob'],
     merchants: ['Apple', 'JB Hi-Fi', 'Officeworks', 'Microsoft', 'Adobe', 'Harvey Norman'],
     confidence: 0.55,
@@ -72,7 +72,7 @@ const ruleCategories = [
   },
   {
     category: 'Work Clothing & Protective Equipment',
-    description: 'Compulsory uniforms, occupation-specific protective clothing, and safety gear — conventional clothing worn at work is not deductible',
+    description: 'Compulsory uniforms, occupation specific protective clothing, and safety gear — conventional clothing worn at work is not deductible',
     keywords: ['workwear', 'hi-vis', 'safety boots', 'hard hat', 'ppe', 'bunnings', 'total tools', 'blackwoods', 'wurth', 'hard yakka', 'king gee'],
     merchants: ['Bunnings Warehouse', 'Total Tools', 'Blackwoods', 'Hard Yakka', 'King Gee'],
     confidence: 0.45,

@@ -151,10 +151,10 @@ export default function Landing() {
                 {/* Sub-copy */}
                 <motion.div variants={staggerItem} className="max-w-lg mx-auto lg:mx-0 mb-7 sm:mb-8 space-y-2">
                   <p className="text-base sm:text-lg leading-relaxed" style={{ color: '#E2DDD8' }}>
-                    Upload your CSV or PDF bank statement — instantly uncover every work-related deduction you're entitled to.
+                    Upload your CSV or PDF bank statement and instantly uncover every tax deduction you are entitled to.
                   </p>
                   <p className="text-sm sm:text-base leading-relaxed" style={{ color: '#A89E96' }}>
-                    AI-powered with ATO citations, confidence scores, and audit-ready evidence checklists.
+                    Powered by AI with ATO citations, confidence scores, and evidence checklists ready for your tax agent.
                   </p>
                 </motion.div>
 
