@@ -91,12 +91,20 @@
     pointer-events: none;
   }
 
-  /* ── Animated shimmer for buttons ────────────────────────────────────── */
-  .btn-shimmer {
-    background-size: 200% auto;
-    transition: background-position 0.4s ease;
+  /* ── Animated shimmer sweep — overlay on primary buttons ────────────── */
+  @keyframes shimmer-sweep {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%)  skewX(-20deg); }
   }
-  .btn-shimmer:hover { background-position: right center; }
+  .btn-shimmer-sweep::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);
+    animation: shimmer-sweep 2.4s ease infinite;
+    pointer-events: none;
+    border-radius: inherit;
+  }
 
   /* ── Touch-action: manipulation — removes 300ms tap delay ───────────── */
   .touch-manipulation { touch-action: manipulation; }

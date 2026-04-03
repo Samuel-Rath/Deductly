@@ -171,20 +171,23 @@ export default function Landing() {
                   </Button>
                   <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                     {[
-                      { Icon: Lock, text: 'No data stored', accent: '#4ADE80' },
-                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842' },
-                      { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD' },
-                    ].map(({ Icon, text, accent }) => (
+                      { Icon: Lock, text: 'No data stored', accent: '#4ADE80', glow: 'rgba(74,222,128,0.12)' },
+                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842', glow: 'rgba(245,200,66,0.12)' },
+                      { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD', glow: 'rgba(147,197,253,0.12)' },
+                    ].map(({ Icon, text, accent, glow }) => (
                       <span
                         key={text}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-[0.02em] transition-all duration-200"
                         style={{
-                          background: 'rgba(44,40,36,0.80)',
-                          border: '1px solid rgba(64,58,48,0.95)',
-                          color: '#D4CCC4',
+                          background: `rgba(26,22,16,0.90)`,
+                          border: `1px solid rgba(64,58,48,0.90)`,
+                          color: '#C4BAB0',
+                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04)`,
                         }}
                       >
-                        <Icon size={11} style={{ color: accent }} strokeWidth={2.5} />
+                        <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: glow }}>
+                          <Icon size={10} style={{ color: accent }} strokeWidth={2.5} />
+                        </span>
                         {text}
                       </span>
                     ))}
@@ -401,11 +404,11 @@ export default function Landing() {
             ].map((f) => (
               <AnimatedSection key={f.title} delay={f.delay} variant="scale">
                 <TiltCard className="h-full">
-                  <div className="h-full glass border border-line-700 hover:border-accent/40 hover:shadow-glow rounded-xl p-6 transition-all duration-300 group">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-600/20 to-gold-500/10 border border-line-600 flex items-center justify-center mb-5 text-accent-light group-hover:scale-110 transition-transform duration-300">
+                  <div className="h-full glass border border-line-700 hover:border-gold-600/40 hover:shadow-[0_0_28px_rgba(200,144,10,0.14)] rounded-xl p-6 transition-all duration-300 group">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-600/20 to-gold-500/08 border border-line-600 group-hover:border-gold-600/40 flex items-center justify-center mb-5 text-accent-light group-hover:scale-[1.08] group-hover:shadow-[0_0_14px_rgba(200,144,10,0.28)] transition-all duration-300">
                       {f.icon}
                     </div>
-                    <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
+                    <h3 className="text-base font-semibold text-white mb-2 tracking-[0.01em]">{f.title}</h3>
                     <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
                   </div>
                 </TiltCard>
@@ -465,7 +468,7 @@ export default function Landing() {
                 <motion.div
                   whileHover={{ scale: 1.08, rotate: -3 }}
                   transition={{ type: 'spring', stiffness: 300 }}
-                  className="shrink-0 w-12 h-12 rounded-xl bg-gradient-brand flex items-center justify-center text-white text-sm font-bold shadow-soft"
+                  className="shrink-0 w-12 h-12 rounded-xl bg-gradient-brand flex items-center justify-center text-white text-sm font-bold font-mono tracking-wide shadow-[0_2px_12px_rgba(200,144,10,0.32),inset_0_1px_0_rgba(255,255,255,0.14)]"
                 >
                   {step.n}
                 </motion.div>
@@ -496,9 +499,9 @@ export default function Landing() {
               { value: '0–100', label: 'Composite Confidence' },
               { value: 'Free', label: 'No Account Needed' },
             ].map((s) => (
-              <motion.div key={s.label} variants={staggerItem}>
-                <div className="text-3xl font-mono font-bold text-gradient mb-1">{s.value}</div>
-                <div className="text-sm text-slate-500">{s.label}</div>
+              <motion.div key={s.label} variants={staggerItem} className="group">
+                <div className="text-4xl sm:text-5xl font-mono font-bold text-gradient mb-2 tabular-nums tracking-tight">{s.value}</div>
+                <div className="text-xs font-medium text-slate-500 tracking-widest uppercase">{s.label}</div>
               </motion.div>
             ))}
           </motion.div>

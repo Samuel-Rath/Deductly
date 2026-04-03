@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, X, Gem } from 'lucide-react'
 
 export default function Navigation() {
   const location = useLocation()
@@ -26,7 +27,10 @@ export default function Navigation() {
           <div className="flex items-center justify-between h-16">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center group" onClick={() => setMenuOpen(false)}>
+            <Link to="/" className="flex items-center gap-2 group" onClick={() => setMenuOpen(false)}>
+              <div className="w-7 h-7 rounded-lg bg-gradient-brand flex items-center justify-center shadow-[0_0_10px_rgba(200,144,10,0.30)] group-hover:shadow-[0_0_16px_rgba(200,144,10,0.48)] transition-shadow duration-200">
+                <Gem size={14} className="text-ink-950" strokeWidth={2.5} />
+              </div>
               <span className="font-display text-lg sm:text-xl font-bold text-gradient tracking-tight">
                 Deductly
               </span>
@@ -38,6 +42,7 @@ export default function Navigation() {
                 <Link
                   key={path}
                   to={path}
+                  aria-current={isActive(path) ? 'page' : undefined}
                   className={[
                     'relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200',
                     isActive(path)
@@ -59,8 +64,12 @@ export default function Navigation() {
             {/* Desktop CTA */}
             <Link
               to="/upload"
-              className="hidden md:block px-5 py-2 text-sm font-semibold text-ink-950 rounded-xl bg-gradient-brand shadow-soft hover:shadow-glow transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              className="hidden md:inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold tracking-[0.025em] text-ink-950 rounded-xl bg-gradient-brand overflow-hidden relative
+                shadow-[0_2px_14px_rgba(200,144,10,0.32),inset_0_1px_0_rgba(255,255,255,0.14)]
+                hover:brightness-[1.08] hover:shadow-[0_4px_20px_rgba(200,144,10,0.48)]
+                transition-all duration-200 active:scale-[0.97]"
             >
+              <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] bg-gradient-to-b from-white/[0.11] to-transparent" />
               Get Started
             </Link>
 
@@ -68,28 +77,41 @@ export default function Navigation() {
             <div className="flex md:hidden items-center gap-2">
               <Link
                 to="/upload"
-                className="px-4 py-1.5 text-sm font-semibold text-ink-950 rounded-lg bg-gradient-brand shadow-soft"
+                className="px-4 py-1.5 text-sm font-semibold tracking-[0.025em] text-ink-950 rounded-lg bg-gradient-brand
+                  shadow-[0_2px_10px_rgba(200,144,10,0.28),inset_0_1px_0_rgba(255,255,255,0.12)]
+                  active:scale-[0.97] transition-all duration-150"
                 onClick={() => setMenuOpen(false)}
               >
                 Get Started
               </Link>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-150"
                 aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               >
-                <motion.span
-                  animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
-                  className="block w-5 h-px bg-slate-300 origin-center transition-all"
-                />
-                <motion.span
-                  animate={menuOpen ? { opacity: 0 } : { opacity: 1 }}
-                  className="block w-5 h-px bg-slate-300"
-                />
-                <motion.span
-                  animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
-                  className="block w-5 h-px bg-slate-300 origin-center transition-all"
-                />
+                <AnimatePresence mode="wait" initial={false}>
+                  {menuOpen ? (
+                    <motion.span
+                      key="close"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <X size={18} strokeWidth={2} />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="open"
+                      initial={{ opacity: 0, rotate: 90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: -90 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Menu size={18} strokeWidth={2} />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </button>
             </div>
           </div>
@@ -110,6 +132,7 @@ export default function Navigation() {
                   <Link
                     key={path}
                     to={path}
+                    aria-current={isActive(path) ? 'page' : undefined}
                     onClick={() => setMenuOpen(false)}
                     className={[
                       'px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
