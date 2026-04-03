@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Gem } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 
 export default function Navigation() {
   const location = useLocation()
@@ -28,9 +28,6 @@ export default function Navigation() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group" onClick={() => setMenuOpen(false)}>
-              <div className="w-7 h-7 rounded-lg bg-gradient-brand flex items-center justify-center shadow-[0_0_10px_rgba(200,144,10,0.30)] group-hover:shadow-[0_0_16px_rgba(200,144,10,0.48)] transition-shadow duration-200">
-                <Gem size={14} className="text-ink-950" strokeWidth={2.5} />
-              </div>
               <span className="font-display text-lg sm:text-xl font-bold text-gradient tracking-tight">
                 Deductly
               </span>

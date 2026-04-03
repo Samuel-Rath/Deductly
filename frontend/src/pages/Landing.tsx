@@ -169,12 +169,12 @@ export default function Landing() {
                     Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                  <div className="flex flex-nowrap justify-center lg:justify-start gap-2">
                     {[
-                      { Icon: Lock, text: 'No data stored', accent: '#4ADE80', glow: 'rgba(74,222,128,0.12)' },
-                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842', glow: 'rgba(245,200,66,0.12)' },
-                      { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD', glow: 'rgba(147,197,253,0.12)' },
-                    ].map(({ Icon, text, accent, glow }) => (
+                      { Icon: Lock, text: 'No data stored', accent: '#4ADE80' },
+                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842' },
+                      { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD' },
+                    ].map(({ Icon, text, accent }) => (
                       <span
                         key={text}
                         className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-[0.02em] transition-all duration-200"
@@ -185,9 +185,7 @@ export default function Landing() {
                           boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04)`,
                         }}
                       >
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: glow }}>
-                          <Icon size={10} style={{ color: accent }} strokeWidth={2.5} />
-                        </span>
+                        <Icon size={11} style={{ color: accent }} strokeWidth={2.5} className="shrink-0" />
                         {text}
                       </span>
                     ))}
