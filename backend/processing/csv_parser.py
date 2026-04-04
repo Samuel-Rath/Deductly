@@ -431,6 +431,8 @@ class CSVParser:
         
         # Remove common payment prefixes (case-insensitive)
         prefixes = [
+            r"V\d{3,6}\s+",        # NAB card suffix prefix: V3737, V12345
+            r"\d{1,2}/\d{2}\s+",   # Embedded internal merchant date: 13/11
             r"PAYPAL\s*\*\s*",
             r"VISA\s+",
             r"MASTERCARD\s+",

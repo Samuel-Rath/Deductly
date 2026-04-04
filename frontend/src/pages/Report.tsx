@@ -672,7 +672,7 @@ export default function Report() {
                         <td className="py-4 pr-4 text-small text-slate-300">
                           {formatDate(transaction.date)}
                         </td>
-                        <td className="py-4 pr-4 text-small text-white">
+                        <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>
                           {transaction.merchant}
                         </td>
                         <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">
@@ -732,7 +732,7 @@ export default function Report() {
                       <td className="py-4 pr-4 text-small text-slate-500">
                         {formatDate(transaction.date)}
                       </td>
-                      <td className="py-4 pr-4 text-small text-slate-500">
+                      <td className="py-4 pr-4 text-small text-slate-500 max-w-[180px] truncate" title={transaction.merchant}>
                         {transaction.merchant}
                       </td>
                       <td className="py-4 pr-4 text-small text-slate-500 max-w-xs truncate">

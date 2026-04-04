@@ -91,6 +91,17 @@ class PDFParser:
             logger.debug("PyPDF2 parsing failed", extra={"error": str(e)})
         return transactions
 
+    # Phrases that identify bank footer/disclaimer lines — two or more triggers the guard
+    _DISCLAIMER_PHRASES = [
+        'provisional list', 'statement of account', 'national australia bank',
+        'may include transactions', 'payment by the bank', 'australian credit licence',
+        'afsl', 'abn 12',
+    ]
+
+    def _is_disclaimer_line(self, line: str) -> bool:
+        low = line.lower()
+        return sum(1 for p in self._DISCLAIMER_PHRASES if p in low) >= 2
+
     def _parse_with_state_machine(self, text: str) -> List[NormalisedTransaction]:
         """
         Parse transactions from raw PDF text using a state machine.
@@ -140,7 +151,8 @@ class PDFParser:
                 }
 
             elif current_transaction is not None:
-                current_transaction['description'] += ' ' + line_stripped
+                if not self._is_disclaimer_line(line_stripped):
+                    current_transaction['description'] += ' ' + line_stripped
 
         # Flush last transaction
         if current_transaction and current_transaction.get('date') and current_transaction.get('description'):
@@ -171,7 +183,8 @@ class PDFParser:
             direction = TransactionDirection.CREDIT
             absolute_amount = signed_amount
 
-        description = raw_txn['description']
+        description = self._clean_pdf_description(raw_txn['description'])
+        raw_txn['description'] = description
         merchant = self.csv_parser.extract_merchant(description)
         payment_rail = self.csv_parser.detect_payment_rail(description)
 
@@ -188,6 +201,12 @@ class PDFParser:
             raw_data={'source': 'pdf', 'original_description': description},
         )
 
+    def _clean_pdf_description(self, description: str) -> str:
+        """Strip NAB-style card prefix (V3737) and embedded internal date (13/11) from the start."""
+        cleaned = re.sub(r'^V\d{3,6}\s+', '', description, flags=re.IGNORECASE)
+        cleaned = re.sub(r'^\d{1,2}/\d{2}(?:/\d{2,4})?\s+', '', cleaned)
+        return cleaned.strip()
+
     def _extract_amount_from_description(self, transaction: dict) -> None:
         """
         Extract the transaction amount from the accumulated description text.
@@ -195,10 +214,11 @@ class PDFParser:
         """
         description = transaction['description']
 
-        amount_pattern = r'\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+        # Require $ prefix OR a .XX decimal to avoid matching bare integers (e.g. page numbers)
+        amount_pattern = r'(?:\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)|\b(\d{1,3}(?:,\d{3})*\.\d{2})\b)'
         amounts = []
         for match in re.finditer(amount_pattern, description):
-            amount_str = match.group(1).replace(',', '')
+            amount_str = (match.group(1) or match.group(2)).replace(',', '')
             try:
                 amount_val = float(amount_str)
                 if amount_val >= 0.01:

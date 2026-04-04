@@ -164,7 +164,7 @@ export default function Landing() {
                     variant="primary"
                     size="lg"
                     onClick={() => navigate('/upload')}
-                    className="group w-full sm:w-auto"
+                    className="group"
                   >
                     Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -384,13 +384,13 @@ export default function Landing() {
               {
                 icon: <Brain size={22} />,
                 title: 'AI Grounded',
-                body: 'Claude AI cross-references transactions against the ATO knowledge base with tailored rules across all major deduction categories.',
+                body: 'Claude AI matches transactions against the ATO knowledge base with tailored rules across all major deduction categories.',
                 delay: 0.1,
               },
               {
                 icon: <Zap size={22} />,
                 title: 'Confidence Scores',
-                body: 'Composite 0–100% scoring — keyword matching, RAG grounding, and AI reasoning — fully transparent.',
+                body: 'Composite 0 to 100 scoring using keyword matching, RAG grounding, and AI reasoning. Fully transparent.',
                 delay: 0.2,
               },
               {
@@ -444,17 +444,17 @@ export default function Landing() {
               {
                 n: '01',
                 title: 'Upload Your Statement',
-                body: 'Drop in a CSV or PDF from any major Australian bank. We auto-detect the format, income year, and bank layout.',
+                body: 'Drop in a CSV or PDF from any major Australian bank. We automatically detect the format, income year, and bank layout.',
               },
               {
                 n: '02',
                 title: 'AI Analyses Transactions',
-                body: 'Transactions are matched against ATO knowledge base entries and scored by AI. PII is redacted before any external call.',
+                body: 'Every transaction is run against ATO deduction rules and given a confidence score. Your personal details are removed before any AI processing.',
               },
               {
                 n: '03',
                 title: 'Download Your Report',
-                body: 'Get a full deduction report with ATO citations, evidence checklists, and occupation based flags — ready for your tax agent.',
+                body: 'Get a full deduction report with ATO citations, evidence checklists, and occupation based flags ready for your tax agent.',
               },
             ].map((step) => (
               <motion.div
@@ -526,12 +526,12 @@ export default function Landing() {
                     Upload your bank statement and get an ATO grounded deduction report in under a minute
                   </p>
                 </AnimatedSection>
-                <AnimatedSection variant="fade-up" delay={0.25}>
+                <AnimatedSection variant="fade-up" delay={0.25} className="flex flex-col items-center">
                   <Button
                     variant="primary"
                     size="lg"
                     onClick={() => navigate('/upload')}
-                    className="group mx-auto"
+                    className="group"
                   >
                     Find My Deductions
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
