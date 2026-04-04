@@ -172,7 +172,7 @@ export default function Landing() {
                   <div className="flex flex-nowrap justify-center lg:justify-start gap-2">
                     {[
                       { Icon: Lock, text: 'No data stored', accent: '#4ADE80' },
-                      { Icon: ShieldCheck, text: 'ATO-aligned', accent: '#F5C842' },
+                      { Icon: ShieldCheck, text: 'ATO Aligned', accent: '#F5C842' },
                       { Icon: Zap, text: 'Instant analysis', accent: '#93C5FD' },
                     ].map(({ Icon, text, accent }) => (
                       <span
@@ -383,8 +383,8 @@ export default function Landing() {
               },
               {
                 icon: <Brain size={22} />,
-                title: 'AI-Grounded',
-                body: 'Claude AI cross-references transactions against the ATO knowledge base with occupation-specific rules across all major deduction categories.',
+                title: 'AI Grounded',
+                body: 'Claude AI cross-references transactions against the ATO knowledge base with tailored rules across all major deduction categories.',
                 delay: 0.1,
               },
               {
@@ -454,7 +454,7 @@ export default function Landing() {
               {
                 n: '03',
                 title: 'Download Your Report',
-                body: 'Get a full deduction report with ATO citations, evidence checklists, and occupation-dependent flags — ready for your tax agent.',
+                body: 'Get a full deduction report with ATO citations, evidence checklists, and occupation based flags — ready for your tax agent.',
               },
             ].map((step) => (
               <motion.div
@@ -523,7 +523,7 @@ export default function Landing() {
                     Ready to Find Your Deductions?
                   </h2>
                   <p className="text-base sm:text-lg text-slate-400 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-                    Upload your bank statement and get an ATO-grounded deduction report in under a minute
+                    Upload your bank statement and get an ATO grounded deduction report in under a minute
                   </p>
                 </AnimatedSection>
                 <AnimatedSection variant="fade-up" delay={0.25}>

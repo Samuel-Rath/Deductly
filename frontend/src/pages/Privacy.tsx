@@ -172,7 +172,7 @@ export default function Privacy() {
                   <div>
                     <div className="text-small font-semibold text-white">Rule Classification</div>
                     <div className="text-small text-slate-300">
-                      Transactions are matched against ATO deduction rules across all work-related categories. Confidence scores
+                      Transactions are matched against ATO deduction rules across all work related categories. Confidence scores
                       are assigned based on keyword matching and rule logic.
                     </div>
                   </div>

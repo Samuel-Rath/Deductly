@@ -3,7 +3,7 @@ import { Card, Chip, AnimatedSection, Icon } from '../components'
 
 const ruleCategories = [
   {
-    category: 'Work-Related Travel & Vehicles',
+    category: 'Work Related Travel and Vehicles',
     description: 'Car expenses, public transport, flights, and accommodation for travel required for work — commuting to a regular workplace is not deductible',
     keywords: ['uber', 'didi', 'ola', 'taxi', 'transurban', 'citylink', 'eastlink', 'linkt', 'myki', 'opal', 'go card', 'qantas', 'jetstar', 'virgin australia', 'rex'],
     merchants: ['Uber', 'DiDi', 'Transurban / LinktT', 'Qantas', 'Jetstar', 'Virgin Australia'],
@@ -36,7 +36,7 @@ const ruleCategories = [
     keywords: ['microsoft', 'apple', 'adobe', 'jb hi-fi', 'harvey norman', 'officeworks', 'canva', 'atlassian', 'slack', 'zoom', 'dropbox', 'aws', 'google workspace', 'xero', 'myob'],
     merchants: ['Apple', 'JB Hi-Fi', 'Officeworks', 'Microsoft', 'Adobe', 'Harvey Norman'],
     confidence: 0.55,
-    evidence: ['Receipt or invoice', 'Estimate of work-use percentage', 'Description of how the item is used in your role'],
+    evidence: ['Receipt or invoice', 'Estimate of work use percentage', 'Description of how the item is used in your role'],
     flags: ['needs_review'],
     examples: [
       { description: 'MICROSOFT 365 SUBSCRIPTION', matched: 'microsoft keyword' },
@@ -45,7 +45,7 @@ const ruleCategories = [
     version: '1.0',
   },
   {
-    category: 'Self-Education & Professional Development',
+    category: 'Self Education and Professional Development',
     description: 'Courses, conferences, workshops, and textbooks directly related to your current role — must maintain or improve skills in your existing job',
     keywords: ['udemy', 'coursera', 'tafe', 'university', 'linkedin learning', 'pluralsight', 'conference', 'workshop', 'seminar', 'eventbrite', 'humanitix', 'trybooking'],
     merchants: ['TAFE', 'Udemy', 'Coursera', 'LinkedIn Learning', 'Eventbrite', 'University bookshops'],
@@ -100,7 +100,7 @@ const exclusionRules = [
     examples: ['ATM WITHDRAWAL WESTPAC', 'EFTPOS CASH $50'],
   },
   {
-    name: 'Loan & Mortgage Repayments',
+    name: 'Loan and Mortgage Repayments',
     patterns: ['LOAN REPAYMENT', 'MORTGAGE', 'HOME LOAN'],
     reason: 'Loan repayments are not deductible expenses',
     examples: ['HOME LOAN REPAYMENT', 'MORTGAGE PAYMENT'],
@@ -403,7 +403,7 @@ export default function Rules() {
                     <div className="space-y-3 mb-4">
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small font-semibold text-white mb-1">Keyword Score (up to 30%)</div>
-                        <div className="text-micro text-slate-300">How strongly the transaction description and merchant match work-related keywords across deduction categories (travel, home office, equipment, education, memberships, clothing, etc.)</div>
+                        <div className="text-micro text-slate-300">How strongly the transaction description and merchant match work related keywords across deduction categories (travel, home office, equipment, education, memberships, clothing, etc.)</div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
                         <div className="text-small font-semibold text-white mb-1">RAG Grounding Score (up to 40%)</div>
@@ -430,7 +430,7 @@ export default function Rules() {
                           <div className="h-full bg-accent" style={{ width: '90%' }} />
                         </div>
                         <p className="text-micro text-slate-300 mt-2">
-                          Clear occupational requirement — e.g. professional body membership, self-education course directly tied to your current role
+                          Clear occupational requirement — e.g. professional body membership, a self education course directly tied to your current role
                         </p>
                       </div>
 
@@ -443,7 +443,7 @@ export default function Rules() {
                           <div className="h-full bg-slate-500" style={{ width: '70%' }} />
                         </div>
                         <p className="text-micro text-slate-300 mt-2">
-                          Probable work expense — confirm the work-use proportion or occupational nexus with your tax agent
+                          Probable work expense — confirm the work use proportion or occupational nexus with your tax agent
                         </p>
                       </div>
 

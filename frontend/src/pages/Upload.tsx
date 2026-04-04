@@ -147,7 +147,7 @@ export default function Upload() {
                   onClick={() => fileInputRef.current?.click()}
                   role="button"
                   tabIndex={0}
-                  aria-label="Upload bank statement - drag and drop or click to browse"
+                  aria-label="Upload bank statement. Drag and drop or click to browse"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
