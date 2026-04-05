@@ -4,6 +4,49 @@ import { Card, Button, Chip, Drawer, Icon } from '../components'
 import { useJobStatus, useDownloadReportFile } from '../api/hooks'
 import { downloadReport } from '../api/client'
 
+// ─── Flag metadata ────────────────────────────────────────────────────────────
+const FLAG_INFO: Record<string, { label: string; description: string; action?: string; color: 'amber' | 'green' }> = {
+  needs_review:        { label: 'Needs Review',               color: 'amber', description: 'Confidence is below your threshold. Worth checking with a tax agent before claiming.' },
+  occupation_dependent:{ label: 'Occupation Dependent',       color: 'amber', description: 'Only deductible for certain occupations. Confirm this expense applies to your specific job.' },
+  method_required:     { label: 'Calculation Method Required',color: 'amber', description: 'You must choose between two ATO-approved methods (e.g. fixed rate vs. actual cost for home office).', action: 'Check the ATO guidelines for your preferred method.' },
+  percentage_required:        { label: 'Work Percentage Required',    color: 'amber', description: 'Only the work-related portion is deductible. Estimate and record the percentage used for work.', action: 'Keep a logbook or diary to substantiate your claim.' },
+  instant_deduction_eligible: { label: 'Instant Deduction Eligible',  color: 'green', description: 'Under $300 — you can claim the full amount this year without depreciation.' },
+  depreciation_check:         { label: 'Check Depreciation Rules',    color: 'amber', description: 'Over $300 — this item must be depreciated over its effective life unless a concession applies.', action: 'Check the ATO guide on deducting items over $300.' },
+}
+
+// ─── Category labels ──────────────────────────────────────────────────────────
+const CATEGORY_LABELS: Record<string, string> = {
+  work_software:            'Work Software',
+  professional_memberships: 'Professional Memberships',
+  training_education:       'Training & Education',
+  work_equipment:           'Work Equipment',
+  phone_internet:           'Phone & Internet',
+  working_from_home:        'Working From Home',
+  travel:                   'Work Travel',
+  donations:                'Donations',
+  bank_fees:                'Bank Fees',
+}
+
+// ─── Reason formatter ─────────────────────────────────────────────────────────
+function formatReason(reason: string | undefined): string {
+  if (!reason) return ''
+  const parts = reason.split(';').map(s => s.trim()).filter(Boolean)
+  const mapped = parts.map(part => {
+    const merchantMatch = part.match(/^merchant_match:\s*(.+?)(?:\s*\(similarity:.*?\))?$/i)
+    if (merchantMatch) return `Matched merchant: ${merchantMatch[1].trim()}`
+    const keywordMatch = part.match(/^keyword_match:\s*(.+)$/i)
+    if (keywordMatch) return `Keywords: ${keywordMatch[1].trim()}`
+    const ruleMatch = part.match(/^rule:\s*(.+)$/i)
+    if (ruleMatch) return `Rule: ${ruleMatch[1].trim()}`
+    const hintMatch = part.match(/^no_match\s*\|\s*hints:\s*(.+)$/i)
+    if (hintMatch) return `No match found — possible: ${hintMatch[1].replace(/possible_/gi, '').replace(/_/g, ' ').trim()}`
+    if (part === 'no_match' || part === 'no_rule_matched') return 'No matching rule found'
+    return part
+  })
+  const result = mapped.join(' · ')
+  return result || reason
+}
+
 export default function Report() {
   const { jobId } = useParams<{ jobId: string }>()
   const navigate = useNavigate()
@@ -12,6 +55,7 @@ export default function Report() {
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [reportError, setReportError] = useState<string | null>(null)
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   
   // Check if report data was passed via navigation state (ephemeral mode)
   const stateReportData = location.state?.reportData
@@ -239,8 +283,11 @@ export default function Report() {
             <h1 className="font-display text-h1 font-semibold text-white mb-2">
               Deduction Report
             </h1>
-            <p className="text-body text-slate-300">
-              Income Year: {reportData.income_year} (1 July {reportData.income_year.split('-')[0]} to 30 June {reportData.income_year.split('-')[1]})
+            <p className="text-body text-slate-400">
+              Income year {reportData.income_year}
+              {reportData.generated_at && (
+                <span className="text-slate-600"> · Generated {new Date(reportData.generated_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+              )}
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -460,7 +507,7 @@ export default function Report() {
                 .map(([category, amount]) => (
                   <div key={category}>
                     <div className="flex justify-between text-small text-slate-300 mb-1">
-                      <span>{category}</span>
+                      <span>{CATEGORY_LABELS[category] ?? category}</span>
                       <span className="font-medium">{formatCurrency(amount as number)}</span>
                     </div>
                     <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
@@ -483,7 +530,7 @@ export default function Report() {
           <div className="border-b border-line-700 mb-6" role="tablist" aria-label="Report sections">
             <div className="flex space-x-8">
               <button
-                onClick={() => setActiveTab('candidates')}
+                onClick={() => { setActiveTab('candidates'); setCategoryFilter(null) }}
                 role="tab"
                 aria-selected={activeTab === 'candidates'}
                 aria-controls="candidates-panel"
@@ -501,7 +548,7 @@ export default function Report() {
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('needs-review')}
+                onClick={() => { setActiveTab('needs-review'); setCategoryFilter(null) }}
                 role="tab"
                 aria-selected={activeTab === 'needs-review'}
                 aria-controls="needs-review-panel"
@@ -558,152 +605,159 @@ export default function Report() {
           </div>
 
           {/* Candidates Table */}
-          {activeTab === 'candidates' && (
-            <div 
-              role="tabpanel" 
-              id="candidates-panel" 
-              aria-labelledby="candidates-tab"
-              className="overflow-x-auto"
-            >
-              <table className="w-full min-w-[640px]" aria-label="Deduction candidates">
-                <thead>
-                  <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
-                    <th className="pb-3 pr-4">DATE</th>
-                    <th className="pb-3 pr-4">MERCHANT</th>
-                    <th className="pb-3 pr-4">DESCRIPTION</th>
-                    <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                    <th className="pb-3 pr-4">CATEGORY</th>
-                    <th className="pb-3 pr-4">CONFIDENCE</th>
-                    <th className="pb-3">EVIDENCE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {candidates.map((transaction) => {
-                    const confidenceInfo = getConfidenceLabel(transaction.confidence)
-                    return (
-                      <tr
-                        key={transaction.id}
-                        onClick={() => setSelectedTransaction(transaction.id)}
-                        className={`
-                          border-b border-line-700 cursor-pointer transition-colors
-                          ${selectedTransaction === transaction.id 
-                            ? 'bg-ink-800' 
-                            : 'hover:bg-ink-800'
-                          }
-                        `}
-                      >
-                        <td className="py-4 pr-4 text-small text-slate-300">
-                          {formatDate(transaction.date)}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-white">
-                          {transaction.merchant}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">
-                          {transaction.description}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-white text-right">
-                          {formatCurrency(transaction.amount)}
-                        </td>
-                        <td className="py-4 pr-4">
-                          <Chip label={transaction.category} variant="category" size="sm" />
-                        </td>
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-micro text-slate-300">
-                              {confidenceInfo.label}
-                            </span>
-                            <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${confidenceInfo.color}`}
-                                style={{ width: `${transaction.confidence * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex flex-wrap gap-1">
-                            {transaction.evidence && transaction.evidence.map((ev, idx) => (
-                              <Chip key={idx} label={ev} variant="category" size="sm" />
-                            ))}
-                          </div>
-                        </td>
+          {activeTab === 'candidates' && (() => {
+            const candidateCategories = [...new Set(candidates.map((t: any) => t.category).filter(Boolean))]
+            const filtered = categoryFilter ? candidates.filter((t: any) => t.category === categoryFilter) : candidates
+            return (
+              <div role="tabpanel" id="candidates-panel" aria-labelledby="candidates-tab">
+                {/* Category filter chips */}
+                {candidateCategories.length > 1 && (
+                  <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-1">
+                    <button
+                      onClick={() => setCategoryFilter(null)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                    >
+                      All ({candidates.length})
+                    </button>
+                    {candidateCategories.map((cat: string) => {
+                      const count = candidates.filter((t: any) => t.category === cat).length
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                        >
+                          {CATEGORY_LABELS[cat] ?? cat} ({count})
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px]" aria-label="Deduction candidates">
+                    <thead>
+                      <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                        <th className="pb-3 pr-4">DATE</th>
+                        <th className="pb-3 pr-4">MERCHANT</th>
+                        <th className="pb-3 pr-4">DESCRIPTION</th>
+                        <th className="pb-3 pr-4 text-right">AMOUNT</th>
+                        <th className="pb-3 pr-4">CATEGORY</th>
+                        <th className="pb-3 pr-4">CONFIDENCE</th>
+                        <th className="pb-3">EVIDENCE</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    </thead>
+                    <tbody>
+                      {filtered.map((transaction: any) => {
+                        const confidenceInfo = getConfidenceLabel(transaction.confidence)
+                        return (
+                          <tr
+                            key={transaction.id}
+                            onClick={() => setSelectedTransaction(transaction.id)}
+                            className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
+                          >
+                            <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
+                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{transaction.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{transaction.description}</td>
+                            <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="py-4 pr-4">
+                              <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="sm" />
+                            </td>
+                            <td className="py-4 pr-4">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-micro text-slate-300">{confidenceInfo.label}</span>
+                                <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
+                                  <div className={`h-full ${confidenceInfo.color}`} style={{ width: `${transaction.confidence * 100}%` }} />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4">
+                              <div className="flex flex-wrap gap-1">
+                                {transaction.evidence && transaction.evidence.map((ev: string, idx: number) => (
+                                  <Chip key={idx} label={ev} variant="category" size="sm" />
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Needs Review Table */}
-          {activeTab === 'needs-review' && (
-            <div 
-              role="tabpanel" 
-              id="needs-review-panel" 
-              aria-labelledby="needs-review-tab"
-              className="overflow-x-auto"
-            >
-              <table className="w-full" aria-label="Transactions needing review">
-                <thead>
-                  <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
-                    <th className="pb-3 pr-4">DATE</th>
-                    <th className="pb-3 pr-4">MERCHANT</th>
-                    <th className="pb-3 pr-4">DESCRIPTION</th>
-                    <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                    <th className="pb-3 pr-4">CONFIDENCE</th>
-                    <th className="pb-3">REASON</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {needsReview.map((transaction) => {
-                    const confidenceInfo = getConfidenceLabel(transaction.confidence)
-                    return (
-                      <tr
-                        key={transaction.id}
-                        onClick={() => setSelectedTransaction(transaction.id)}
-                        className={`
-                          border-b border-line-700 cursor-pointer transition-colors
-                          ${selectedTransaction === transaction.id 
-                            ? 'bg-ink-800' 
-                            : 'hover:bg-ink-800'
-                          }
-                        `}
-                      >
-                        <td className="py-4 pr-4 text-small text-slate-300">
-                          {formatDate(transaction.date)}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>
-                          {transaction.merchant}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">
-                          {transaction.description}
-                        </td>
-                        <td className="py-4 pr-4 text-small text-white text-right">
-                          {formatCurrency(transaction.amount)}
-                        </td>
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-micro text-slate-300">
-                              {confidenceInfo.label}
-                            </span>
-                            <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${confidenceInfo.color}`}
-                                style={{ width: `${transaction.confidence * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 text-small text-slate-300">
-                          {transaction.reason}
-                        </td>
+          {activeTab === 'needs-review' && (() => {
+            const reviewCategories = [...new Set(needsReview.map((t: any) => t.category).filter(Boolean))]
+            const filtered = categoryFilter ? needsReview.filter((t: any) => t.category === categoryFilter) : needsReview
+            return (
+              <div role="tabpanel" id="needs-review-panel" aria-labelledby="needs-review-tab">
+                {reviewCategories.length > 1 && (
+                  <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-1">
+                    <button
+                      onClick={() => setCategoryFilter(null)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                    >
+                      All ({needsReview.length})
+                    </button>
+                    {reviewCategories.map((cat: string) => {
+                      const count = needsReview.filter((t: any) => t.category === cat).length
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                        >
+                          {CATEGORY_LABELS[cat] ?? cat} ({count})
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full" aria-label="Transactions needing review">
+                    <thead>
+                      <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                        <th className="pb-3 pr-4">DATE</th>
+                        <th className="pb-3 pr-4">MERCHANT</th>
+                        <th className="pb-3 pr-4">DESCRIPTION</th>
+                        <th className="pb-3 pr-4 text-right">AMOUNT</th>
+                        <th className="pb-3 pr-4">CONFIDENCE</th>
+                        <th className="pb-3">WHY FLAGGED</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    </thead>
+                    <tbody>
+                      {filtered.map((transaction: any) => {
+                        const confidenceInfo = getConfidenceLabel(transaction.confidence)
+                        return (
+                          <tr
+                            key={transaction.id}
+                            onClick={() => setSelectedTransaction(transaction.id)}
+                            className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
+                          >
+                            <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
+                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{transaction.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{transaction.description}</td>
+                            <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="py-4 pr-4">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-micro text-slate-300">{confidenceInfo.label}</span>
+                                <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
+                                  <div className={`h-full ${confidenceInfo.color}`} style={{ width: `${transaction.confidence * 100}%` }} />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 text-small text-slate-300">{formatReason(transaction.reason)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Excluded Table */}
           {activeTab === 'excluded' && (
@@ -751,20 +805,61 @@ export default function Report() {
             </div>
           )}
 
-          {/* Audit Trail */}
-          {activeTab === 'audit' && (
-            <div 
-              role="tabpanel" 
-              id="audit-panel" 
-              aria-labelledby="audit-tab"
-              className="text-center py-12 text-slate-300"
-            >
-              <p className="mb-4">Audit trail view will show detailed processing steps for each transaction.</p>
-              <p className="text-small text-slate-500">
-                This includes normalisation, exclusion checks, classification attempts, and final results.
-              </p>
-            </div>
-          )}
+          {/* Audit Trail — full transaction log */}
+          {activeTab === 'audit' && (() => {
+            const allRows = [
+              ...candidates.map((t: any) => ({ ...t, _decision: 'candidate' })),
+              ...needsReview.map((t: any) => ({ ...t, _decision: 'needs_review' })),
+              ...excluded.map((t: any) => ({ ...t, _decision: 'excluded' })),
+            ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            return (
+              <div role="tabpanel" id="audit-panel" aria-labelledby="audit-tab" className="overflow-x-auto">
+                <p className="text-small text-slate-500 mb-4">
+                  Every transaction analysed — showing the final decision and reason for each.
+                </p>
+                <table className="w-full min-w-[700px]" aria-label="Full audit trail">
+                  <thead>
+                    <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                      <th className="pb-3 pr-4">DATE</th>
+                      <th className="pb-3 pr-4">MERCHANT</th>
+                      <th className="pb-3 pr-4 text-right">AMOUNT</th>
+                      <th className="pb-3 pr-4">DECISION</th>
+                      <th className="pb-3 pr-4">CATEGORY / REASON</th>
+                      <th className="pb-3">CONFIDENCE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allRows.map((t: any) => (
+                      <tr key={t.id} className="border-b border-line-700">
+                        <td className="py-3 pr-4 text-small text-slate-300 whitespace-nowrap">{formatDate(t.date)}</td>
+                        <td className="py-3 pr-4 text-small text-white max-w-[160px] truncate" title={t.merchant}>{t.merchant}</td>
+                        <td className="py-3 pr-4 text-small text-white text-right whitespace-nowrap">{formatCurrency(t.amount)}</td>
+                        <td className="py-3 pr-4">
+                          {t._decision === 'candidate' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/30 text-green-400 border border-green-800/40">Candidate</span>
+                          )}
+                          {t._decision === 'needs_review' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-900/30 text-amber-400 border border-amber-800/40">Needs Review</span>
+                          )}
+                          {t._decision === 'excluded' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-ink-800 text-slate-500 border border-line-700">Excluded</span>
+                          )}
+                        </td>
+                        <td className="py-3 pr-4 text-small text-slate-400 max-w-xs truncate">
+                          {t._decision === 'excluded'
+                            ? (t.explanation ?? t.reason ?? '')
+                            : (t.category ? `${CATEGORY_LABELS[t.category] ?? t.category} · ${formatReason(t.reason)}` : formatReason(t.reason))}
+                        </td>
+                        <td className="py-3 text-small text-slate-400">
+                          {t.confidence != null ? `${Math.round(t.confidence * 100)}%` : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          })()}
         </Card>
 
         {/* Transaction Detail Drawer */}
@@ -848,7 +943,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             <div className="text-micro font-medium text-slate-500 mb-2">
               CATEGORY
             </div>
-            <Chip label={transaction.category} variant="category" size="md" />
+            <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="md" />
           </div>
         )}
 
@@ -877,7 +972,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             CLASSIFICATION REASON
           </div>
           <div className="text-small text-slate-300">
-            {transaction.reason}
+            {formatReason(transaction.reason)}
           </div>
         </div>
       </div>
@@ -904,33 +999,29 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       )}
 
       {/* Flags */}
-      {transaction.flags && transaction.flags.length > 0 && (
+      {transaction.flags && transaction.flags.filter((f: string) => FLAG_INFO[f]).length > 0 && (
         <div className="border-t border-line-700 pt-6">
           <div className="text-micro font-medium text-slate-500 mb-3">
-            SPECIAL REQUIREMENTS
+            WHAT YOU NEED TO DO
           </div>
-          <div className="space-y-2">
-            {transaction.flags.map((flag: string, idx: number) => (
-              <div key={idx} className="flex items-start space-x-2">
-                <div className="w-5 h-5 rounded-full bg-accent bg-opacity-20 flex items-center justify-center mt-0.5">
-                  <Icon name="AlertTriangle" size={12} className="text-accent" />
-                </div>
-                <div>
-                  <div className="text-small text-white font-medium">
-                    {flag === 'percentage_required' && 'Percentage Required'}
-                    {flag === 'method_required' && 'Method Required'}
-                    {flag === 'needs_review' && 'Needs Review'}
-                    {flag === 'occupation_dependent' && 'Occupation Dependent'}
+          <div className="space-y-3">
+            {transaction.flags.filter((f: string) => FLAG_INFO[f]).map((flag: string, idx: number) => {
+              const info = FLAG_INFO[flag]
+              return (
+                <div key={idx} className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0 ${info.color === 'green' ? 'bg-green-500/20' : 'bg-amber-500/20'}`}>
+                    <Icon name={info.color === 'green' ? 'Check' : 'AlertTriangle'} size={11} className={info.color === 'green' ? 'text-green-400' : 'text-amber-400'} />
                   </div>
-                  <div className="text-micro text-slate-300 mt-1">
-                    {flag === 'percentage_required' && 'Calculate and document the work-related percentage of this expense.'}
-                    {flag === 'method_required' && 'Choose an appropriate method and maintain required records.'}
-                    {flag === 'needs_review' && 'Low confidence — please review and confirm this classification.'}
-                    {flag === 'occupation_dependent' && 'Deductibility depends on your occupation. Confirm with a registered tax agent.'}
+                  <div>
+                    <div className="text-small text-white font-medium">{info.label}</div>
+                    <div className="text-micro text-slate-400 mt-0.5 leading-relaxed">{info.description}</div>
+                    {info.action && (
+                      <div className="text-micro text-amber-400 mt-1">{info.action}</div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

@@ -202,9 +202,12 @@ class PDFParser:
         )
 
     def _clean_pdf_description(self, description: str) -> str:
-        """Strip NAB-style card prefix (V3737) and embedded internal date (13/11) from the start."""
+        """Strip NAB-style card prefix (V3737), embedded internal date (13/11),
+        and repeated trailing card suffix (V3737 at end) from the description."""
         cleaned = re.sub(r'^V\d{3,6}\s+', '', description, flags=re.IGNORECASE)
         cleaned = re.sub(r'^\d{1,2}/\d{2}(?:/\d{2,4})?\s+', '', cleaned)
+        # Also strip trailing repeated card suffix e.g. "APPLE.COM SYDNEY V3737"
+        cleaned = re.sub(r'\s+V\d{3,6}\s*$', '', cleaned, flags=re.IGNORECASE)
         return cleaned.strip()
 
     def _extract_amount_from_description(self, transaction: dict) -> None:
@@ -245,6 +248,12 @@ class PDFParser:
             clean_desc = description[:amounts[0][1]].strip()
 
         transaction['amount'] = transaction_amount if is_credit else -transaction_amount
+
+        # Strip any residual monetary values and balance indicators left inside clean_desc
+        # (e.g. NAB descriptions include a merchant-side amount and running balance before the debit)
+        clean_desc = re.sub(r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', '', clean_desc)
+        clean_desc = re.sub(r'\b\d{1,3}(?:,\d{3})*\.\d{2}\b', '', clean_desc)
+        clean_desc = re.sub(r'\s+\b(CR|DR)\b', '', clean_desc, flags=re.IGNORECASE)
         transaction['description'] = re.sub(r'\s+', ' ', clean_desc).strip() or 'Transaction'
 
     def _parse_date(self, date_str: str):

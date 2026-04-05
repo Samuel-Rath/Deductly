@@ -21,9 +21,6 @@ from backend.processing.fuzzy_matcher import FuzzyMatcher
 from backend.processing.report_generator import ReportGenerator
 from backend.processing.audit_trail import AuditTrailBuilder
 from backend.storage.storage_service import StorageService
-from backend.rag.knowledge_base import ATOKnowledgeBase
-from backend.rag.rag_engine import RAGEngine
-from backend.rag.llm_classifier import LLMClassifier
 
 
 class ProcessingPipeline:
@@ -41,20 +38,16 @@ class ProcessingPipeline:
     def __init__(
         self,
         rules_path: str = "backend/config/rules.json",
-        knowledge_path: str = "backend/config/ato_fitness_knowledge.json",
         confidence_threshold: float = 0.60,
         storage_service: Optional[StorageService] = None,
-        use_rag: bool = False,
     ):
         """
         Initialize the processing pipeline.
 
         Args:
             rules_path: Path to rules configuration file
-            knowledge_path: Path to ATO fitness knowledge base
             confidence_threshold: Minimum confidence for classification
             storage_service: Optional storage service for persistence
-            use_rag: Enable RAG-powered fitness transaction analysis (requires ANTHROPIC_API_KEY)
         """
         self.confidence_threshold = confidence_threshold
         self.storage_service = storage_service
@@ -78,18 +71,6 @@ class ProcessingPipeline:
 
         self.report_generator = ReportGenerator(confidence_threshold=confidence_threshold)
         self.audit_builder = AuditTrailBuilder()
-
-        # RAG fitness classifier (optional)
-        self.llm_classifier: Optional[LLMClassifier] = None
-        if use_rag:
-            kb = ATOKnowledgeBase(knowledge_path)
-            rag_engine = RAGEngine(knowledge_base=kb)
-            if rag_engine.available:
-                self.llm_classifier = LLMClassifier(
-                    rag_engine=rag_engine,
-                    confidence_threshold=0.40,
-                    override_threshold=confidence_threshold,
-                )
     
     def process(
         self,
@@ -147,10 +128,6 @@ class ProcessingPipeline:
 
             # Step 5: Classify deduction candidates (rule-based)
             classified = self._classify_candidates(candidates)
-
-            # Step 5b: RAG enhancement for fitness transactions (if enabled)
-            if self.llm_classifier:
-                classified = self.llm_classifier.enhance(classified)
 
             # Step 6: Record classification in audit trail
             self._record_classifications(classified)

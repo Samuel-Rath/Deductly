@@ -103,6 +103,18 @@ class ClassificationEngine:
         rule_match = self.rules_engine.match(transaction_copy)
         
         if not rule_match:
+            # Build a partial hint by scanning all rules for any keyword match
+            hint_parts = []
+            for rule in self.rules_engine.rules:
+                if not rule.enabled:
+                    continue
+                for kw in rule.keywords:
+                    if kw.lower() in transaction_copy.description.lower() or kw.lower() in transaction_copy.merchant.lower():
+                        hint_parts.append(f"possible_{rule.category.value}")
+                        break
+
+            no_match_reason = f"no_match | hints: {', '.join(set(hint_parts))}" if hint_parts else "no_match"
+
             # No rule matched - record attempt and return unclassified transaction
             if self.audit_builder:
                 self.audit_builder.record_classification_attempt(
@@ -112,16 +124,16 @@ class ClassificationEngine:
                     "none",
                     0.0,
                     False,
-                    "no_rule_matched"
+                    no_match_reason
                 )
-            
+
             classified_txn = ClassifiedTransaction.model_construct(
                 transaction=transaction_copy,
                 category=None,
                 confidence=0.0,
                 matched_rule_id=None,
                 matched_rule_version=None,
-                reason="no_rule_matched",
+                reason=no_match_reason,
                 evidence_checklist=[],
                 flags=["needs_review"]
             )
@@ -134,7 +146,7 @@ class ClassificationEngine:
                     0.0,
                     None,
                     None,
-                    "no_rule_matched",
+                    no_match_reason,
                     [],
                     ["needs_review"]
                 )
@@ -142,7 +154,23 @@ class ClassificationEngine:
             return classified_txn
         
         matched_rule, confidence = rule_match
-        
+
+        # Boost confidence for subscription categories when transaction is recurring
+        SUBSCRIPTION_CATEGORIES = {
+            DeductionCategory.WORK_SOFTWARE,
+            DeductionCategory.PHONE_INTERNET,
+            DeductionCategory.PROFESSIONAL_MEMBERSHIPS,
+        }
+        if transaction.recurring_flag and matched_rule.category in SUBSCRIPTION_CATEGORIES:
+            confidence = min(1.0, confidence + 0.08)
+
+        # Adjust confidence based on fuzzy match quality
+        if fuzzy_score is not None:
+            if fuzzy_score >= 0.95:
+                confidence = min(1.0, confidence + 0.05)
+            elif fuzzy_score < 0.88:
+                confidence = max(0.0, confidence - 0.05)
+
         # Record classification attempt
         if self.audit_builder:
             self.audit_builder.record_classification_attempt(
@@ -196,7 +224,14 @@ class ClassificationEngine:
         if matched_rule.category == DeductionCategory.PHONE_INTERNET:
             if "percentage_required" not in flags:
                 flags.append("percentage_required")
-        
+
+        # Surface ATO $300 instant deduction threshold for work equipment
+        if matched_rule.category == DeductionCategory.WORK_EQUIPMENT:
+            if transaction.absolute_amount <= 300:
+                flags.append("instant_deduction_eligible")
+            else:
+                flags.append("depreciation_check")
+
         # Step 5: Ensure donations have eligibility check
         evidence_checklist = list(matched_rule.evidence_checklist)
         if matched_rule.category == DeductionCategory.DONATIONS:

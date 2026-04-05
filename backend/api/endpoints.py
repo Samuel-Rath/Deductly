@@ -61,7 +61,6 @@ async def upload_csv(
     income_year: Optional[str] = Form(None),
     ephemeral_mode: bool = Form(True),
     confidence_threshold: float = Form(0.60),
-    use_rag: bool = Form(False),
 ) -> UploadResponse:
     """
     Upload a CSV or PDF file for processing.
@@ -73,8 +72,7 @@ async def upload_csv(
         income_year: Australian income year (format: "YYYY-YYYY"). Auto-detected if omitted.
         ephemeral_mode: If True, no data is persisted after report generation
         confidence_threshold: Minimum confidence for classification (0.0-1.0)
-        use_rag: Enable RAG-powered fitness deduction analysis via Claude AI (requires ANTHROPIC_API_KEY)
-    
+
     Returns:
         UploadResponse with job_id and status
     
@@ -170,7 +168,6 @@ async def upload_csv(
         income_year=income_year,
         ephemeral_mode=ephemeral_mode,
         confidence_threshold=confidence_threshold,
-        use_rag=use_rag,
     )
     
     # Initialize storage service
@@ -265,10 +262,8 @@ async def upload_csv(
         # Initialize processing pipeline
         pipeline = ProcessingPipeline(
             rules_path="backend/config/rules.json",
-            knowledge_path="backend/config/ato_fitness_knowledge.json",
             confidence_threshold=confidence_threshold,
             storage_service=storage,
-            use_rag=use_rag,
         )
         
         # Process and generate reports
@@ -324,16 +319,6 @@ async def upload_csv(
             """Flatten ClassifiedTransaction to match frontend expectations."""
             txn = ct.transaction
             flags = ct.flags or []
-            is_rag = "rag_analysed" in flags
-            is_fitness = "occupation_dependent" in flags or (
-                ct.category and ct.category.value == "fitness_related"
-            )
-            # Extract ATO citation from RAG reason if present
-            ato_citation = None
-            if is_rag and ct.reason:
-                m = re.search(r"\| ATO: ([^|]+)", ct.reason)
-                if m:
-                    ato_citation = m.group(1).strip()
             return {
                 "id": txn.transaction_id,
                 "date": txn.date.isoformat(),
@@ -347,13 +332,6 @@ async def upload_csv(
                 "evidence": [e.value for e in ct.evidence_checklist],
                 "flags": flags,
                 "matched_rule_id": ct.matched_rule_id,
-                "rag_analysed": is_rag,
-                "is_fitness_related": is_fitness,
-                "ato_citation": ato_citation,
-                "disclaimer": (
-                    "NOT TAX ADVICE — consult a registered tax agent or the ATO before claiming."
-                    if is_fitness else None
-                ),
             }
         
         # Helper function to flatten excluded transaction for frontend
@@ -374,7 +352,6 @@ async def upload_csv(
         report_dict = {
             "income_year": report_data.income_year,
             "generated_at": report_data.generated_at.isoformat(),
-            "rag_enabled": use_rag,
             "disclaimer": "NOT TAX ADVICE — This report is for informational purposes only. Always consult a registered tax agent (BAS agent) or contact the ATO before claiming any deductions.",
             "summary": {
                 "total_deductible": float(report_data.summary.total_deductible),
