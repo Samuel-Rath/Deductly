@@ -38,6 +38,7 @@ REPORTS_DIR = Path("backend/reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
 _UUID_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+_INCOME_YEAR_RE = re.compile(r'^\d{4}-\d{4}$')
 
 
 def _validate_job_id(job_id: str) -> None:
@@ -107,7 +108,7 @@ async def upload_csv(
             'file_too_large',
             'medium',
             file_size=len(file_content),
-            max_size=MAX_FILE_SIZE,
+            max_size=SecurityConfig.MAX_UPLOAD_SIZE_BYTES,
             upload_filename=file.filename
         )
         metrics_collector.record_security_event('invalid_file')
@@ -124,7 +125,6 @@ async def upload_csv(
         )
     
     # Validate income year format (if provided) — must be YYYY-YYYY with consecutive years
-    _INCOME_YEAR_RE = re.compile(r'^\d{4}-\d{4}$')
     if income_year:
         if not _INCOME_YEAR_RE.match(income_year):
             raise HTTPException(

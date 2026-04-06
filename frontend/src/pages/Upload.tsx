@@ -26,7 +26,6 @@ export default function Upload() {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.6)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -69,18 +68,9 @@ export default function Upload() {
   const handleUpload = async () => {
     if (!file) return
     setIsUploading(true)
-    setUploadProgress(0)
     setError(null)
     try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) { clearInterval(progressInterval); return 90 }
-          return prev + 10
-        })
-      }, 200)
       await uploadMutation.mutateAsync({ file, ephemeralMode: true, confidenceThreshold })
-      clearInterval(progressInterval)
-      setUploadProgress(100)
     } catch (err) {
       console.error('Upload error:', err)
     }
@@ -218,22 +208,26 @@ export default function Upload() {
 
             {/* Upload Progress */}
             {isUploading && (
-              <div role="status" aria-live="polite" aria-label="Upload progress" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
-                <div className="flex justify-between text-sm text-slate-300 mb-3">
+              <div role="status" aria-live="polite" aria-label="Uploading and processing" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
+                <div className="flex items-center justify-between text-sm text-slate-300 mb-3">
                   <span className="font-medium">Uploading and processing...</span>
-                  <span className="font-mono font-semibold text-accent-light">{uploadProgress}%</span>
+                  <span className="flex gap-1">
+                    {[0, 1, 2].map(i => (
+                      <span
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-accent-light"
+                        style={{ animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                      />
+                    ))}
+                  </span>
                 </div>
                 <div
                   className="w-full h-2 bg-ink-900 rounded-full overflow-hidden"
                   role="progressbar"
-                  aria-valuenow={uploadProgress}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
+                  aria-busy="true"
+                  aria-label="Processing your file"
                 >
-                  <div
-                    className="h-full bg-gradient-brand transition-all duration-300 rounded-full"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+                  <div className="h-full bg-gradient-brand rounded-full progress-indeterminate" />
                 </div>
               </div>
             )}

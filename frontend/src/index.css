@@ -130,6 +130,16 @@
     outline: none;
   }
 
+  /* ── Indeterminate upload progress bar ──────────────────────────────── */
+  @keyframes progress-indeterminate {
+    0%   { transform: translateX(-100%); width: 45%; }
+    50%  { width: 55%; }
+    100% { transform: translateX(250%);  width: 45%; }
+  }
+  .progress-indeterminate {
+    animation: progress-indeterminate 1.6s ease-in-out infinite;
+  }
+
   /* ── Reduced motion — disable all animations when requested ─────────── */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -145,5 +155,42 @@
       animation: none !important;
       transform: none !important;
     }
+  }
+}
+
+/* ── Print styles — Save as PDF from Report page ────────────────────────── */
+@media print {
+  /* Force dark backgrounds and colours to render in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide chrome that doesn't belong in a saved PDF */
+  nav,
+  .no-print,
+  [role="button"]:not(.print-keep),
+  button:not(.print-keep) {
+    display: none !important;
+  }
+
+  /* Remove viewport padding — let content fill the page */
+  body {
+    padding: 0 !important;
+  }
+
+  /* Prevent orphaned table rows */
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* Summary cards: 2 per row in print */
+  .print\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Drawers are always hidden in print */
+  [data-drawer] {
+    display: none !important;
   }
 }

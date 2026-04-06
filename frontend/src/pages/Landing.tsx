@@ -374,7 +374,7 @@ export default function Landing() {
 
           {/* Feature grid — each card tilts on hover */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-6xl mx-auto">
-            {[
+            [
               {
                 icon: <Shield size={22} />,
                 title: 'Privacy First',
@@ -383,20 +383,20 @@ export default function Landing() {
               },
               {
                 icon: <Brain size={22} />,
-                title: 'AI Grounded',
-                body: 'Claude AI matches transactions against the ATO knowledge base with tailored rules across all major deduction categories.',
+                title: 'ATO Rule Engine',
+                body: 'Every transaction is matched against ATO deduction rules with keyword detection, merchant recognition, and recurring pattern analysis across all major categories.',
                 delay: 0.1,
               },
               {
                 icon: <Zap size={22} />,
                 title: 'Confidence Scores',
-                body: 'Composite 0 to 100 scoring using keyword matching, RAG grounding, and AI reasoning. Fully transparent.',
+                body: 'Composite scoring using keyword matching, merchant recognition, and transaction patterns. Every classification is transparent with reasons shown.',
                 delay: 0.2,
               },
               {
                 icon: <FileText size={22} />,
-                title: 'ATO Citations',
-                body: 'Every deduction candidate includes the specific ATO ruling or tax determination that supports the claim.',
+                title: 'Evidence Checklists',
+                body: 'Every candidate includes what to keep — receipts, diary entries, logbooks — plus occupation flags and ATO method guides ready for your tax agent.',
                 delay: 0.3,
               },
             ].map((f) => (
@@ -448,8 +448,8 @@ export default function Landing() {
               },
               {
                 n: '02',
-                title: 'AI Analyses Transactions',
-                body: 'Every transaction is run against ATO deduction rules and given a confidence score. Your personal details are removed before any AI processing.',
+                title: 'Rules Engine Analyses Transactions',
+                body: 'Every transaction is matched against ATO deduction rules and given a confidence score. Bank numbers and personal identifiers are stripped before classification.',
               },
               {
                 n: '03',
@@ -492,7 +492,7 @@ export default function Landing() {
             viewport={{ once: true, amount: 0.4 }}
           >
             {[
-              { value: '6', label: 'Deduction Categories' },
+              { value: '9', label: 'Deduction Categories' },
               { value: '100%', label: 'Ephemeral — No Storage' },
               { value: '0–100', label: 'Composite Confidence' },
               { value: 'Free', label: 'No Account Needed' },

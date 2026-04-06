@@ -27,11 +27,10 @@ class SecurityConfig:
     MAX_UPLOAD_SIZE_BYTES: int = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
     # Single source of truth for allowed upload types (CSV + PDF)
+    # text/plain and application/vnd.ms-excel removed — too broad; extension check is the real guard
     ALLOWED_FILE_TYPES: List[str] = [
         "text/csv",
         "application/csv",
-        "text/plain",
-        "application/vnd.ms-excel",   # Some browsers send this for .csv
         "application/pdf",
     ]
     ALLOWED_FILE_EXTENSIONS: List[str] = [".csv", ".pdf"]

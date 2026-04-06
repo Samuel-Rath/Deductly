@@ -357,15 +357,22 @@ export default function Report() {
           </div>
           )}
           
-          {/* Ephemeral Mode Notice */}
+          {/* Ephemeral Mode — Save as PDF */}
           {stateReportData && (
-            <div className="mt-3 p-3 bg-accent/10 border border-accent/30 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <Icon name="Info" size={20} className="text-accent mt-0.5" />
-                <div className="text-small text-slate-300">
-                  Report generated in ephemeral mode - data is not stored and downloads are not available. You can view and analyze the report on this page.
-                </div>
+            <div className="mt-3 flex items-center justify-between gap-3 p-3 bg-ink-800 border border-line-700 rounded-lg no-print">
+              <div className="flex items-center gap-2 text-small text-slate-400">
+                <Icon name="Info" size={16} className="text-slate-500 shrink-0" />
+                <span>No stored copy — save this report before leaving.</span>
               </div>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => window.print()}
+                className="shrink-0 print-keep"
+              >
+                <Icon name="Download" size={15} />
+                Save as PDF
+              </Button>
             </div>
           )}
 
@@ -451,14 +458,14 @@ export default function Report() {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
-                  <span>High (0.80–1.00)</span>
+                  <span>High (80–100%)</span>
                   <span>{summary.confidenceDistribution.high} transactions</span>
                 </div>
                 <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
                   <div
-                    className="h-full bg-accent"
-                    style={{ 
-                      width: `${safePercentage(summary.confidenceDistribution.high, totalTransactions)}%` 
+                    className="h-full bg-gradient-brand"
+                    style={{
+                      width: `${safePercentage(summary.confidenceDistribution.high, totalTransactions)}%`
                     }}
                   />
                 </div>
@@ -466,14 +473,14 @@ export default function Report() {
 
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
-                  <span>Medium (0.60–0.79)</span>
+                  <span>Medium (60–79%)</span>
                   <span>{summary.confidenceDistribution.medium} transactions</span>
                 </div>
                 <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
                   <div
-                    className="h-full bg-slate-500"
-                    style={{ 
-                      width: `${safePercentage(summary.confidenceDistribution.medium, totalTransactions)}%` 
+                    className="h-full bg-accent/50"
+                    style={{
+                      width: `${safePercentage(summary.confidenceDistribution.medium, totalTransactions)}%`
                     }}
                   />
                 </div>
@@ -481,14 +488,14 @@ export default function Report() {
 
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
-                  <span>Low (&lt; 0.60)</span>
+                  <span>Low (below 60%)</span>
                   <span>{summary.confidenceDistribution.low} transactions</span>
                 </div>
                 <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
                   <div
-                    className="h-full bg-slate-700"
-                    style={{ 
-                      width: `${safePercentage(summary.confidenceDistribution.low, totalTransactions)}%` 
+                    className="h-full bg-slate-600"
+                    style={{
+                      width: `${safePercentage(summary.confidenceDistribution.low, totalTransactions)}%`
                     }}
                   />
                 </div>
@@ -512,9 +519,9 @@ export default function Report() {
                     </div>
                     <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-white"
-                        style={{ 
-                          width: `${safePercentage(amount as number, summary.totalDeductible)}%` 
+                        className="h-full bg-gradient-brand"
+                        style={{
+                          width: `${safePercentage(amount as number, summary.totalDeductible)}%`
                         }}
                       />
                     </div>
@@ -1045,8 +1052,8 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             <div>
               <div className="font-medium text-white mb-1">About this classification</div>
               <p>
-                This transaction was classified using keyword matching and ATO-grounded rules
-                for Australian fitness-related tax deductions.
+                This transaction was classified using keyword matching, merchant recognition,
+                and ATO-grounded deduction rules for Australian taxpayers.
               </p>
             </div>
 

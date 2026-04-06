@@ -29,15 +29,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address, considering trusted proxies"""
-        # Check X-Forwarded-For header if behind proxy
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for and SecurityConfig.TRUSTED_PROXIES:
-            # Take the first IP (client IP)
-            client_ip = forwarded_for.split(",")[0].strip()
-        else:
-            client_ip = request.client.host if request.client else "unknown"
-        
-        return client_ip
+        remote = request.client.host if request.client else "unknown"
+        # Only trust X-Forwarded-For when the immediate connection comes from a known proxy
+        if SecurityConfig.TRUSTED_PROXIES and remote in SecurityConfig.TRUSTED_PROXIES:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                return forwarded_for.split(",")[0].strip()
+        return remote
     
     def _cleanup_old_entries(self):
         """Remove old rate limit entries"""
@@ -80,20 +78,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if len(recent_requests) >= SecurityConfig.RATE_LIMIT_PER_MINUTE:
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                headers={"Retry-After": "60"},
                 content={
                     "error": "rate_limit_exceeded",
                     "message": f"Rate limit exceeded. Maximum {SecurityConfig.RATE_LIMIT_PER_MINUTE} requests per minute.",
                     "retry_after": 60
                 }
             )
-        
+
         # Check per-hour rate limit
         hour_ago = current_time - 3600
         hourly_requests = [ts for ts in self.requests[client_ip] if ts > hour_ago]
-        
+
         if len(hourly_requests) >= SecurityConfig.RATE_LIMIT_PER_HOUR:
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                headers={"Retry-After": "3600"},
                 content={
                     "error": "rate_limit_exceeded",
                     "message": f"Rate limit exceeded. Maximum {SecurityConfig.RATE_LIMIT_PER_HOUR} requests per hour.",
@@ -114,6 +114,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 if total_uploaded_mb + size_mb > SecurityConfig.UPLOAD_RATE_LIMIT_MB_PER_HOUR:
                     return JSONResponse(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        headers={"Retry-After": "3600"},
                         content={
                             "error": "upload_limit_exceeded",
                             "message": f"Upload limit exceeded. Maximum {SecurityConfig.UPLOAD_RATE_LIMIT_MB_PER_HOUR}MB per hour.",
