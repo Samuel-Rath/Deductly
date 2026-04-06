@@ -16,6 +16,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
+const COLD_START_RETRY_DELAY_MS = 5000; // Render/Railway free tier needs ~30s to wake
 const UPLOAD_TIMEOUT_MS = 120000; // 2 min — PDF processing can be slow
 
 // ============================================================================
@@ -27,6 +28,10 @@ export interface UploadRequest {
   incomeYear?: string; // Optional - will be auto-detected if not provided
   ephemeralMode: boolean;
   confidenceThreshold?: number;
+  /** Called with 0–100 as bytes are sent to the server */
+  onUploadProgress?: (pct: number) => void;
+  /** Called before each retry attempt with the 1-based attempt number */
+  onRetry?: (attempt: number) => void;
 }
 
 export interface UploadResponse {
@@ -129,14 +134,20 @@ function handleAPIError(error: unknown): never {
 async function withRetry<T>(
   fn: () => Promise<T>,
   retries: number = MAX_RETRIES,
-  delay: number = RETRY_DELAY_MS
+  delay: number = RETRY_DELAY_MS,
+  onRetry?: (attempt: number) => void
 ): Promise<T> {
   try {
     return await fn();
   } catch (error) {
     if (retries > 0 && shouldRetry(error)) {
-      await sleep(delay);
-      return withRetry(fn, retries - 1, delay * 2); // Exponential backoff
+      const attempt = MAX_RETRIES - retries + 1;
+      onRetry?.(attempt);
+      // Network errors mean the server is likely cold-starting — use longer delays
+      const isNetworkError = error instanceof APIError && error.statusCode === 0;
+      const retryDelay = isNetworkError ? Math.max(delay, COLD_START_RETRY_DELAY_MS) : delay;
+      await sleep(retryDelay);
+      return withRetry(fn, retries - 1, retryDelay * 2, onRetry);
     }
     throw error;
   }
@@ -181,11 +192,20 @@ export async function uploadCSV(request: UploadRequest): Promise<UploadResponse>
       formData.append('confidence_threshold', String(request.confidenceThreshold));
     }
     
-    const response = await withRetry(() =>
-      apiClient.post<UploadResponse>('/api/upload', formData, {
+    const response = await withRetry(
+      () => apiClient.post<UploadResponse>('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: UPLOAD_TIMEOUT_MS,
-      })
+        onUploadProgress: request.onUploadProgress
+          ? (evt) => {
+              const pct = evt.total ? Math.round((evt.loaded / evt.total) * 100) : 0;
+              request.onUploadProgress!(pct);
+            }
+          : undefined,
+      }),
+      MAX_RETRIES,
+      RETRY_DELAY_MS,
+      request.onRetry
     );
     
     return response.data;

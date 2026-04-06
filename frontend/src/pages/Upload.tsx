@@ -1,4 +1,4 @@
-import { useState, useRef, DragEvent, ChangeEvent } from 'react'
+import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Card, Icon } from '../components'
 import { useUploadCSV } from '../api/hooks'
@@ -9,16 +9,25 @@ export default function Upload() {
 
   const uploadMutation = useUploadCSV({
     onSuccess: (data) => {
-      if (data.report_data) {
-        navigate(`/report/${data.job_id}`, { state: { reportData: data.report_data } })
-      } else {
-        navigate(`/report/${data.job_id}`)
-      }
+      if (processingTimerRef.current) clearInterval(processingTimerRef.current)
+      setUploadProgress(100)
+      setTimeout(() => {
+        if (data.report_data) {
+          navigate(`/report/${data.job_id}`, { state: { reportData: data.report_data } })
+        } else {
+          navigate(`/report/${data.job_id}`)
+        }
+      }, 300)
     },
     onError: (error) => {
-      setError(error.message || 'Upload failed. Please try again.')
+      if (processingTimerRef.current) clearInterval(processingTimerRef.current)
+      const msg = error.errorCode === 'network_error'
+        ? 'Could not reach the server. Please check your connection and try again.'
+        : error.message || 'Upload failed. Please try again.'
+      setError(msg)
       setIsUploading(false)
       setUploadProgress(0)
+      setIsWakingUp(false)
     },
   })
 
@@ -26,8 +35,18 @@ export default function Upload() {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [statusMsg, setStatusMsg] = useState('Uploading your file...')
+  const [isWakingUp, setIsWakingUp] = useState(false)
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.6)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const processingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (processingTimerRef.current) clearInterval(processingTimerRef.current)
+    }
+  }, [])
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -67,10 +86,48 @@ export default function Upload() {
 
   const handleUpload = async () => {
     if (!file) return
+    if (processingTimerRef.current) clearInterval(processingTimerRef.current)
     setIsUploading(true)
+    setIsWakingUp(false)
+    setUploadProgress(0)
+    setStatusMsg('Uploading your file...')
     setError(null)
+
+    const startProcessingPhase = () => {
+      setStatusMsg('Analysing transactions...')
+      let current = 40
+      processingTimerRef.current = setInterval(() => {
+        current = Math.min(90, current + 0.6)
+        setUploadProgress(Math.round(current))
+        if (current >= 90 && processingTimerRef.current) {
+          clearInterval(processingTimerRef.current)
+          processingTimerRef.current = null
+        }
+      }, 300)
+    }
+
+    let uploadPhaseComplete = false
+
     try {
-      await uploadMutation.mutateAsync({ file, ephemeralMode: true, confidenceThreshold })
+      await uploadMutation.mutateAsync({
+        file,
+        ephemeralMode: true,
+        confidenceThreshold,
+        onUploadProgress: (pct) => {
+          setUploadProgress(Math.round(pct * 0.4))
+          if (pct >= 100 && !uploadPhaseComplete) {
+            uploadPhaseComplete = true
+            startProcessingPhase()
+          }
+        },
+        onRetry: (attempt) => {
+          if (processingTimerRef.current) clearInterval(processingTimerRef.current)
+          uploadPhaseComplete = false
+          setIsWakingUp(true)
+          setUploadProgress(0)
+          setStatusMsg(`Connecting to server (attempt ${attempt + 1})...`)
+        },
+      })
     } catch (err) {
       console.error('Upload error:', err)
     }
@@ -209,25 +266,27 @@ export default function Upload() {
             {/* Upload Progress */}
             {isUploading && (
               <div role="status" aria-live="polite" aria-label="Uploading and processing" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
-                <div className="flex items-center justify-between text-sm text-slate-300 mb-3">
-                  <span className="font-medium">Uploading and processing...</span>
-                  <span className="flex gap-1">
-                    {[0, 1, 2].map(i => (
-                      <span
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-accent-light"
-                        style={{ animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
-                      />
-                    ))}
-                  </span>
+                <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
+                  <span className="font-medium">{statusMsg}</span>
+                  <span className="text-xs font-mono text-slate-400 tabular-nums">{uploadProgress}%</span>
                 </div>
+                {isWakingUp && (
+                  <p className="text-xs text-amber-400 mb-2">
+                    Server is warming up — first load can take up to 30 seconds
+                  </p>
+                )}
                 <div
                   className="w-full h-2 bg-ink-900 rounded-full overflow-hidden"
                   role="progressbar"
-                  aria-busy="true"
-                  aria-label="Processing your file"
+                  aria-valuenow={uploadProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Upload and processing progress"
                 >
-                  <div className="h-full bg-gradient-brand rounded-full progress-indeterminate" />
+                  <div
+                    className="h-full bg-gradient-brand rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
                 </div>
               </div>
             )}

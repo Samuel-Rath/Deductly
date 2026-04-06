@@ -396,7 +396,7 @@ export default function Landing() {
               {
                 icon: <FileText size={22} />,
                 title: 'Evidence Checklists',
-                body: 'Every candidate includes what to keep — receipts, diary entries, logbooks — plus occupation flags and ATO method guides ready for your tax agent.',
+                body: 'Every candidate includes what to keep: receipts, diary entries, or logbooks, plus occupation flags and ATO method guides ready for your tax agent.',
                 delay: 0.3,
               },
             ].map((f) => (
