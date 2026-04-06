@@ -374,7 +374,7 @@ export default function Landing() {
 
           {/* Feature grid — each card tilts on hover */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-6xl mx-auto">
-            [
+            {[
               {
                 icon: <Shield size={22} />,
                 title: 'Privacy First',
