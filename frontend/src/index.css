@@ -160,11 +160,35 @@
 
 /* ── Print styles — Save as PDF from Report page ────────────────────────── */
 @media print {
-  /* Force dark backgrounds and colours to render in print */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* Switch to light theme — dark text on white paper */
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    padding: 0 !important;
   }
+
+  /* Strip all dark backgrounds so paper shows through */
+  * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: unset !important;
+    color: #111111 !important;
+    border-color: #e5e7eb !important;
+  }
+
+  /* Restore chart/progress bar fills */
+  .bg-gradient-brand { background: #c8900a !important; }
+  .bg-slate-600      { background: #9ca3af !important; }
+
+  /* Gradient text → plain gold */
+  .text-gradient, .text-gradient-bright {
+    -webkit-text-fill-color: #c8900a !important;
+    background: none !important;
+  }
+
+  /* Chart row backgrounds (confidence bars use bg-ink-800/bg-ink-900) */
+  .overflow-x-auto { overflow: visible !important; }
 
   /* Hide chrome that doesn't belong in a saved PDF */
   nav,
@@ -174,15 +198,8 @@
     display: none !important;
   }
 
-  /* Remove viewport padding — let content fill the page */
-  body {
-    padding: 0 !important;
-  }
-
   /* Prevent orphaned table rows */
-  tr {
-    page-break-inside: avoid;
-  }
+  tr { page-break-inside: avoid; }
 
   /* Summary cards: 2 per row in print */
   .print\:grid-cols-2 {
@@ -190,7 +207,5 @@
   }
 
   /* Drawers are always hidden in print */
-  [data-drawer] {
-    display: none !important;
-  }
+  [data-drawer] { display: none !important; }
 }

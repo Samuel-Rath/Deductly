@@ -31,7 +31,8 @@ class CSVFormat:
         amount_col: Optional[str] = None,
         debit_col: Optional[str] = None,
         credit_col: Optional[str] = None,
-        date_format: str = "%Y-%m-%d"
+        date_format: str = "%Y-%m-%d",
+        supplementary_col: Optional[str] = None,
     ):
         self.date_col = date_col
         self.description_col = description_col
@@ -39,6 +40,7 @@ class CSVFormat:
         self.debit_col = debit_col
         self.credit_col = credit_col
         self.date_format = date_format
+        self.supplementary_col = supplementary_col  # e.g. ANZ "Particulars"
         
         # Validate that we have either amount_col OR both debit_col and credit_col
         if not amount_col and not (debit_col and credit_col):
@@ -64,9 +66,26 @@ class CSVParser:
     ]
     
     DESCRIPTION_PATTERNS = [
-        "description", "details", "narrative", "transaction details", 
+        "description", "details", "narrative", "transaction details",
         "merchant", "payee", "memo"
     ]
+
+    # Secondary columns checked when primary description is generic (e.g. ANZ "Particulars")
+    SUPPLEMENTARY_DESC_PATTERNS = [
+        "particulars", "narration", "merchant name", "card merchant", "remarks", "reference"
+    ]
+
+    # Values that indicate the primary description column has no useful merchant data
+    GENERIC_DESCRIPTIONS = frozenset({
+        "transaction", "transfer", "transfer in", "transfer out",
+        "eftpos", "eftpos debit", "eftpos purchase", "eftpos credit",
+        "visa", "visa purchase", "visa debit", "visa credit",
+        "mastercard", "mastercard purchase",
+        "payment", "direct debit", "direct credit",
+        "debit", "credit", "pos", "tap and go", "contactless",
+        "internet banking", "internet transfer", "online transfer",
+        "purchase", "withdrawal", "deposit",
+    })
     
     AMOUNT_PATTERNS = [
         "amount", "value", "transaction amount"
@@ -202,18 +221,26 @@ class CSVParser:
             date_str = first_row[date_col].strip()
             date_format = self._detect_date_format(date_str)
         
+        # Detect supplementary description column (e.g. ANZ "Particulars", Westpac "Narration")
+        # Only used when primary description is a generic placeholder like "Transaction"
+        supplementary_col = self._match_column(headers, self.SUPPLEMENTARY_DESC_PATTERNS)
+        # Avoid using the same column twice
+        if supplementary_col == description_col:
+            supplementary_col = None
+
         # Reset file pointer for subsequent reads
         csv_file.seek(0)
         # Detach text wrapper to prevent closing the underlying binary file
         text_file.detach()
-        
+
         return CSVFormat(
             date_col=date_col,
             description_col=description_col,
             amount_col=amount_col,
             debit_col=debit_col,
             credit_col=credit_col,
-            date_format=date_format
+            date_format=date_format,
+            supplementary_col=supplementary_col,
         )
     
     @staticmethod
@@ -332,8 +359,17 @@ class CSVParser:
                 
                 transaction_date = self._parse_date(date_str, csv_format.date_format)
                 
-                # Get description
+                # Get description — try primary column first, then supplementary
                 description = row.get(csv_format.description_col, "").strip()
+                if csv_format.supplementary_col:
+                    supplementary = row.get(csv_format.supplementary_col, "").strip()
+                    if supplementary:
+                        if description.lower() in self.GENERIC_DESCRIPTIONS:
+                            # Primary is generic — use supplementary entirely
+                            description = supplementary
+                        elif supplementary.lower() not in self.GENERIC_DESCRIPTIONS and supplementary != description:
+                            # Both have content — combine for richer context
+                            description = f"{description} {supplementary}"
                 if not description:
                     continue  # Skip rows without description
                 

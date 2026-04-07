@@ -10,6 +10,7 @@ Validates: Requirements 4.1-4.5, 5.1-5.4, 6.1-6.3
 import pytest
 from decimal import Decimal
 from datetime import date
+from pathlib import Path
 
 from backend.models.schemas import (
     NormalisedTransaction,
@@ -734,27 +735,29 @@ class TestNoMatchHints:
 class TestRulesJsonValidity:
     """Ensure rules.json loads without validation errors (catches fitness_related removal)."""
 
+    RULES_PATH = str(Path(__file__).parent.parent / "config" / "rules.json")
+
     def test_rules_json_loads_successfully(self):
         from backend.processing.rules_engine import RulesEngine
-        engine = RulesEngine.load_rules("backend/config/rules.json")
+        engine = RulesEngine.load_rules(self.RULES_PATH)
         assert len(engine.rules) > 0
 
     def test_no_fitness_related_category_in_rules(self):
         from backend.processing.rules_engine import RulesEngine
-        engine = RulesEngine.load_rules("backend/config/rules.json")
+        engine = RulesEngine.load_rules(self.RULES_PATH)
         categories = [r.category.value for r in engine.rules]
         assert "fitness_related" not in categories
 
     def test_new_merchants_present(self):
         from backend.processing.rules_engine import RulesEngine
-        engine = RulesEngine.load_rules("backend/config/rules.json")
+        engine = RulesEngine.load_rules(self.RULES_PATH)
         all_merchants = [m for r in engine.rules for m in r.merchants]
         for expected in ["Canva", "Xero", "MYOB", "Atlassian", "Bunnings", "Airbnb"]:
             assert expected in all_merchants, f"Expected merchant '{expected}' not found in rules"
 
     def test_r015_apple_rule_present(self):
         from backend.processing.rules_engine import RulesEngine
-        engine = RulesEngine.load_rules("backend/config/rules.json")
+        engine = RulesEngine.load_rules(self.RULES_PATH)
         r015 = next((r for r in engine.rules if r.rule_id == "R015"), None)
         assert r015 is not None
         assert r015.confidence == pytest.approx(0.55)
