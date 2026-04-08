@@ -198,7 +198,8 @@ export async function uploadCSV(request: UploadRequest): Promise<UploadResponse>
         timeout: UPLOAD_TIMEOUT_MS,
         onUploadProgress: request.onUploadProgress
           ? (evt) => {
-              const pct = evt.total ? Math.round((evt.loaded / evt.total) * 100) : 0;
+              const total = evt.total || request.file.size;
+              const pct = total > 0 ? Math.round((evt.loaded / total) * 100) : 0;
               request.onUploadProgress!(pct);
             }
           : undefined,
