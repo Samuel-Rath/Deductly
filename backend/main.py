@@ -4,6 +4,7 @@ Main application entry point with comprehensive security, logging, and monitorin
 """
 
 import os
+import hmac
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
@@ -145,16 +146,34 @@ async def health_check():
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics(request: Request):
     """
     Application metrics — only available when ENABLE_METRICS=true.
-    Should be protected by network policy or API key in production.
+    Protected by API key (if REQUIRE_API_KEY=true) or trusted-proxy allowlist.
     """
     if not SecurityConfig.ENABLE_METRICS:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"error": "not_found", "message": "Metrics endpoint is disabled"},
         )
+
+    # Require either a valid API key or that the request originates from a
+    # trusted proxy/internal network.  This prevents unauthenticated callers
+    # from fingerprinting throughput or security-event rates (VULN-003).
+    client_ip = request.client.host if request.client else ""
+    api_key   = request.headers.get(SecurityConfig.API_KEY_HEADER, "")
+
+    key_ok    = bool(SecurityConfig.API_KEYS) and any(
+        hmac.compare_digest(api_key, k) for k in SecurityConfig.API_KEYS
+    )
+    ip_ok     = bool(SecurityConfig.TRUSTED_PROXIES) and client_ip in SecurityConfig.TRUSTED_PROXIES
+
+    if not key_ok and not ip_ok:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": "forbidden", "message": "Metrics access requires a valid API key or trusted source IP."},
+        )
+
     return get_metrics()
 
 

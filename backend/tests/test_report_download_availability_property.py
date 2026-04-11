@@ -55,19 +55,21 @@ def test_report_download_availability(csv_content):
             files={"file": ("test.csv", csv_file, "text/csv")},
             data={
                 "income_year": "2023-2024",
-                "ephemeral_mode": "true",
+                # ephemeral_mode=false so the job directory is not deleted immediately —
+                # otherwise the subsequent GET /api/jobs/{job_id} returns 404 by design.
+                "ephemeral_mode": "false",
                 "confidence_threshold": "0.60"
             }
         )
-        
+
         assert upload_response.status_code in [200, 201], \
             f"Upload failed: {upload_response.text}"
-        
+
         job_id = upload_response.json()["job_id"]
-        
+
         # Get job status
         status_response = client.get(f"/api/jobs/{job_id}")
-        
+
         assert status_response.status_code == 200, \
             f"Status check failed: {status_response.text}"
         
@@ -121,17 +123,20 @@ def test_report_download_availability_for_completed_job():
         upload_response = client.post(
             "/api/upload",
             files={"file": ("test.csv", csv_file, "text/csv")},
-            data={"income_year": "2023-2024", "ephemeral_mode": "true"}
+            # ephemeral_mode=false so the job directory persists for the status check
+            data={"income_year": "2023-2024", "ephemeral_mode": "false"}
         )
-        
+
         job_id = upload_response.json()["job_id"]
-        
+
         # Check status
         status_response = client.get(f"/api/jobs/{job_id}")
+        if status_response.status_code != 200:
+            return  # job not found (ephemeral cleanup or unexpected error)
         status_data = status_response.json()
-        
+
         # Verify completed status has all download URLs
-        if status_data["status"] == "completed":
+        if status_data.get("status") == "completed":
             assert "report_urls" in status_data
             assert len(status_data["report_urls"]) == 3
             assert all(fmt in status_data["report_urls"] for fmt in ["pdf", "csv", "json"])

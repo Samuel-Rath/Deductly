@@ -4,14 +4,18 @@ Implements comprehensive security measures for production deployment
 """
 
 import os
+import warnings
 from typing import List, Dict
 from datetime import timedelta
 
+_DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production-min-32-chars"
+
+
 class SecurityConfig:
     """Centralized security configuration"""
-    
+
     # Secret key for session management and CSRF protection
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production-min-32-chars")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", _DEFAULT_SECRET_KEY)
     
     # CORS Configuration
     ALLOWED_ORIGINS: List[str] = os.getenv(
@@ -129,8 +133,18 @@ class SecurityConfig:
     def validate_config(cls) -> None:
         """Validate security configuration on startup"""
         errors = []
-        
-        # Only enforce SECRET_KEY in production
+
+        # Warn unconditionally when the insecure default key is in use (VULN-005).
+        # A staging or pre-prod deployment that forgets ENVIRONMENT=production would
+        # otherwise silently pass the production-only check below.
+        if cls.SECRET_KEY == _DEFAULT_SECRET_KEY:
+            warnings.warn(
+                "SECRET_KEY is using the insecure built-in default. "
+                "Set the SECRET_KEY environment variable to a random 32+ character string.",
+                stacklevel=2,
+            )
+
+        # Hard-fail in production with a weak or missing key
         if cls.is_production() and (not cls.SECRET_KEY or len(cls.SECRET_KEY) < 32):
             errors.append("SECRET_KEY must be at least 32 characters in production")
         

@@ -15,7 +15,7 @@ test.describe('Navigation', () => {
   })
 
   test('direct URL navigation works for all routes', async ({ page }) => {
-    for (const route of ['/', '/upload', '/rules', '/privacy']) {
+    for (const route of ['/', '/upload', '/rules', '/privacy', '/terms']) {
       await page.goto(route)
       await expect(page).not.toHaveURL(/404/)
       // Page should render something (not blank)

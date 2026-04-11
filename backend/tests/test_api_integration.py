@@ -111,12 +111,15 @@ class TestJobStatusEndpoint:
         **Validates: Requirements 11.3, 11.4**
         """
         with patch('backend.processing.report_generator.ReportGenerator.generate_pdf'):
-            # Upload a file first
+            # Upload with ephemeral_mode=false so the job directory persists
+            # long enough for the subsequent status request.
+            # (Ephemeral mode deletes the directory immediately on completion,
+            # making the status endpoint return 404 by design.)
             csv_file = io.BytesIO(sample_csv.encode('utf-8'))
             upload_response = client.post(
                 "/api/upload",
                 files={"file": ("test.csv", csv_file, "text/csv")},
-                data={"income_year": "2023-2024", "ephemeral_mode": "true"}
+                data={"income_year": "2023-2024", "ephemeral_mode": "false"}
             )
             
             job_id = upload_response.json()["job_id"]
@@ -237,13 +240,15 @@ class TestCompleteWorkflow:
         """
         with patch('backend.processing.report_generator.ReportGenerator.generate_pdf'):
             # Step 1: Upload CSV
+            # ephemeral_mode=false so the job directory is not deleted immediately —
+            # otherwise step 2 (GET /api/jobs/{job_id}) would receive a 404.
             csv_file = io.BytesIO(sample_csv.encode('utf-8'))
             upload_response = client.post(
                 "/api/upload",
                 files={"file": ("test.csv", csv_file, "text/csv")},
                 data={
                     "income_year": "2023-2024",
-                    "ephemeral_mode": "true",
+                    "ephemeral_mode": "false",
                     "confidence_threshold": "0.60"
                 }
             )

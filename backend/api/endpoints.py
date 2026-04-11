@@ -82,6 +82,8 @@ async def upload_csv(
     """
     # Validate file type — check both MIME type and extension (MIME is client-controlled)
     file_ext = Path(file.filename or "").suffix.lower() if file.filename else ""
+    # Sanitise the client-supplied filename before any logging (VULN-004: log injection)
+    _safe_filename = re.sub(r'[^\w.\-]', '_', Path(file.filename or "unknown").name)[:128]
     mime_ok = file.content_type in SecurityConfig.ALLOWED_FILE_TYPES
     ext_ok = file_ext in SecurityConfig.ALLOWED_FILE_EXTENSIONS
     if not mime_ok or not ext_ok:
@@ -89,7 +91,7 @@ async def upload_csv(
             'invalid_file_type',
             'low',
             content_type=file.content_type,
-            upload_filename=file.filename,
+            upload_filename=_safe_filename,
         )
         metrics_collector.record_security_event('invalid_file')
         raise HTTPException(
@@ -109,7 +111,7 @@ async def upload_csv(
             'medium',
             file_size=len(file_content),
             max_size=SecurityConfig.MAX_UPLOAD_SIZE_BYTES,
-            upload_filename=file.filename
+            upload_filename=_safe_filename,
         )
         metrics_collector.record_security_event('invalid_file')
         raise HTTPException(
@@ -123,7 +125,7 @@ async def upload_csv(
                 },
             },
         )
-    
+
     # Validate income year format (if provided) — must be YYYY-YYYY with consecutive years
     if income_year:
         if not _INCOME_YEAR_RE.match(income_year):
@@ -219,11 +221,17 @@ async def upload_csv(
                 storage.update_job_status(job_id, "failed", error=str(e))
                 log_error('pdf_conversion_failed', e, job_id=job_id)
                 metrics_collector.record_upload(success=False, file_size=len(file_content))
+                # VULN-001: never expose raw exception text in production
+                user_msg = (
+                    f"Failed to parse PDF: {str(e)}"
+                    if not SecurityConfig.is_production()
+                    else "Could not parse the uploaded PDF. Please check the file and try again."
+                )
                 raise HTTPException(
                     status_code=400,
                     detail={
                         "error": "pdf_parsing_failed",
-                        "message": f"Failed to parse PDF: {str(e)}",
+                        "message": user_msg,
                         "details": {"job_id": job_id}
                     }
                 )

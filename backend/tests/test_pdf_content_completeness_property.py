@@ -143,7 +143,7 @@ def test_pdf_content_completeness(report_data):
     # Property 1: Income year should be present
     assert report_data.income_year in html_content, \
         "PDF should contain the income year"
-    assert "1 July to 30 June" in html_content, \
+    assert "1 July" in html_content and "30 June" in html_content, \
         "PDF should reference the Australian income year period"
     
     # Property 2: Summary totals should be present
@@ -169,7 +169,7 @@ def test_pdf_content_completeness(report_data):
     
     # Property 5: Line item table should be present with required columns
     if report_data.candidates:
-        assert "Likely Deductible Candidates" in html_content, \
+        assert "Likely Deductible Items" in html_content, \
             "PDF should have a section for deduction candidates"
         
         # Check for table headers

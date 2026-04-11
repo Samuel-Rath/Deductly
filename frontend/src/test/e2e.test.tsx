@@ -129,8 +129,8 @@ describe('End-to-End User Journey', () => {
     await waitFor(() => {
       expect(screen.getByText(/Processing failed/i)).toBeInTheDocument()
       expect(screen.getByText(/Invalid CSV format/i)).toBeInTheDocument()
-    }, { timeout: 10000 })
-  }, 15000)
+    })
+  })
 
   it('validates file type before upload', async () => {
     renderApp()
