@@ -1,6 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from './Button';
 
+/**
+ * Accessible modal dialog with focus trap and scroll lock.
+ *
+ * On open, focus moves into the dialog and scroll is locked; on close, focus
+ * returns to the element that triggered the dialog (WCAG 2.1 §2.4.3).
+ * Pressing Escape always closes the modal.
+ */
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;

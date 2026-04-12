@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { Landing, Upload, Report, Rules, Privacy, Terms } from './pages'
 import { Navigation, Footer } from './components'
 
+// React Router doesn't reset scroll position between route changes, so without
+// this the user lands mid-page when navigating to a new route.
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])

@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
+/**
+ * Accessible slide-out drawer panel with focus trap and scroll lock.
+ *
+ * Mirrors Modal's focus-management contract: focus enters the drawer on open
+ * and returns to the triggering element on close (WCAG 2.1 §2.4.3).
+ * Pressing Escape always closes the drawer.
+ */
 export interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;

@@ -93,6 +93,13 @@ export default function Upload() {
     setStatusMsg('Uploading your file...')
     setError(null)
 
+    // Progress is split into two phases because the backend processes synchronously
+    // and sends no streaming updates between receiving the file and returning results.
+    //
+    // Phase 1 (0–40 %): real bytes-transferred progress from axios onUploadProgress.
+    // Phase 2 (40–90 %): simulated tick-based advance while the backend runs the
+    //   classification pipeline. Capped at 90 % so the bar never reaches 100 % before
+    //   the response arrives; the final jump to 100 % happens in onSuccess.
     const startProcessingPhase = () => {
       setStatusMsg('Analysing transactions...')
       let current = 40
@@ -268,7 +275,9 @@ export default function Upload() {
               <div role="status" aria-live="polite" aria-label="Uploading and processing" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
                 <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
                   <span className="font-medium">{statusMsg}</span>
-                  <span className="text-xs font-mono text-slate-400 tabular-nums">{uploadProgress}%</span>
+                  {uploadProgress > 0 && (
+                    <span className="text-xs font-mono text-slate-400 tabular-nums">{uploadProgress}%</span>
+                  )}
                 </div>
                 {isWakingUp && (
                   <p className="text-xs text-amber-400 mb-2">
@@ -276,17 +285,23 @@ export default function Upload() {
                   </p>
                 )}
                 <div
-                  className="w-full h-2 bg-ink-900 rounded-full overflow-hidden"
+                  className="w-full h-2 bg-ink-900 rounded-full overflow-hidden relative"
                   role="progressbar"
                   aria-valuenow={uploadProgress}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-label="Upload and processing progress"
                 >
-                  <div
-                    className="h-full bg-gradient-brand rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+                  {uploadProgress === 0 ? (
+                    <div className="absolute inset-0 overflow-hidden rounded-full">
+                      <div className="w-1/3 h-full bg-gradient-brand rounded-full animate-indeterminate" />
+                    </div>
+                  ) : (
+                    <div
+                      className="h-full bg-gradient-brand rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  )}
                 </div>
               </div>
             )}

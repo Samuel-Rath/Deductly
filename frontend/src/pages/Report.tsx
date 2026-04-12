@@ -27,6 +27,41 @@ const CATEGORY_LABELS: Record<string, string> = {
   bank_fees:                'Bank Fees',
 }
 
+// ─── Generic name detection + smart display resolver ─────────────────────────
+const GENERIC_NAMES = new Set([
+  'transaction', 'eftpos', 'visa', 'mastercard', 'purchase', 'payment',
+  'pos purchase', 'card purchase', 'direct debit', 'bpay', 'transfer',
+  'credit', 'debit', 'deposit', 'withdrawal', 'fee', 'charge',
+  'miscellaneous', 'misc', 'other', 'unknown',
+])
+
+function isGeneric(s: string): boolean {
+  return GENERIC_NAMES.has(s.toLowerCase().trim())
+}
+
+function extractFromReason(reason: string | undefined): string | null {
+  if (!reason) return null
+  const m = reason.match(/merchant_match:\s*(.+?)(?:\s*\(similarity:[^)]*\))?(?:;|$)/i)
+  if (m) return m[1].trim()
+  const k = reason.match(/keyword_match:\s*([^;(]+)/i)
+  if (k) return k[1].trim().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return null
+}
+
+function resolveDisplay(txn: any): { merchant: string; description: string } {
+  const rawMerchant = (txn.merchant ?? '').trim()
+  const rawDesc    = (txn.description ?? '').trim()
+  const catLabel   = CATEGORY_LABELS[txn.category] ?? null
+  const hint       = extractFromReason(txn.reason)
+
+  const merchant   = isGeneric(rawMerchant) ? (hint ?? catLabel ?? rawMerchant) : rawMerchant
+  const description = isGeneric(rawDesc)
+    ? catLabel ? `${catLabel} expense` : (hint ? `${hint} expense` : rawDesc)
+    : rawDesc
+
+  return { merchant, description }
+}
+
 // ─── Reason formatter ─────────────────────────────────────────────────────────
 function formatReason(reason: string | undefined): string {
   if (!reason) return ''
@@ -656,6 +691,7 @@ export default function Report() {
                     <tbody>
                       {filtered.map((transaction: any) => {
                         const confidenceInfo = getConfidenceLabel(transaction.confidence)
+                        const display = resolveDisplay(transaction)
                         return (
                           <tr
                             key={transaction.id}
@@ -663,8 +699,8 @@ export default function Report() {
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
                             <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{transaction.merchant}</td>
-                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{transaction.description}</td>
+                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
                             <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
                             <td className="py-4 pr-4">
                               <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="sm" />
@@ -737,6 +773,7 @@ export default function Report() {
                     <tbody>
                       {filtered.map((transaction: any) => {
                         const confidenceInfo = getConfidenceLabel(transaction.confidence)
+                        const display = resolveDisplay(transaction)
                         return (
                           <tr
                             key={transaction.id}
@@ -744,8 +781,8 @@ export default function Report() {
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
                             <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{transaction.merchant}</td>
-                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{transaction.description}</td>
+                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
                             <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
                             <td className="py-4 pr-4">
                               <div className="flex items-center space-x-2">
@@ -785,7 +822,9 @@ export default function Report() {
                   </tr>
                 </thead>
                 <tbody>
-                  {excluded.map((transaction) => (
+                  {excluded.map((transaction) => {
+                    const display = resolveDisplay(transaction)
+                    return (
                     <tr
                       key={transaction.id}
                       className="border-b border-line-700"
@@ -794,10 +833,10 @@ export default function Report() {
                         {formatDate(transaction.date)}
                       </td>
                       <td className="py-4 pr-4 text-small text-slate-500 max-w-[180px] truncate" title={transaction.merchant}>
-                        {transaction.merchant}
+                        {display.merchant}
                       </td>
                       <td className="py-4 pr-4 text-small text-slate-500 max-w-xs truncate">
-                        {transaction.description}
+                        {display.description}
                       </td>
                       <td className="py-4 pr-4 text-small text-slate-500 text-right">
                         {formatCurrency(transaction.amount)}
@@ -806,7 +845,7 @@ export default function Report() {
                         {transaction.explanation}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
@@ -902,6 +941,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
   if (!transaction) return null
 
   const confidenceInfo = getConfidenceLabel(transaction.confidence)
+  const display = resolveDisplay(transaction)
 
   return (
     <div className="space-y-6">
@@ -912,7 +952,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             MERCHANT
           </div>
           <div className="text-h3 font-semibold text-white">
-            {transaction.merchant}
+            {display.merchant}
           </div>
         </div>
         <div>
@@ -920,7 +960,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             DESCRIPTION
           </div>
           <div className="text-small text-slate-300">
-            {transaction.description}
+            {display.description}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

@@ -241,6 +241,9 @@ class PDFParser:
         is_credit = any(kw in desc_upper for kw in CREDIT_KEYWORDS)
 
         if len(amounts) >= 2:
+            # Bank PDFs typically print "transaction amount  running_balance" on one line.
+            # The second-to-last monetary value is therefore the transaction amount;
+            # the last is the new account balance, which we discard.
             transaction_amount = amounts[-2][0]
             clean_desc = description[:amounts[-2][1]].strip()
         else:

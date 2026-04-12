@@ -16,6 +16,8 @@ export interface TableProps<T> {
   className?: string;
 }
 
+// T must expose an optional `id` so the component can derive a stable React key
+// and compare rows for selection state without the caller needing to wire it up.
 export function Table<T extends { id?: string | number }>({
   columns,
   data,

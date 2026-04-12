@@ -49,6 +49,8 @@ export default function Navigation() {
                 >
                   {label}
                   {isActive(path) && (
+                    // Shared layoutId lets Framer Motion animate the gold underline
+                    // smoothly between nav items rather than snapping on each route change.
                     <motion.div
                       layoutId="nav-indicator"
                       className="absolute -bottom-px left-2 right-2 h-px rounded-full bg-gradient-to-r from-gold-400 to-gold-600"

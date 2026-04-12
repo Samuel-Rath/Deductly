@@ -14,6 +14,9 @@ export const Input: React.FC<InputProps> = ({
   id,
   ...props
 }) => {
+  // Generate a stable-enough fallback ID so the <label> is always associated with
+  // the <input> via htmlFor, which screen readers require. Callers should prefer
+  // passing an explicit id when the component appears more than once on a page.
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
   
   return (

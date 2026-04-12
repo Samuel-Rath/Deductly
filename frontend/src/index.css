@@ -209,3 +209,11 @@
   /* Drawers are always hidden in print */
   [data-drawer] { display: none !important; }
 }
+
+@keyframes indeterminate-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.animate-indeterminate {
+  animation: indeterminate-slide 1.4s ease-in-out infinite;
+}
