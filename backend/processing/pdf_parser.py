@@ -65,12 +65,12 @@ class PDFParser:
         transactions = []
         try:
             with pdfplumber.open(pdf_file) as pdf:
-                all_text = [
-                    page.extract_text()
-                    for page in pdf.pages
-                    if page.extract_text()
-                ]
-                full_text = '\n'.join(all_text)
+                pages_text = []
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if text:
+                        pages_text.append(text)
+                full_text = '\n'.join(pages_text)
                 transactions = self._parse_with_state_machine(full_text)
         except Exception as e:
             logger.debug("pdfplumber parsing failed, will try fallback", extra={"error": str(e)})
@@ -80,12 +80,12 @@ class PDFParser:
         transactions = []
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
-            all_text = [
-                page.extract_text()
-                for page in pdf_reader.pages
-                if page.extract_text()
-            ]
-            full_text = '\n'.join(all_text)
+            pages_text = []
+            for page in pdf_reader.pages:
+                text = page.extract_text()
+                if text:
+                    pages_text.append(text)
+            full_text = '\n'.join(pages_text)
             transactions = self._parse_with_state_machine(full_text)
         except Exception as e:
             logger.debug("PyPDF2 parsing failed", extra={"error": str(e)})

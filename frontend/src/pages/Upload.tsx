@@ -87,30 +87,49 @@ export default function Upload() {
   const handleUpload = async () => {
     if (!file) return
     if (processingTimerRef.current) clearInterval(processingTimerRef.current)
+    const isPDF = file.name.toLowerCase().endsWith('.pdf')
     setIsUploading(true)
     setIsWakingUp(false)
     setUploadProgress(0)
-    setStatusMsg('Uploading your file...')
+    setStatusMsg(isPDF ? 'Uploading your PDF...' : 'Uploading your file...')
     setError(null)
 
     // Progress is split into two phases because the backend processes synchronously
     // and sends no streaming updates between receiving the file and returning results.
     //
     // Phase 1 (0–40 %): real bytes-transferred progress from axios onUploadProgress.
-    // Phase 2 (40–90 %): simulated tick-based advance while the backend runs the
-    //   classification pipeline. Capped at 90 % so the bar never reaches 100 % before
-    //   the response arrives; the final jump to 100 % happens in onSuccess.
+    // Phase 2 (40–95 %): simulated tick-based advance while the backend runs parsing
+    //   + classification. PDFs get a slightly slower curve (more work on server).
+    //   Capped at 95 % so the bar never reaches 100 % before the response arrives;
+    //   the final jump to 100 % happens in onSuccess.
     const startProcessingPhase = () => {
-      setStatusMsg('Analysing transactions...')
+      const pdfStages = [
+        { at: 50, msg: 'Extracting transactions from PDF...' },
+        { at: 65, msg: 'Normalising merchants and amounts...' },
+        { at: 78, msg: 'Classifying deductible items...' },
+        { at: 88, msg: 'Building your report...' },
+      ]
+      const csvStages = [
+        { at: 55, msg: 'Parsing transactions...' },
+        { at: 72, msg: 'Classifying deductible items...' },
+        { at: 88, msg: 'Building your report...' },
+      ]
+      const stages = isPDF ? pdfStages : csvStages
+      setStatusMsg(stages[0].msg)
       let current = 40
+      // PDFs typically take longer server-side; use a slower step.
+      const stepPerTick = isPDF ? 0.9 : 1.3
       processingTimerRef.current = setInterval(() => {
-        current = Math.min(90, current + 0.6)
-        setUploadProgress(Math.round(current))
-        if (current >= 90 && processingTimerRef.current) {
+        current = Math.min(95, current + stepPerTick)
+        const rounded = Math.round(current)
+        setUploadProgress(rounded)
+        const nextStage = stages.find(s => rounded >= s.at && rounded < s.at + 2)
+        if (nextStage) setStatusMsg(nextStage.msg)
+        if (current >= 95 && processingTimerRef.current) {
           clearInterval(processingTimerRef.current)
           processingTimerRef.current = null
         }
-      }, 300)
+      }, 200)
     }
 
     let uploadPhaseComplete = false

@@ -398,6 +398,7 @@ class ReportGenerator:
     {self._generate_needs_review_section(report_data)}
     {self._generate_excluded_section(report_data)}
     {self._generate_footer()}
+    {self._generate_privacy_terms_section()}
 </body>
 </html>
 """
@@ -483,6 +484,16 @@ class ReportGenerator:
             border: 1px solid #DDD0A8;
             padding: 0.8em 1em;
             vertical-align: top;
+        }
+        .summary-table td.highlight-card {
+            background-color: #FFF4D4;
+            border: 2px solid #B8860B;
+        }
+        .summary-table td.highlight-card .summary-label {
+            color: #5C4000;
+        }
+        .summary-table td.highlight-card .summary-value {
+            color: #5C4000;
         }
         .summary-label {
             font-size: 8pt;
@@ -701,17 +712,26 @@ class ReportGenerator:
 
     <table class="summary-table">
         <tr>
-            <td>
+            <td class="highlight-card">
                 <div class="summary-label">Likely Deductible</div>
                 <div class="summary-value">${summary.total_deductible:,.2f}</div>
+                <div style="font-size:7.5pt;color:#5C4000;margin-top:0.25em;">
+                    {len(report_data.candidates)} high-confidence item{'s' if len(report_data.candidates) != 1 else ''}
+                </div>
             </td>
             <td>
                 <div class="summary-label">Needs Review</div>
                 <div class="summary-value">${summary.total_needs_review:,.2f}</div>
+                <div style="font-size:7.5pt;color:#7A5C00;margin-top:0.25em;">
+                    {len(report_data.needs_review)} item{'s' if len(report_data.needs_review) != 1 else ''}
+                </div>
             </td>
             <td>
                 <div class="summary-label">Excluded / Not Deductible</div>
                 <div class="summary-value">${summary.total_excluded:,.2f}</div>
+                <div style="font-size:7.5pt;color:#7A5C00;margin-top:0.25em;">
+                    {len(report_data.excluded)} item{'s' if len(report_data.excluded) != 1 else ''}
+                </div>
             </td>
         </tr>
     </table>
@@ -1007,6 +1027,75 @@ class ReportGenerator:
     </div>
 """
     
+    def _generate_privacy_terms_section(self) -> str:
+        """Generate a privacy policy & terms of use section for the PDF report."""
+        return """
+    <div class="page-break"></div>
+    <div class="footer">
+        <h2 style="margin-top:0;">Privacy Policy &amp; Terms of Use</h2>
+
+        <h3>How Your Data Is Handled</h3>
+        <p>
+            Deductly processes bank statements in <strong>ephemeral mode</strong> by default.
+            Your file is held in server memory only for the duration of this analysis and
+            is <strong>deleted immediately after</strong> the report is returned. No transaction
+            data, statements, or reports are persisted to any database or disk once processing
+            completes.
+        </p>
+        <p>
+            <strong>No account required.</strong> Deductly does not collect names, email
+            addresses, bank credentials, or any personal identifiers beyond the content of
+            the statement you choose to upload. Sensitive identifiers found inside uploaded
+            files (e.g.&nbsp;BSB / account numbers, card numbers) are redacted before any
+            report export.
+        </p>
+        <p>
+            <strong>No third-party sharing.</strong> Your transaction data is never sold,
+            shared with advertisers, or transmitted to third parties. Processing happens
+            entirely on our own backend.
+        </p>
+
+        <h3>Your Rights</h3>
+        <p>
+            Because nothing is stored, there is nothing to request, export, or delete
+            after the fact. If you close this report, all server-side traces are already
+            gone. You remain the sole custodian of the PDF, CSV, and JSON exports
+            downloaded to your device.
+        </p>
+
+        <h3>Terms of Use</h3>
+        <p>
+            <strong>Not tax advice.</strong> Deductly provides automated pattern analysis
+            to help you and your registered tax agent identify <em>candidate</em> deductions.
+            The output of this report does <strong>not</strong> constitute tax, financial,
+            or legal advice, and Deductly is not a registered tax agent.
+        </p>
+        <p>
+            <strong>Accuracy &amp; responsibility.</strong> Every item flagged as
+            &ldquo;likely deductible&rdquo; must be independently verified by you or a
+            registered tax agent before lodgement with the ATO. You are solely responsible
+            for the accuracy of your tax return and for retaining substantiating records
+            for the five-year period required by the ATO.
+        </p>
+        <p>
+            <strong>Limitation of liability.</strong> Deductly is provided on an
+            &ldquo;as is&rdquo; basis without warranties of any kind. To the fullest
+            extent permitted by law, Deductly disclaims liability for any loss, penalty,
+            interest charge, audit outcome, or damage arising from reliance on this
+            report.
+        </p>
+        <p>
+            <strong>Acceptable use.</strong> You agree to only upload statements
+            belonging to you or that you are authorised to analyse, and not to use
+            Deductly for unlawful purposes.
+        </p>
+
+        <p style="margin-top:1.5em; text-align:center; color:#AAAAAA; font-size:7.5pt;">
+            Privacy Policy &amp; Terms of Use &nbsp;|&nbsp; Deductly
+        </p>
+    </div>
+"""
+
     def _escape_html(self, text: str) -> str:
         """Escape HTML special characters."""
         return (text
