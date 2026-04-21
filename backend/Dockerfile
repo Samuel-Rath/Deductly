@@ -46,10 +46,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check — use stdlib urllib so the container does not depend on
-# the `requests` package (which is not listed in requirements.txt).
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=5).status == 200 else 1)"
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
 
 # Run application with security settings
 CMD ["uvicorn", "main:app", \

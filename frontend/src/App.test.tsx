@@ -6,12 +6,11 @@ describe('App', () => {
   it('renders without crashing', () => {
     render(<App />)
     // App renders the landing page by default
-    expect(screen.getByText(/Find Every Tax Deduction/i)).toBeInTheDocument()
+    expect(screen.getByText(/Turn Bank Statements Into/i)).toBeInTheDocument()
   })
 
   it('renders navigation', () => {
     render(<App />)
-    // Nav/footer contain the brand — there may be multiple occurrences
-    expect(screen.getAllByText('Deductly').length).toBeGreaterThan(0)
+    expect(screen.getByText('Deductly')).toBeInTheDocument()
   })
 })

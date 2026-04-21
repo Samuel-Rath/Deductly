@@ -14,59 +14,91 @@ vi.mock('react-router-dom', async () => {
 })
 
 describe('Landing Page', () => {
-  const renderLanding = () =>
+  it('renders hero section with headline', () => {
     render(
       <BrowserRouter>
         <Landing />
       </BrowserRouter>
     )
 
-  it('renders hero section with headline', () => {
-    renderLanding()
-    expect(screen.getByText(/Find Every Tax Deduction/i)).toBeInTheDocument()
-    expect(screen.getByText(/You're Missing/i)).toBeInTheDocument()
+    expect(screen.getByText(/Turn Bank Statements Into/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tax-Ready/i)).toBeInTheDocument()
   })
 
-  it('renders trust signals next to the CTA', () => {
-    renderLanding()
-    expect(screen.getByText(/No data stored/i)).toBeInTheDocument()
-    expect(screen.getByText(/ATO Aligned/i)).toBeInTheDocument()
-    expect(screen.getByText(/Instant analysis/i)).toBeInTheDocument()
+  it('renders trust signals', () => {
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    // "No account needed" appears in both trust signals and stats strip
+    expect(screen.getAllByText(/No account needed/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Data never stored/i)).toBeInTheDocument()
+    expect(screen.getByText(/ATO-cited analysis/i)).toBeInTheDocument()
   })
 
-  it('renders Why Deductly features section with four cards', () => {
-    renderLanding()
-    // "Why Deductly" is the section eyebrow in the editorial grid
-    expect(screen.getByText(/Why Deductly/i)).toBeInTheDocument()
-    // Feature card titles — the first one is embedded in a longer heading string
-    expect(screen.getByText(/Privacy First/i)).toBeInTheDocument()
-    expect(screen.getByText('ATO Rule Engine')).toBeInTheDocument()
+  it('renders why Deductly features section', () => {
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText('Why Deductly')).toBeInTheDocument()
+    expect(screen.getByText('Privacy First')).toBeInTheDocument()
+    expect(screen.getByText('AI-Grounded')).toBeInTheDocument()
     expect(screen.getByText('Confidence Scores')).toBeInTheDocument()
-    expect(screen.getByText('Evidence Checklists')).toBeInTheDocument()
+    expect(screen.getByText('ATO Citations')).toBeInTheDocument()
   })
 
-  it('renders How It Works flow rollup card', () => {
-    renderLanding()
+  it('renders how it works section with three steps', () => {
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
     expect(screen.getByText('How It Works')).toBeInTheDocument()
-    // Steps appear as a single tagline in the rollup card, and as pills on the thumb.
-    expect(screen.getByText(/Upload Your Statement/)).toBeInTheDocument()
-    expect(screen.getByText(/Rules Engine Analyses Transactions/)).toBeInTheDocument()
-    expect(screen.getByText(/Download Your Report/)).toBeInTheDocument()
+    expect(screen.getByText('Upload Your Statement')).toBeInTheDocument()
+    expect(screen.getByText('AI Analyses Transactions')).toBeInTheDocument()
+    expect(screen.getByText('Download Your Report')).toBeInTheDocument()
   })
 
   it('navigates to upload page when primary CTA is clicked', async () => {
     const user = userEvent.setup()
-    renderLanding()
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
 
-    // "Find My Deductions" appears in both hero and bottom CTA
-    const buttons = screen.getAllByText('Find My Deductions')
+    const buttons = screen.getAllByText('Analyse My Statement')
     await user.click(buttons[0])
 
     expect(mockNavigate).toHaveBeenCalledWith('/upload')
   })
 
+  it('navigates to rules page when View ATO Rules is clicked', async () => {
+    const user = userEvent.setup()
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
+    await user.click(screen.getByText('View ATO Rules'))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/rules')
+  })
+
   it('renders stats strip with key metrics', () => {
-    renderLanding()
+    render(
+      <BrowserRouter>
+        <Landing />
+      </BrowserRouter>
+    )
+
     expect(screen.getByText('Deduction Categories')).toBeInTheDocument()
     expect(screen.getByText('Composite Confidence')).toBeInTheDocument()
   })

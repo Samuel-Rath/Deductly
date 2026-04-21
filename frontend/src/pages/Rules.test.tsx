@@ -39,7 +39,7 @@ describe('Rules Page', () => {
 
     expect(screen.getByText('Tools, Equipment & Technology')).toBeInTheDocument()
     expect(screen.getByText('Professional Memberships & Subscriptions')).toBeInTheDocument()
-    expect(screen.getByText('Self Education and Professional Development')).toBeInTheDocument()
+    expect(screen.getByText('Self-Education & Professional Development')).toBeInTheDocument()
     expect(screen.getByText('Home Office Expenses')).toBeInTheDocument()
   })
 
@@ -52,7 +52,7 @@ describe('Rules Page', () => {
     )
 
     // Click the first category card button
-    const categoryButton = screen.getByText('Work Related Travel and Vehicles').closest('button')
+    const categoryButton = screen.getByText('Work-Related Travel & Vehicles').closest('button')
     await user.click(categoryButton!)
 
     expect(screen.getByText('KEYWORDS')).toBeInTheDocument()
@@ -111,7 +111,7 @@ describe('Rules Page', () => {
       </BrowserRouter>
     )
 
-    const categoryButton = screen.getByText('Work Related Travel and Vehicles').closest('button')
+    const categoryButton = screen.getByText('Work-Related Travel & Vehicles').closest('button')
     await user.click(categoryButton!)
 
     expect(screen.getByText('MATCHING EXAMPLES')).toBeInTheDocument()

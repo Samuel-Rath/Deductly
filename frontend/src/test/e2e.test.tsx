@@ -44,15 +44,14 @@ describe('End-to-End User Journey', () => {
   it('renders landing page with current headline', () => {
     renderApp()
     expect(screen.getByText(/Find Every Tax Deduction/i)).toBeInTheDocument()
-    // Brand appears in nav + footer
-    expect(screen.getAllByText('Deductly').length).toBeGreaterThan(0)
+    expect(screen.getByText('Deductly')).toBeInTheDocument()
   })
 
   it('navigates to upload page when Get Started is clicked', async () => {
     const user = userEvent.setup()
     renderApp()
 
-    const getStartedLink = screen.getAllByRole('link', { name: /Get Started/i })[0]
+    const getStartedLink = screen.getByRole('link', { name: /Get Started/i })
     await user.click(getStartedLink)
 
     await waitFor(() => {
@@ -71,7 +70,7 @@ describe('End-to-End User Journey', () => {
     renderApp()
 
     // Navigate to upload via nav link
-    const getStartedLink = screen.getAllByRole('link', { name: /Get Started/i })[0]
+    const getStartedLink = screen.getByRole('link', { name: /Get Started/i })
     await user.click(getStartedLink)
 
     await waitFor(() => {
@@ -113,7 +112,7 @@ describe('End-to-End User Journey', () => {
 
     renderApp()
 
-    const getStartedLink = screen.getAllByRole('link', { name: /Get Started/i })[0]
+    const getStartedLink = screen.getByRole('link', { name: /Get Started/i })
     await user.click(getStartedLink)
 
     await waitFor(() => {
@@ -136,7 +135,7 @@ describe('End-to-End User Journey', () => {
   it('validates file type before upload', async () => {
     renderApp()
 
-    const getStartedLink = screen.getAllByRole('link', { name: /Get Started/i })[0]
+    const getStartedLink = screen.getByRole('link', { name: /Get Started/i })
     await userEvent.setup().click(getStartedLink)
 
     await waitFor(() => {
@@ -169,6 +168,6 @@ describe('End-to-End User Journey', () => {
     }
 
     // The Get Started link should be reachable via tab
-    expect(screen.getAllByRole('link', { name: /Get Started/i })[0]).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Get Started/i })).toBeInTheDocument()
   })
 })
