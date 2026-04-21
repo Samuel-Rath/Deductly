@@ -104,14 +104,14 @@ describe('Modal', () => {
   });
 
   describe('size variants', () => {
+    // Size classes are applied with the sm: responsive prefix in the component
     it('renders small size', () => {
       const { container } = render(
         <Modal isOpen={true} onClose={() => {}} size="sm">
           <p>Content</p>
         </Modal>
       );
-      const modal = container.querySelector('.max-w-md');
-      expect(modal).toBeInTheDocument();
+      expect(container.querySelector('.sm\\:max-w-md')).toBeInTheDocument();
     });
 
     it('renders medium size by default', () => {
@@ -120,8 +120,7 @@ describe('Modal', () => {
           <p>Content</p>
         </Modal>
       );
-      const modal = container.querySelector('.max-w-2xl');
-      expect(modal).toBeInTheDocument();
+      expect(container.querySelector('.sm\\:max-w-2xl')).toBeInTheDocument();
     });
 
     it('renders large size', () => {
@@ -130,8 +129,7 @@ describe('Modal', () => {
           <p>Content</p>
         </Modal>
       );
-      const modal = container.querySelector('.max-w-4xl');
-      expect(modal).toBeInTheDocument();
+      expect(container.querySelector('.sm\\:max-w-4xl')).toBeInTheDocument();
     });
   });
 

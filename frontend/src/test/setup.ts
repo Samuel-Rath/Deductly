@@ -65,3 +65,12 @@ Object.defineProperty(window, 'matchMedia', {
 
 // ── scrollTo ────────────────────────────────────────────────────────────────
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
+
+// ── @paper-design/shaders-react (WebGL not supported in jsdom) ─────────────
+// Stubbed out so the hero background renders as an inert <div> in tests.
+vi.mock('@paper-design/shaders-react', () => ({
+  MeshGradient: (props: { className?: string }) => {
+    const React = require('react')
+    return React.createElement('div', { 'data-testid': 'mesh-gradient', className: props.className })
+  },
+}))

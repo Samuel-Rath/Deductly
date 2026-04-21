@@ -377,45 +377,49 @@ async def upload_csv(
             "excluded": [flatten_excluded_transaction(t) for t in report_data.excluded],
         }
         
-        # In ephemeral mode, clean up generated files immediately after sending response
-        if ephemeral_mode:
-            try:
-                shutil.rmtree(job_dir)
-            except Exception as cleanup_error:
-                log_event('cleanup_warning', job_id=job_id, error=str(cleanup_error))
-        
         return UploadResponse(
             job_id=job_id,
             status="completed",
             message="File processed successfully.",
             report_data=report_dict
         )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions (they're already properly formatted)
         raise
     except Exception as e:
         # Update job status to failed
         storage.update_job_status(job_id, "failed", error=str(e))
-        
+
         # Record failed upload
         metrics_collector.record_upload(success=False, file_size=len(file_content))
         metrics_collector.record_job(success=False, processing_time=0)
-        
+
         # Log error
         log_error('processing_failed', e, job_id=job_id)
-        
+
         detail: dict = {"error": "processing_failed", "message": "An unexpected error occurred during processing.", "details": {"job_id": job_id}}
         if not SecurityConfig.is_production():
             detail["message"] = f"Failed to process file: {str(e)}"
         raise HTTPException(status_code=500, detail=detail)
     finally:
-        # Always delete the temp file regardless of success or failure
+        # Always delete the temp upload regardless of success or failure
         if _temp_path is not None:
             try:
                 os.unlink(_temp_path)
             except OSError:
                 pass
+
+        # Ephemeral-mode guarantee: generated report files must not persist on
+        # disk, even if the request failed partway through. Cleanup must run
+        # on every exit path — success, HTTPException, or unexpected error.
+        if ephemeral_mode:
+            try:
+                job_dir = REPORTS_DIR / job_id
+                if job_dir.exists():
+                    shutil.rmtree(job_dir)
+            except Exception as cleanup_error:
+                log_event('cleanup_warning', job_id=job_id, error=str(cleanup_error))
 
 
 # ============================================================================

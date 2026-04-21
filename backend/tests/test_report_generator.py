@@ -639,3 +639,155 @@ class TestReportGenerator:
                 assert evidence  # Should not be empty
                 # Should be comma-separated or similar readable format
                 assert isinstance(evidence, str)
+
+
+class TestPrivacyAndTermsSection:
+    """Cover the privacy policy + terms of use section added to the PDF."""
+
+    def test_privacy_terms_section_is_included_in_full_report(self, sample_report_data):
+        generator = ReportGenerator()
+        html = generator._generate_html_report(sample_report_data)
+
+        assert "Privacy Policy" in html
+        assert "Terms of Use" in html
+
+    def test_privacy_section_mentions_ephemeral_processing(self):
+        generator = ReportGenerator()
+        html = generator._generate_privacy_terms_section()
+
+        assert "ephemeral" in html.lower()
+        assert "deleted" in html.lower()
+        # Should explicitly say nothing is stored
+        assert "not" in html.lower()
+
+    def test_privacy_section_states_no_account_or_third_party_sharing(self):
+        generator = ReportGenerator()
+        html = generator._generate_privacy_terms_section()
+
+        # No-account and no-third-party commitments are load-bearing promises
+        assert "No account" in html or "no account" in html.lower()
+        assert "third" in html.lower()  # no third-party sharing clause
+        assert "redact" in html.lower()  # redaction mentioned
+
+    def test_terms_section_includes_not_tax_advice_disclaimer(self):
+        generator = ReportGenerator()
+        html = generator._generate_privacy_terms_section()
+
+        assert "Not tax advice" in html or "not tax advice" in html.lower()
+        assert "registered tax agent" in html.lower()
+
+    def test_terms_section_includes_liability_and_acceptable_use(self):
+        generator = ReportGenerator()
+        html = generator._generate_privacy_terms_section()
+
+        assert "liability" in html.lower()
+        assert "acceptable use" in html.lower() or "Acceptable use" in html
+
+    def test_privacy_terms_section_is_on_its_own_page(self):
+        # The section should be preceded by a page-break so it prints as an appendix
+        generator = ReportGenerator()
+        html = generator._generate_privacy_terms_section()
+        assert 'page-break' in html
+
+
+class TestSummaryHighlightCard:
+    """Cover the highlighted 'Likely Deductible' summary card and item counts."""
+
+    def test_summary_has_highlight_card_class(self, sample_report_data):
+        generator = ReportGenerator()
+        html = generator._generate_html_report(sample_report_data)
+        assert 'highlight-card' in html
+
+    def test_summary_cards_show_item_counts(self, sample_report_data):
+        """Each summary card should show how many items it covers."""
+        generator = ReportGenerator()
+        html = generator._generate_html_report(sample_report_data)
+
+        # sample_report_data has 1 candidate + 1 needs_review + 1 excluded
+        assert '1 high-confidence item' in html
+        # needs_review and excluded both show "1 item"
+        assert html.count('1 item') >= 2
+
+    def test_summary_cards_pluralise_correctly(self):
+        """Multiple items should render as 'items' (plural)."""
+        generator = ReportGenerator()
+
+        summary = ReportSummary(
+            total_deductible=Decimal("200.00"),
+            total_needs_review=Decimal("0.00"),
+            total_excluded=Decimal("0.00"),
+            category_totals={"work_software": Decimal("200.00")},
+            confidence_distribution={"high": 2, "medium": 0, "low": 0},
+        )
+
+        t1 = ClassifiedTransaction(
+            transaction=NormalisedTransaction(
+                date=date(2023, 8, 15),
+                description="ADOBE",
+                merchant="Adobe",
+                direction=TransactionDirection.DEBIT,
+                absolute_amount=Decimal("100.00"),
+                signed_amount=Decimal("-100.00"),
+            ),
+            category=DeductionCategory.WORK_SOFTWARE,
+            confidence=0.95,
+            matched_rule_id="R001",
+            matched_rule_version="1.0",
+            reason="keyword_match: adobe",
+            evidence_checklist=[EvidenceType.RECEIPT],
+            flags=[],
+        )
+        t2 = ClassifiedTransaction(
+            transaction=NormalisedTransaction(
+                date=date(2023, 8, 16),
+                description="FIGMA",
+                merchant="Figma",
+                direction=TransactionDirection.DEBIT,
+                absolute_amount=Decimal("100.00"),
+                signed_amount=Decimal("-100.00"),
+            ),
+            category=DeductionCategory.WORK_SOFTWARE,
+            confidence=0.92,
+            matched_rule_id="R001",
+            matched_rule_version="1.0",
+            reason="keyword_match: figma",
+            evidence_checklist=[EvidenceType.RECEIPT],
+            flags=[],
+        )
+
+        report = ReportData(
+            income_year="2023-2024",
+            generated_at=datetime(2024, 1, 15, 10, 30, 0),
+            summary=summary,
+            candidates=[t1, t2],
+            needs_review=[],
+            excluded=[],
+            audit_trail=[],
+        )
+
+        html = generator._generate_html_report(report)
+        assert '2 high-confidence items' in html
+
+    def test_summary_cards_handle_zero_items(self):
+        """Empty buckets should still render without errors and use singular form."""
+        generator = ReportGenerator()
+
+        summary = ReportSummary(
+            total_deductible=Decimal("0.00"),
+            total_needs_review=Decimal("0.00"),
+            total_excluded=Decimal("0.00"),
+            category_totals={},
+            confidence_distribution={"high": 0, "medium": 0, "low": 0},
+        )
+        report = ReportData(
+            income_year="2023-2024",
+            generated_at=datetime(2024, 1, 15),
+            summary=summary,
+            candidates=[],
+            needs_review=[],
+            excluded=[],
+            audit_trail=[],
+        )
+        html = generator._generate_html_report(report)
+        assert '0 high-confidence item' in html
+        assert '0 item' in html
