@@ -12,6 +12,12 @@ from pathlib import Path
 from typing import Optional, BinaryIO
 from datetime import datetime
 
+# Default rules path, anchored to the backend package directory so it resolves
+# identically regardless of the process cwd (workspace root, backend/, or a
+# container's working dir). A cwd-relative default broke pytest when it was
+# run from backend/ in CI.
+_DEFAULT_RULES_PATH = str(Path(__file__).resolve().parent.parent / "config" / "rules.json")
+
 from backend.models.schemas import ReportData, ReportSummary
 from backend.processing.csv_parser import CSVParser, CSVParseError
 from backend.processing.exclusion_engine import ExclusionEngine
@@ -37,7 +43,7 @@ class ProcessingPipeline:
     
     def __init__(
         self,
-        rules_path: str = "backend/config/rules.json",
+        rules_path: str = _DEFAULT_RULES_PATH,
         confidence_threshold: float = 0.60,
         storage_service: Optional[StorageService] = None,
     ):

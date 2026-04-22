@@ -34,8 +34,14 @@ from backend.processing.pdf_parser import PDFParser
 from backend.logging_config import log_event, log_error, log_security_event, log_audit
 from backend.monitoring import metrics_collector
 
-REPORTS_DIR = Path("backend/reports")
-REPORTS_DIR.mkdir(exist_ok=True)
+# Anchor REPORTS_DIR to the module file so it resolves identically whether the
+# app is launched from the repo root, from `backend/`, or from a container's
+# working dir. The previous `Path("backend/reports")` was cwd-relative and
+# crashed import when pytest ran from backend/ (CI) because it tried to create
+# `backend/backend/reports` whose parent didn't exist. `parents=True` also
+# hardens against the very first run in a fresh environment.
+REPORTS_DIR = Path(__file__).resolve().parent.parent / "reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 _UUID_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 _INCOME_YEAR_RE = re.compile(r'^\d{4}-\d{4}$')
@@ -267,9 +273,9 @@ async def upload_csv(
                     default_income_year=income_year
                 )
         
-        # Initialize processing pipeline
+        # Initialize processing pipeline (rules path defaults to the one
+        # anchored in pipeline.py — works regardless of cwd).
         pipeline = ProcessingPipeline(
-            rules_path="backend/config/rules.json",
             confidence_threshold=confidence_threshold,
             storage_service=storage,
         )
