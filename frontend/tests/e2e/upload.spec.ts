@@ -50,8 +50,9 @@ test.describe('Upload Flow', () => {
   })
 
   test('mocks successful upload and navigates to report', async ({ page }) => {
-    // Intercept the API call — no backend needed
-    await page.route('**/upload', async (route) => {
+    // Intercept the API call — `**/api/upload` specifically so the pattern
+    // doesn't ALSO swallow the SPA page navigation to `/upload`.
+    await page.route('**/api/upload', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -89,7 +90,7 @@ test.describe('Upload Flow', () => {
   })
 
   test('shows error message on upload failure', async ({ page }) => {
-    await page.route('**/upload', async (route) => {
+    await page.route('**/api/upload', async (route) => {
       await route.fulfill({
         status: 400,
         contentType: 'application/json',

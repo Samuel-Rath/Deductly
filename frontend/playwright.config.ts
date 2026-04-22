@@ -1,43 +1,45 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// PW-5: baseURL is configurable via PLAYWRIGHT_BASE_URL so the same suite can
+// run against local dev (`npm run dev`), preview deployments, or staging in CI
+// without editing this file.
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['html', { open: 'never' }], ['list']],
+  reporter: [['html', { open: 'never' }], ['list'], ['github']],
 
   // Global timeouts — set once here rather than scattered inline per-test.
-  timeout: 30_000,          // max wall time per test
-  expect: { timeout: 8_000 }, // max time for each expect() assertion
+  timeout: 30_000,              // max wall time per test
+  expect: { timeout: 8_000 },   // max time for each expect() assertion
 
   use: {
-    baseURL: 'http://localhost:3000',
-    actionTimeout: 10_000,        // max time for a single Playwright action
-    navigationTimeout: 15_000,    // max time for page navigations
+    baseURL: BASE_URL,
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
+    // Fail fast on console errors in tests (off by default; turn on in CI if desired)
   },
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'tablet',
-      use: { ...devices['iPad (gen 7)'] },
-    },
+    { name: 'chromium',      use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+    { name: 'tablet',        use: { ...devices['iPad (gen 7)'] } },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
-  },
+  // Only auto-start a dev server when testing against localhost. For staging
+  // URLs the webServer block would try to start a local server on top of the
+  // remote target — we skip it instead.
+  webServer: BASE_URL.startsWith('http://localhost')
+    ? {
+        command: 'npm run dev',
+        url: BASE_URL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 30_000,
+      }
+    : undefined,
 })

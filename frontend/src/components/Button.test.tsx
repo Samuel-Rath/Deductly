@@ -14,7 +14,7 @@ describe('Button', () => {
     it('renders primary variant with gradient background', () => {
       render(<Button variant="primary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button.className).toMatch(/bg-gradient-to-r/)
+      expect(button.className).toMatch(/bg-gradient-brand/)
     })
 
     it('renders secondary variant with border', () => {
@@ -23,10 +23,12 @@ describe('Button', () => {
       expect(button).toHaveClass('border', 'border-line-700')
     })
 
-    it('renders secondary variant with glass styling', () => {
+    it('renders secondary variant with frosted glass styling', () => {
       render(<Button variant="secondary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button).toHaveClass('glass')
+      // Glass look is delivered via backdrop-blur + translucent bg, not a .glass class
+      expect(button.className).toMatch(/backdrop-blur/)
+      expect(button.className).toMatch(/bg-white/)
     })
 
     it('renders tertiary variant with muted text', () => {
@@ -46,7 +48,7 @@ describe('Button', () => {
     it('renders small size with correct padding', () => {
       render(<Button size="sm">Small</Button>)
       const button = screen.getByRole('button', { name: /small/i })
-      expect(button).toHaveClass('px-3', 'py-1.5')
+      expect(button).toHaveClass('px-4', 'py-2')
     })
 
     it('renders medium size with correct padding', () => {
@@ -58,7 +60,7 @@ describe('Button', () => {
     it('renders large size with correct padding', () => {
       render(<Button size="lg">Large</Button>)
       const button = screen.getByRole('button', { name: /large/i })
-      expect(button).toHaveClass('px-7', 'py-3.5')
+      expect(button).toHaveClass('px-8', 'py-3.5')
     })
 
     it('defaults to medium size when no size specified', () => {
@@ -140,7 +142,8 @@ describe('Button', () => {
     it('has focus ring styles', () => {
       render(<Button>Focus me</Button>)
       const button = screen.getByRole('button', { name: /focus me/i })
-      expect(button).toHaveClass('focus:outline-none', 'focus:ring-2')
+      // Uses focus-visible: modifier (keyboard-only focus ring)
+      expect(button).toHaveClass('focus-visible:outline-none', 'focus-visible:ring-2')
     })
 
     it('accepts and passes through aria-label', () => {

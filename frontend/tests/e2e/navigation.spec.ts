@@ -7,7 +7,7 @@ test.describe('Navigation', () => {
     await page.getByRole('navigation').getByRole('link', { name: 'Rules' }).click()
     await expect(page).toHaveURL(/\/rules/)
 
-    await page.getByRole('navigation').getByRole('link', { name: 'Privacy' }).click()
+    await page.getByRole('navigation').getByRole('link', { name: 'Privacy', exact: true }).click()
     await expect(page).toHaveURL(/\/privacy/)
 
     await page.getByRole('navigation').getByRole('link', { name: 'Home' }).click()

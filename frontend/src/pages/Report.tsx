@@ -648,7 +648,7 @@ export default function Report() {
 
           {/* Candidates Table */}
           {activeTab === 'candidates' && (() => {
-            const candidateCategories = [...new Set(candidates.map((t: any) => t.category).filter(Boolean))]
+            const candidateCategories = [...new Set(candidates.map((t: any) => t.category).filter(Boolean))] as string[]
             const filtered = categoryFilter ? candidates.filter((t: any) => t.category === categoryFilter) : candidates
             return (
               <div role="tabpanel" id="candidates-panel" aria-labelledby="candidates-tab">
@@ -732,7 +732,7 @@ export default function Report() {
 
           {/* Needs Review Table */}
           {activeTab === 'needs-review' && (() => {
-            const reviewCategories = [...new Set(needsReview.map((t: any) => t.category).filter(Boolean))]
+            const reviewCategories = [...new Set(needsReview.map((t: any) => t.category).filter(Boolean))] as string[]
             const filtered = categoryFilter ? needsReview.filter((t: any) => t.category === categoryFilter) : needsReview
             return (
               <div role="tabpanel" id="needs-review-panel" aria-labelledby="needs-review-tab">
@@ -822,7 +822,7 @@ export default function Report() {
                   </tr>
                 </thead>
                 <tbody>
-                  {excluded.map((transaction) => {
+                  {excluded.map((transaction: any) => {
                     const display = resolveDisplay(transaction)
                     return (
                     <tr

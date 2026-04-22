@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
+import React from 'react'
 
 // ── IntersectionObserver (used by framer-motion useInView) ──────────────────
 // Must be a proper class constructor so framer-motion can call `new IntersectionObserver(cb)`
@@ -29,7 +30,7 @@ Object.defineProperty(window, 'IntersectionObserver', {
   configurable: true,
   value: MockIntersectionObserver,
 })
-Object.defineProperty(global, 'IntersectionObserver', {
+Object.defineProperty(globalThis, 'IntersectionObserver', {
   writable: true,
   configurable: true,
   value: MockIntersectionObserver,
@@ -65,3 +66,14 @@ Object.defineProperty(window, 'matchMedia', {
 
 // ── scrollTo ────────────────────────────────────────────────────────────────
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
+
+// ── PW-4: @paper-design/shaders-react uses WebGL which isn't in jsdom.
+// Replace MeshGradient with an inert <div> so unit tests that mount the
+// Landing hero don't crash with "WebGL is not supported".
+vi.mock('@paper-design/shaders-react', () => ({
+  MeshGradient: (props: { className?: string }) =>
+    React.createElement('div', {
+      'data-testid': 'mesh-gradient',
+      className: props.className,
+    }),
+}))

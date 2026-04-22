@@ -121,11 +121,21 @@ export function useJobStatus(
     queryKey: queryKeys.job(jobId),
     queryFn: () => getJobStatus(jobId),
     enabled: options?.enabled !== false && !!jobId,
-    refetchInterval: options?.refetchInterval ?? ((data) => {
-      // Default: stop polling when job is complete or failed
+    // React Query v5: refetchInterval receives the Query object (not data).
+    // We expose a data-based callback in our public API (back-compat), then
+    // translate it to the Query-based signature the library now expects.
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      const userOpt = options?.refetchInterval;
+      if (typeof userOpt === 'function') {
+        return userOpt(data);
+      }
+      if (userOpt !== undefined) {
+        return userOpt;
+      }
       if (!data) return 2000;
       return data.status === 'completed' || data.status === 'failed' ? false : 2000;
-    }),
+    },
     retry: (failureCount, error) => {
       // Don't retry on 404 (job not found)
       if (error.statusCode === 404) return false;

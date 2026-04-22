@@ -11,17 +11,30 @@ from datetime import timedelta
 _DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production-min-32-chars"
 
 
+def _split_csv_env(raw: str) -> List[str]:
+    """
+    Parse a comma-separated env var into a list.
+
+    SEC-2: strips whitespace and drops empty entries so operator typos like
+    'key1, key2' don't silently produce ' key2' (which would fail every
+    hmac.compare_digest check) or '' (which would match nothing but stay
+    present in the list).
+    """
+    if not raw:
+        return []
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
 class SecurityConfig:
     """Centralized security configuration"""
 
     # Secret key for session management and CSRF protection
     SECRET_KEY: str = os.getenv("SECRET_KEY", _DEFAULT_SECRET_KEY)
-    
+
     # CORS Configuration
-    ALLOWED_ORIGINS: List[str] = os.getenv(
-        "ALLOWED_ORIGINS",
-        "http://localhost:5173,http://localhost:3000"
-    ).split(",")
+    ALLOWED_ORIGINS: List[str] = _split_csv_env(
+        os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
+    )
     
     CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "false").lower() == "true"
     CORS_MAX_AGE: int = int(os.getenv("CORS_MAX_AGE", "600"))  # 10 minutes
@@ -72,7 +85,7 @@ class SecurityConfig:
         r'\bACC:\s*\d{6,10}\b',     # Account with label
     ]
     
-    CUSTOM_REDACTION_PATTERNS: List[str] = os.getenv("REDACTION_PATTERNS", "").split(",") if os.getenv("REDACTION_PATTERNS") else []
+    CUSTOM_REDACTION_PATTERNS: List[str] = _split_csv_env(os.getenv("REDACTION_PATTERNS", ""))
     
     @classmethod
     def get_all_redaction_patterns(cls) -> List[str]:
@@ -120,10 +133,10 @@ class SecurityConfig:
     # API Security
     API_KEY_HEADER: str = "X-API-Key"
     REQUIRE_API_KEY: bool = os.getenv("REQUIRE_API_KEY", "false").lower() == "true"
-    API_KEYS: List[str] = os.getenv("API_KEYS", "").split(",") if os.getenv("API_KEYS") else []
-    
+    API_KEYS: List[str] = _split_csv_env(os.getenv("API_KEYS", ""))
+
     # Trusted Proxies (for rate limiting behind reverse proxy)
-    TRUSTED_PROXIES: List[str] = os.getenv("TRUSTED_PROXIES", "").split(",") if os.getenv("TRUSTED_PROXIES") else []
+    TRUSTED_PROXIES: List[str] = _split_csv_env(os.getenv("TRUSTED_PROXIES", ""))
     
     # Feature Flags
     ENABLE_SWAGGER_UI: bool = os.getenv("ENABLE_SWAGGER_UI", "false").lower() == "true"

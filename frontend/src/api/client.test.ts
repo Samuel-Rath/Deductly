@@ -222,15 +222,15 @@ describe('API Client', () => {
       const mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation(() => null as any);
       
       // Mock URL methods
-      global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
-      global.URL.revokeObjectURL = vi.fn();
+      globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+      globalThis.URL.revokeObjectURL = vi.fn();
 
       await downloadReportFile('test-job-123', 'pdf', 'custom-report.pdf');
 
       expect(mockLink.download).toBe('custom-report.pdf');
       expect(mockLink.click).toHaveBeenCalled();
-      expect(global.URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
-      expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+      expect(globalThis.URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
+      expect(globalThis.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
 
       // Cleanup
       mockCreateElement.mockRestore();

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { Button } from './Button';
 
 /**
  * Accessible modal dialog with focus trap and scroll lock.

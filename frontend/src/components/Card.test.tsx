@@ -41,19 +41,20 @@ describe('Card', () => {
     it('applies small padding when padding is "sm"', () => {
       const { container } = render(<Card padding="sm">Content</Card>);
       const card = container.firstChild as HTMLElement;
-      expect(card).toHaveClass('p-4');
+      // Responsive: tighter on mobile, larger on sm+ breakpoints
+      expect(card).toHaveClass('p-3', 'sm:p-4');
     });
 
     it('applies medium padding by default', () => {
       const { container } = render(<Card>Content</Card>);
       const card = container.firstChild as HTMLElement;
-      expect(card).toHaveClass('p-6');
+      expect(card).toHaveClass('p-4', 'sm:p-6');
     });
 
     it('applies large padding when padding is "lg"', () => {
       const { container } = render(<Card padding="lg">Content</Card>);
       const card = container.firstChild as HTMLElement;
-      expect(card).toHaveClass('p-8');
+      expect(card).toHaveClass('p-5', 'sm:p-8');
     });
   });
 

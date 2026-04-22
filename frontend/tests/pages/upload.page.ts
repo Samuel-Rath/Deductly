@@ -16,7 +16,9 @@ export class UploadPage {
     this.page         = page
     this.heading      = page.getByRole('heading', { name: /upload your bank statement/i })
     this.dropZone     = page.getByRole('button', { name: /upload bank statement/i })
-    this.fileInput    = page.getByLabel('Bank Statement')
+    // File input is display:hidden behind the drop-zone; getByLabel skips
+    // hidden elements by default, so target by id.
+    this.fileInput    = page.locator('#bank-statement-input')
     this.analyseButton = page.getByRole('button', { name: /start analysis/i })
     this.backButton   = page.getByRole('button', { name: /back/i })
     this.errorAlert   = page.getByRole('alert')

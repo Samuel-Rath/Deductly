@@ -132,9 +132,10 @@ describe('Report Page', () => {
     renderReport()
 
     expect(screen.getByText('Confidence Distribution')).toBeInTheDocument()
-    expect(screen.getByText(/High \(0\.80 - 1\.00\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Medium \(0\.60 - 0\.79\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Low \(< 0\.60\)/i)).toBeInTheDocument()
+    // Labels are rendered as percentages, e.g. "High (80–100%)"
+    expect(screen.getByText(/High \(80[–-]100%\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Medium \(60[–-]79%\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Low \(below 60%\)/i)).toBeInTheDocument()
   })
 
   it('renders category totals chart', () => {

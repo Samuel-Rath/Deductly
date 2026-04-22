@@ -12,9 +12,12 @@ export class LandingPage {
   constructor(page: Page) {
     this.page = page
     this.heading    = page.getByRole('heading', { level: 1 })
-    this.subheading = page.getByText(/instantly uncover every work-related deduction/i)
-    this.ctaButton  = page.getByRole('button', { name: /find my deductions/i })
-    this.trustBadges = page.getByText(/no data stored|ato-aligned|instant analysis/i)
+    this.subheading = page.getByText(/instantly uncover every tax deduction/i)
+    // Landing has two "Find My Deductions" buttons (hero + bottom CTA);
+    // pin the page-object locator to the first (the hero) to avoid strict-mode
+    // matches — individual tests can still target the second when needed.
+    this.ctaButton  = page.getByRole('button', { name: /find my deductions/i }).first()
+    this.trustBadges = page.getByText(/no data stored|ato aligned|instant analysis/i)
     this.nav         = page.getByRole('navigation')
     this.navGetStarted = page.getByRole('link', { name: /get started/i })
   }
@@ -24,6 +27,7 @@ export class LandingPage {
   }
 
   async clickCTA() {
+    // ctaButton is already pinned to .first() in the constructor.
     await this.ctaButton.click()
     await this.page.waitForURL('**/upload')
   }
