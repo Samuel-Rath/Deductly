@@ -16,7 +16,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
-    // PW-3: keep Vitest from picking up Playwright specs, reports, artefacts.
+    // Keep Vitest out of Playwright territory — tests/e2e/**/*.spec.ts look
+    // like Vitest specs but use the Playwright test() API, which crashes
+    // Vitest's runner.
     exclude: [
       'node_modules/**',
       'tests/e2e/**',

@@ -1,8 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// PW-5: baseURL is configurable via PLAYWRIGHT_BASE_URL so the same suite can
-// run against local dev (`npm run dev`), preview deployments, or staging in CI
-// without editing this file.
+// Configurable target lets the same suite run against local dev,
+// preview URLs, or a staging deployment without editing this file.
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
 
 export default defineConfig({
@@ -24,7 +23,6 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
-    // Fail fast on console errors in tests (off by default; turn on in CI if desired)
   },
   projects: [
     { name: 'chromium',      use: { ...devices['Desktop Chrome'] } },

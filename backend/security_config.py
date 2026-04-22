@@ -13,12 +13,12 @@ _DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production-min-32-chars"
 
 def _split_csv_env(raw: str) -> List[str]:
     """
-    Parse a comma-separated env var into a list.
+    Parse a comma-separated env var into a list, stripping whitespace and
+    dropping empties.
 
-    SEC-2: strips whitespace and drops empty entries so operator typos like
-    'key1, key2' don't silently produce ' key2' (which would fail every
-    hmac.compare_digest check) or '' (which would match nothing but stay
-    present in the list).
+    The whitespace-strip matters: an operator typo like ``API_KEYS=key1, key2``
+    would otherwise store ``" key2"`` (leading space), which fails every
+    ``hmac.compare_digest`` check against a legitimate ``key2`` header value.
     """
     if not raw:
         return []
@@ -28,7 +28,10 @@ def _split_csv_env(raw: str) -> List[str]:
 class SecurityConfig:
     """Centralized security configuration"""
 
-    # Secret key for session management and CSRF protection
+    # Reserved for future token signing. Not currently load-bearing — the app
+    # is stateless (no cookies, no CSRF) — but validate_config() still refuses
+    # to start in production with the insecure default, which keeps operators
+    # honest about provisioning real secrets before deploy.
     SECRET_KEY: str = os.getenv("SECRET_KEY", _DEFAULT_SECRET_KEY)
 
     # CORS Configuration

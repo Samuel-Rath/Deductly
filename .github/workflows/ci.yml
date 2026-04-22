@@ -12,6 +12,13 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Opt the JS-based actions (checkout, setup-*, upload-artifact) into the
+# Node 24 runtime now. Node 20 is deprecated on GitHub-hosted runners
+# (forced to Node 24 from 2026-06-02, removed 2026-09-16) and emits a
+# warning on every run otherwise.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   # ----------------------------------------------------------------------------
   # Backend: lint-free pytest with coverage
@@ -59,7 +66,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -98,7 +105,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 

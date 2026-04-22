@@ -423,16 +423,24 @@ class TestReportGenerator:
             assert data1['transactions'] == data2['transactions']
     
     def test_generate_pdf(self, sample_report_data):
-        """Test PDF generation with sample data."""
+        """Test PDF generation with sample data.
+
+        WeasyPrint is an optional runtime dependency (not in
+        ``requirements.txt``). Skip when either the Python package or its
+        underlying GTK/Cairo/Pango system libraries aren't installed —
+        typical on a bare CI runner — so CI stays green without having to
+        provision GTK just for this one test.
+        """
         generator = ReportGenerator()
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             pdf_path = Path(tmpdir) / "deduction_report.pdf"
-            
+
             try:
                 generator.generate_pdf(sample_report_data, str(pdf_path))
+            except ImportError as e:
+                pytest.skip(f"WeasyPrint not installed: {e}")
             except OSError as e:
-                # WeasyPrint requires system libraries (GTK) that may not be installed
                 if 'libgobject' in str(e) or 'libcairo' in str(e) or 'libpango' in str(e):
                     pytest.skip(f"WeasyPrint system dependencies not available: {e}")
                 raise

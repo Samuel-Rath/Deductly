@@ -67,9 +67,9 @@ Object.defineProperty(window, 'matchMedia', {
 // ── scrollTo ────────────────────────────────────────────────────────────────
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
 
-// ── PW-4: @paper-design/shaders-react uses WebGL which isn't in jsdom.
-// Replace MeshGradient with an inert <div> so unit tests that mount the
-// Landing hero don't crash with "WebGL is not supported".
+// @paper-design/shaders-react needs WebGL, which jsdom doesn't ship. Unit
+// tests mounting the Landing hero would crash with "WebGL is not supported"
+// without this stub.
 vi.mock('@paper-design/shaders-react', () => ({
   MeshGradient: (props: { className?: string }) =>
     React.createElement('div', {

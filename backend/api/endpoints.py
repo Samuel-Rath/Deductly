@@ -34,12 +34,9 @@ from backend.processing.pdf_parser import PDFParser
 from backend.logging_config import log_event, log_error, log_security_event, log_audit
 from backend.monitoring import metrics_collector
 
-# Anchor REPORTS_DIR to the module file so it resolves identically whether the
-# app is launched from the repo root, from `backend/`, or from a container's
-# working dir. The previous `Path("backend/reports")` was cwd-relative and
-# crashed import when pytest ran from backend/ (CI) because it tried to create
-# `backend/backend/reports` whose parent didn't exist. `parents=True` also
-# hardens against the very first run in a fresh environment.
+# Anchored to __file__ so the path is stable across cwds (repo root, backend/,
+# a container's workdir). A cwd-relative default broke import when pytest ran
+# from backend/ in CI. `parents=True` additionally handles a fresh checkout.
 REPORTS_DIR = Path(__file__).resolve().parent.parent / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -88,7 +85,8 @@ async def upload_csv(
     """
     # Validate file type — check both MIME type and extension (MIME is client-controlled)
     file_ext = Path(file.filename or "").suffix.lower() if file.filename else ""
-    # Sanitise the client-supplied filename before any logging (VULN-004: log injection)
+    # Filename is attacker-controlled — sanitise it before it reaches any
+    # log line to prevent log injection. Cap at 128 chars for log hygiene.
     _safe_filename = re.sub(r'[^\w.\-]', '_', Path(file.filename or "unknown").name)[:128]
     mime_ok = file.content_type in SecurityConfig.ALLOWED_FILE_TYPES
     ext_ok = file_ext in SecurityConfig.ALLOWED_FILE_EXTENSIONS
@@ -165,10 +163,8 @@ async def upload_csv(
             }
         )
     
-    # Generate unique job ID
     job_id = str(uuid.uuid4())
-    
-    # Log upload started
+
     log_event(
         'upload_started',
         job_id=job_id,
@@ -177,12 +173,9 @@ async def upload_csv(
         ephemeral_mode=ephemeral_mode,
         confidence_threshold=confidence_threshold,
     )
-    
-    # Initialize storage service
+
     db = Database()
     storage = StorageService(database=db, ephemeral_mode=ephemeral_mode)
-    
-    # Create job record
     storage.create_job(
         job_id=job_id,
         income_year=income_year,
@@ -190,26 +183,20 @@ async def upload_csv(
         confidence_threshold=confidence_threshold
     )
 
-    _temp_path: Optional[str] = None  # track temp file for guaranteed cleanup
+    _temp_path: Optional[str] = None  # guaranteed cleanup in finally
 
     try:
-        # Update status to processing
         storage.update_job_status(job_id, "processing")
-        
-        # Record upload metrics
         metrics_collector.record_upload(success=True, file_size=len(file_content))
-        
-        # Determine file type and save appropriately
+
         is_pdf = file.content_type == "application/pdf"
         file_extension = ".pdf" if is_pdf else ".csv"
-        
-        # Save uploaded file temporarily
+
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
         temp_file.write(file_content)
         temp_file.close()
         _temp_path = temp_file.name
-        
-        # If PDF, parse directly to transactions
+
         pdf_transactions = None
         if is_pdf:
             log_event('pdf_conversion_started', job_id=job_id, file_size=len(file_content))
@@ -217,7 +204,7 @@ async def upload_csv(
                 pdf_parser = PDFParser()
                 with open(temp_file.name, 'rb') as pdf_file:
                     pdf_transactions = pdf_parser.parse(io.BytesIO(pdf_file.read()))
-                
+
                 log_event(
                     'pdf_conversion_completed',
                     job_id=job_id,
@@ -227,7 +214,7 @@ async def upload_csv(
                 storage.update_job_status(job_id, "failed", error=str(e))
                 log_error('pdf_conversion_failed', e, job_id=job_id)
                 metrics_collector.record_upload(success=False, file_size=len(file_content))
-                # VULN-001: never expose raw exception text in production
+                # Parser exception text can echo uploaded content — suppress in prod.
                 user_msg = (
                     f"Failed to parse PDF: {str(e)}"
                     if not SecurityConfig.is_production()
@@ -241,19 +228,15 @@ async def upload_csv(
                         "details": {"job_id": job_id}
                     }
                 )
-        
-        # Track processing time
+
         processing_start = time.time()
-        
-        # Auto-detect income year if not provided
+
         if not income_year:
             log_event('income_year_auto_detection_started', job_id=job_id)
             try:
                 if pdf_transactions:
-                    # Detect from parsed PDF transactions
                     income_year = _detect_income_year_from_transactions(pdf_transactions)
                 else:
-                    # Detect from CSV file
                     income_year = _detect_income_year_from_csv(temp_file.name)
                 log_event(
                     'income_year_auto_detected',
@@ -262,11 +245,14 @@ async def upload_csv(
                 )
             except Exception as e:
                 log_error('income_year_detection_failed', e, job_id=job_id)
-                # Default to current income year if detection fails
+                # Fallback: Australian financial year runs 1 Jul – 30 Jun, so
+                # Jan–Jun belongs to the previous calendar year's FY.
                 now = datetime.now()
                 current_year = now.year
-                current_month = now.month
-                income_year = f"{current_year - 1}-{current_year}" if current_month < 7 else f"{current_year}-{current_year + 1}"
+                income_year = (
+                    f"{current_year - 1}-{current_year}" if now.month < 7
+                    else f"{current_year}-{current_year + 1}"
+                )
                 log_event(
                     'income_year_defaulted',
                     job_id=job_id,
@@ -280,12 +266,10 @@ async def upload_csv(
             storage_service=storage,
         )
         
-        # Process and generate reports
         job_dir = REPORTS_DIR / job_id
         job_dir.mkdir(exist_ok=True)
-        
+
         if pdf_transactions:
-            # Process PDF transactions directly
             report_data, generated_files = pipeline.process_and_generate_reports(
                 transactions=pdf_transactions,
                 income_year=income_year,
@@ -296,7 +280,6 @@ async def upload_csv(
                 generate_json=True
             )
         else:
-            # Process CSV file
             with open(temp_file.name, 'rb') as csv_file:
                 report_data, generated_files = pipeline.process_and_generate_reports(
                     csv_file=csv_file,
@@ -307,30 +290,23 @@ async def upload_csv(
                     generate_csv=True,
                     generate_json=True
                 )
-        
-        # Calculate processing time
+
         processing_time = time.time() - processing_start
-        
-        # Update job status to completed
         storage.update_job_status(job_id, "completed")
-        
-        # Record job metrics
         metrics_collector.record_job(success=True, processing_time=processing_time)
-        
-        # Log completion
+
         log_event(
             'upload_completed',
             job_id=job_id,
             processing_time=processing_time,
             transaction_count=len(report_data.candidates) + len(report_data.needs_review) + len(report_data.excluded)
         )
-        
-        # Audit log
         log_audit('upload_complete', job_id=job_id, income_year=income_year)
-        
-        # Helper function to flatten classified transaction for frontend
+
+        # Nested, not module-level: these flatten shapes are only used here.
+        # Pulling them out would add an import dependency for two private
+        # serialisers nobody else calls.
         def flatten_classified_transaction(ct):
-            """Flatten ClassifiedTransaction to match frontend expectations."""
             txn = ct.transaction
             flags = ct.flags or []
             return {
@@ -347,10 +323,8 @@ async def upload_csv(
                 "flags": flags,
                 "matched_rule_id": ct.matched_rule_id,
             }
-        
-        # Helper function to flatten excluded transaction for frontend
+
         def flatten_excluded_transaction(et):
-            """Flatten ExcludedTransaction to match frontend expectations."""
             txn = et.transaction
             return {
                 "id": txn.transaction_id,
@@ -361,8 +335,7 @@ async def upload_csv(
                 "reason": et.reason.value,
                 "explanation": et.explanation,
             }
-        
-        # Convert report_data to dict for response
+
         report_dict = {
             "income_year": report_data.income_year,
             "generated_at": report_data.generated_at.isoformat(),
@@ -396,31 +369,27 @@ async def upload_csv(
     except Exception as e:
         # Update job status to failed
         storage.update_job_status(job_id, "failed", error=str(e))
-
-        # Record failed upload
         metrics_collector.record_upload(success=False, file_size=len(file_content))
         metrics_collector.record_job(success=False, processing_time=0)
-
-        # Log error
         log_error('processing_failed', e, job_id=job_id)
 
         detail: dict = {"error": "processing_failed", "message": "An unexpected error occurred during processing.", "details": {"job_id": job_id}}
+        # Expose the underlying exception message in non-prod only — aids
+        # debugging without leaking stack details to end users in production.
         if not SecurityConfig.is_production():
             detail["message"] = f"Failed to process file: {str(e)}"
         raise HTTPException(status_code=500, detail=detail)
     finally:
-        # Always delete the temp upload regardless of success or failure
         if _temp_path is not None:
             try:
                 os.unlink(_temp_path)
             except OSError:
                 pass
 
-        # Ephemeral-mode guarantee (SEC-1): generated report files must not
-        # persist on disk on ANY exit path — success, HTTPException, or
-        # unexpected error. Moving this into `finally` closes the privacy leak
-        # where reports were left behind when an exception fired after the
-        # files had already been written to disk.
+        # Ephemeral-mode privacy guarantee: report files must not persist on
+        # any exit path (success, HTTPException, or unexpected error). Living
+        # in `finally` closes the leak where reports survived an exception
+        # thrown after generation but before the response was sent.
         if ephemeral_mode:
             try:
                 job_dir = REPORTS_DIR / job_id

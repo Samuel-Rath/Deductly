@@ -12,10 +12,8 @@ from pathlib import Path
 from typing import Optional, BinaryIO
 from datetime import datetime
 
-# Default rules path, anchored to the backend package directory so it resolves
-# identically regardless of the process cwd (workspace root, backend/, or a
-# container's working dir). A cwd-relative default broke pytest when it was
-# run from backend/ in CI.
+# Anchored to __file__ so it resolves identically across cwds. A cwd-relative
+# default broke pytest when it ran from backend/ in CI.
 _DEFAULT_RULES_PATH = str(Path(__file__).resolve().parent.parent / "config" / "rules.json")
 
 from backend.models.schemas import ReportData, ReportSummary

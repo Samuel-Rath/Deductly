@@ -1,5 +1,4 @@
 import { type Page, type Locator, expect } from '@playwright/test'
-import path from 'path'
 
 export class UploadPage {
   readonly page: Page
