@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
-import React from 'react'
 
 // ── IntersectionObserver (used by framer-motion useInView) ──────────────────
 // Must be a proper class constructor so framer-motion can call `new IntersectionObserver(cb)`
@@ -37,15 +36,16 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
 })
 
 // ── ResizeObserver (used by various layout hooks) ───────────────────────────
-const mockResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+// Must be a class: Lenis (smooth scroll) and others call `new ResizeObserver(cb)`.
+class MockResizeObserver {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
 Object.defineProperty(window, 'ResizeObserver', {
   writable: true,
   configurable: true,
-  value: mockResizeObserver,
+  value: MockResizeObserver,
 })
 
 // ── matchMedia (used by framer-motion reducedMotion checks) ─────────────────
@@ -66,14 +66,3 @@ Object.defineProperty(window, 'matchMedia', {
 
 // ── scrollTo ────────────────────────────────────────────────────────────────
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
-
-// @paper-design/shaders-react needs WebGL, which jsdom doesn't ship. Unit
-// tests mounting the Landing hero would crash with "WebGL is not supported"
-// without this stub.
-vi.mock('@paper-design/shaders-react', () => ({
-  MeshGradient: (props: { className?: string }) =>
-    React.createElement('div', {
-      'data-testid': 'mesh-gradient',
-      className: props.className,
-    }),
-}))

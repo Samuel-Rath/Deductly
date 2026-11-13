@@ -45,7 +45,7 @@ describe('Landing Page', () => {
 
   it('renders How It Works section with three steps', () => {
     renderLanding()
-    expect(screen.getByText('How It Works')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /how it works/i })).toBeInTheDocument()
     expect(screen.getByText('Upload Your Statement')).toBeInTheDocument()
     expect(screen.getByText('Rules Engine Analyses Transactions')).toBeInTheDocument()
     expect(screen.getByText('Download Your Report')).toBeInTheDocument()

@@ -24,3 +24,5 @@ export { default as Footer } from './Footer';
 export { default as AnimatedSection } from './AnimatedSection';
 export { Icon } from './Icon';
 export type { IconName } from './Icon';
+export { PageHeader } from './PageHeader';
+export { Logo, LogoMark } from './Logo';

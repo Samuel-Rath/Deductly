@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Card, Icon } from '../components'
+import { Button, PageHeader, LogoMark } from '../components'
 import { useUploadCSV } from '../api/hooks'
 
 export default function Upload() {
@@ -60,11 +60,19 @@ export default function Upload() {
   }
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true) }
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(false) }
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    // dragleave also fires when the pointer crosses into a child element; only
+    // clear the highlight when it actually leaves the drop zone.
+    if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return
+    setIsDragging(false)
+  }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsDragging(false)
+    // Swapping the file mid-upload would show a name that isn't the one being analysed.
+    if (isUploading) return
     setError(null)
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile) {
@@ -77,6 +85,8 @@ export default function Upload() {
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     setError(null)
     const selectedFile = e.target.files?.[0]
+    // Reset so picking the same file again (e.g. after a failed upload) still fires onChange.
+    e.target.value = ''
     if (selectedFile) {
       const validationError = validateFile(selectedFile)
       if (validationError) { setError(validationError); return }
@@ -162,195 +172,217 @@ export default function Upload() {
   const thresholdPct = Math.round(confidenceThreshold * 100)
 
   return (
-    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-display text-h1 font-semibold text-white mb-2">
-            Upload Your Bank Statement
-          </h1>
-          <p className="text-body text-slate-300">
-            We'll analyse your transactions and identify potential tax deductions
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1360px] px-[20px] sm:px-[32px] pb-[96px] lg:pb-[140px]">
+      <PageHeader
+        index="01"
+        label="Step 1 of 2 · Upload"
+        title="Upload Your Bank Statement"
+        lead="We'll analyse your transactions and identify potential tax deductions, checked line by line against ATO rules."
+      />
 
-        <Card>
-          <div className="space-y-6">
-            {/* Drag and Drop Zone */}
-            <div>
-              <label htmlFor="bank-statement-input" className="block text-base font-medium text-white mb-3">
-                Bank Statement
-              </label>
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                role="button"
-                tabIndex={0}
-                aria-label="Upload bank statement. Drag and drop or click to browse"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click() }
-                }}
-                className={`
-                  border-2 border-dashed rounded-xl p-5 sm:p-8 text-center cursor-pointer
-                  transition-all duration-200
-                  ${isDragging
-                    ? 'border-violet-500 bg-violet-500/5 scale-[1.02] shadow-glow-violet'
-                    : file
-                    ? 'border-accent/50 bg-accent/5'
-                    : 'border-line-700 hover:border-line-600 hover:bg-ink-700/40'
-                  }
-                `}
-              >
-                <input
-                  id="bank-statement-input"
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.pdf"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="space-y-3">
-                  {file ? (
-                    <>
-                      <Icon name="FileText" size={40} className="text-accent mx-auto" />
-                      <div className="text-lg font-medium text-white">{file.name}</div>
-                      <div className="text-sm text-slate-400">{(file.size / 1024).toFixed(1)} KB</div>
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="Upload" size={40} className="text-slate-500 mx-auto" />
-                      <div className="text-lg font-medium text-white">Drop your file here</div>
-                      <div className="text-sm text-slate-400">CSV or PDF • or click to browse</div>
-                    </>
-                  )}
+      <div className="grid lg:grid-cols-12 gap-[56px] lg:gap-[32px]">
+        {/* ── Form ─────────────────────────────────────────────────────── */}
+        <div className="lg:col-span-7">
+          <div className="flex items-baseline justify-between mb-[12px]">
+            <label htmlFor="bank-statement-input" className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400">
+              Bank Statement
+            </label>
+            <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-bone-600">CSV · PDF · 10MB max</span>
+          </div>
+
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => { if (!isUploading) fileInputRef.current?.click() }}
+            role="button"
+            tabIndex={0}
+            aria-disabled={isUploading}
+            aria-label="Upload bank statement. Drag and drop or click to browse"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!isUploading) fileInputRef.current?.click() }
+            }}
+            className={[
+              'group relative rounded-[4px] border border-dashed min-h-[280px] sm:min-h-[320px] grid place-items-center p-[24px] text-center cursor-pointer',
+              'transition-[border-color,background-color] duration-300',
+              isDragging
+                ? 'border-brass bg-brass/[0.06]'
+                : file
+                ? 'border-bone/20 bg-transparent'
+                : 'border-bone/20 hover:border-bone/45 hover:bg-bone/[0.02]',
+            ].join(' ')}
+          >
+            <input
+              id="bank-statement-input"
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.pdf"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            {file ? (
+              // The chosen file, shown as a paper slip
+              <div className="paper w-full max-w-[380px] rounded-[3px] px-[24px] py-[20px] text-left shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)] -rotate-[1deg]">
+                <div className="flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.14em] text-[#1A1612]/55">
+                  <span>{file.name.toLowerCase().endsWith('.pdf') ? 'PDF statement' : 'CSV statement'}</span>
+                  <span className="text-penink">Ready</span>
                 </div>
+                <div className="mt-[14px] h-px bg-[#1A1612]/15" />
+                <div className="mt-[14px] font-mono text-[14px] break-all">{file.name}</div>
+                <div className="mt-[6px] font-mono text-[11px] text-[#1A1612]/55">{(file.size / 1024).toFixed(1)} KB</div>
+                <div className="mt-[16px] font-display italic text-[15px] text-penink">↳ click or drop to replace</div>
               </div>
-              {!file && (
-                <p className="mt-2 text-sm text-slate-400">Accepts CSV and PDF files • Maximum 10MB</p>
-              )}
-              {error && (
-                <div role="alert" aria-live="polite" className="mt-3 p-3 bg-red-900/20 border border-red-700 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Icon name="AlertCircle" size={18} className="text-red-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-red-300">{error}</p>
-                  </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <svg aria-hidden="true" width="56" height="64" viewBox="0 0 56 64" fill="none" className="text-bone/40 group-hover:text-bone/70 transition-colors duration-300">
+                  <path d="M6 2h30l14 14v44a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.2" />
+                  <path d="M36 2v14h14" stroke="currentColor" strokeWidth="1.2" />
+                  <path d="M12 28h24M12 35h32M12 42h18M12 49h28" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 3" />
+                </svg>
+                <div className="mt-[24px] font-display text-[30px] sm:text-[36px] leading-none tracking-[-0.02em] text-bone">
+                  Drop your file here
                 </div>
-              )}
-            </div>
-
-            {/* Privacy Notice */}
-            <div className="flex items-start gap-3 p-4 bg-violet-500/5 border border-violet-500/20 rounded-xl">
-              <Icon name="ShieldCheck" size={20} className="text-violet-400 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Your data is processed in memory and deleted immediately after your report is generated. Nothing is stored.
-              </p>
-            </div>
-
-            {/* Analysis Options (collapsible) */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(v => !v)}
-                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
-              >
-                <Icon name={showAdvanced ? 'ChevronDown' : 'ChevronRight'} size={15} />
-                Analysis options
-              </button>
-
-              {showAdvanced && (
-                <div className="mt-4 space-y-5 pl-1">
-                  {/* Confidence threshold */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-white">Confidence level</label>
-                      <span className="text-sm font-mono font-semibold" style={{ color: '#F5C842' }}>{thresholdPct}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0.5}
-                      max={0.9}
-                      step={0.05}
-                      value={confidenceThreshold}
-                      onChange={e => setConfidenceThreshold(Number(e.target.value))}
-                      className="w-full accent-amber-400"
-                      aria-label={`Confidence threshold: ${thresholdPct}%`}
-                    />
-                    <div className="flex justify-between text-xs text-slate-500 mt-1">
-                      <span>More deductions (50%)</span>
-                      <span>Fewer but certain (90%)</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1.5">
-                      Transactions below this threshold go to Needs Review instead of Candidates.
-                    </p>
-                  </div>
-
-</div>
-              )}
-            </div>
-
-            {/* Upload Progress */}
-            {isUploading && (
-              <div role="status" aria-live="polite" aria-label="Uploading and processing" className="p-4 bg-ink-800 border border-line-700 rounded-xl">
-                <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
-                  <span className="font-medium">{statusMsg}</span>
-                  {uploadProgress > 0 && (
-                    <span className="text-xs font-mono text-slate-400 tabular-nums">{uploadProgress}%</span>
-                  )}
-                </div>
-                {isWakingUp && (
-                  <p className="text-xs text-amber-400 mb-2">
-                    Server is warming up — first load can take up to 30 seconds
-                  </p>
-                )}
-                <div
-                  className="w-full h-2 bg-ink-900 rounded-full overflow-hidden relative"
-                  role="progressbar"
-                  aria-valuenow={uploadProgress}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label="Upload and processing progress"
-                >
-                  {uploadProgress === 0 ? (
-                    <div className="absolute inset-0 overflow-hidden rounded-full">
-                      <div className="w-1/3 h-full bg-gradient-brand rounded-full animate-indeterminate" />
-                    </div>
-                  ) : (
-                    <div
-                      className="h-full bg-gradient-brand rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  )}
+                <div className="mt-[12px] text-[15px] text-bone-400">
+                  or <span className="text-bone underline decoration-bone/30 underline-offset-4 group-hover:decoration-brass">browse your files</span>
                 </div>
               </div>
             )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
-              <Button variant="secondary" size="md" onClick={() => navigate('/')} disabled={isUploading}>
-                Back
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleUpload}
-                disabled={!file || isUploading}
-                className="w-full sm:w-auto sm:min-w-[160px]"
-              >
-                {isUploading ? 'Processing...' : 'Start Analysis'}
-              </Button>
-            </div>
           </div>
-        </Card>
 
-        {/* Info Section */}
-        <div className="mt-6 p-4 bg-ink-900/50 border border-line-700 rounded-xl">
-          <h3 className="text-sm font-medium text-white mb-2">Supported Formats</h3>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            We support CSV and PDF bank statements from CommBank, NAB, Westpac, ANZ, and ING. The income year will be automatically detected from your transaction dates.
-          </p>
+          {error && (
+            <div role="alert" aria-live="polite" className="mt-[16px] border-l-2 border-red-400 bg-red-400/[0.06] px-[16px] py-[12px]">
+              <p className="text-[14px] text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Privacy note */}
+          <div className="mt-[24px] flex items-start gap-[14px] border-t border-bone/[0.09] pt-[20px]">
+            <LogoMark size={16} className="text-bone mt-[3px] shrink-0" />
+            <p className="text-[14px] leading-[1.6] text-bone-400">
+              Your data is processed in memory and deleted immediately after your report is generated. Nothing is stored.
+            </p>
+          </div>
+
+          {/* Analysis options */}
+          <div className="mt-[20px] border-t border-bone/[0.09] pt-[20px]">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(v => !v)}
+              aria-expanded={showAdvanced}
+              className="flex items-center gap-[10px] font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400 hover:text-bone transition-colors"
+            >
+              <span aria-hidden="true" className={`inline-block transition-transform duration-300 ${showAdvanced ? 'rotate-45' : ''}`}>+</span>
+              Analysis options
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-[20px]">
+                <div className="flex items-baseline justify-between mb-[12px]">
+                  <label htmlFor="confidence-threshold" className="text-[15px] text-bone">Confidence level</label>
+                  <span className="font-display text-[28px] leading-none text-brass tabular-nums">{thresholdPct}%</span>
+                </div>
+                <input
+                  id="confidence-threshold"
+                  type="range"
+                  min={0.5}
+                  max={0.9}
+                  step={0.05}
+                  value={confidenceThreshold}
+                  onChange={e => setConfidenceThreshold(Number(e.target.value))}
+                  className="w-full accent-[#D9A441]"
+                  aria-label={`Confidence threshold: ${thresholdPct}%`}
+                />
+                <div className="flex justify-between font-mono text-[10.5px] uppercase tracking-[0.12em] text-bone-600 mt-[8px]">
+                  <span>More deductions (50%)</span>
+                  <span>Fewer but certain (90%)</span>
+                </div>
+                <p className="text-[13px] text-bone-400 mt-[10px]">
+                  Transactions below this threshold go to Needs Review instead of Candidates.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Progress */}
+          {isUploading && (
+            <div role="status" aria-live="polite" aria-label="Uploading and processing" className="mt-[24px] border-t border-bone/[0.09] pt-[20px]">
+              <div className="flex items-baseline justify-between gap-[16px]">
+                <span className="text-[15px] text-bone">{statusMsg}</span>
+                {uploadProgress > 0 && (
+                  <span className="font-mono text-[12px] text-bone-400 tabular-nums">{uploadProgress}%</span>
+                )}
+              </div>
+              {isWakingUp && (
+                <p className="mt-[6px] text-[13px] text-brass">
+                  Server is warming up. The first upload can take up to 30 seconds.
+                </p>
+              )}
+              <div
+                className="mt-[14px] w-full h-[2px] bg-bone/[0.1] overflow-hidden relative"
+                role="progressbar"
+                aria-valuenow={uploadProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Upload and processing progress"
+              >
+                {uploadProgress === 0 ? (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="w-1/3 h-full bg-brass animate-indeterminate" />
+                  </div>
+                ) : (
+                  <div className="h-full bg-brass transition-[width] duration-300 ease-out" style={{ width: `${uploadProgress}%` }} />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-[32px] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-[12px]">
+            <Button variant="tertiary" size="md" onClick={() => navigate('/')} disabled={isUploading}>
+              ← Back
+            </Button>
+            <Button
+              variant="primary"
+              size="lg"
+              withArrow={!isUploading}
+              onClick={handleUpload}
+              disabled={!file || isUploading}
+              className="w-full sm:w-auto"
+            >
+              {isUploading ? 'Processing...' : 'Start Analysis'}
+            </Button>
+          </div>
         </div>
+
+        {/* ── Aside ────────────────────────────────────────────────────── */}
+        <aside className="lg:col-span-4 lg:col-start-9 lg:pt-[30px]">
+          <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400">What happens next</h2>
+          <ol className="mt-[16px]">
+            {NEXT_STEPS.map(([t, b], i) => (
+              <li key={t} className="grid grid-cols-[40px_1fr] gap-[8px] py-[18px] border-t border-bone/[0.09]">
+                <span className="font-mono text-[11px] text-brass pt-[6px]">0{i + 1}</span>
+                <div>
+                  <h3 className="font-display text-[22px] leading-none tracking-[-0.01em] text-bone">{t}</h3>
+                  <p className="mt-[8px] text-[14px] leading-[1.6] text-bone-400">{b}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-[8px] border-t border-bone/[0.09] pt-[20px]">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400">Supported Formats</h2>
+            <p className="mt-[12px] text-[14px] leading-[1.6] text-bone-400">
+              CSV and PDF statements from CommBank, NAB, Westpac, ANZ and ING. The income year is detected from your transaction dates.
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   )
 }
+
+const NEXT_STEPS: Array<[string, string]> = [
+  ['Parse', 'Your statement is read in memory. Format, bank layout and income year are detected automatically.'],
+  ['Classify', 'Personal identifiers are stripped, then each line is matched against ATO deduction rules and scored.'],
+  ['Report', 'You get candidates, items to review and an audit trail, with the evidence to keep for each.'],
+]

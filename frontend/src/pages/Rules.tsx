@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Chip, AnimatedSection, Icon } from '../components'
+import { Card, Chip, Icon, PageHeader } from '../components'
 
 const ruleCategories = [
   {
@@ -130,66 +130,63 @@ export default function Rules() {
   const [activeSection, setActiveSection] = useState<'classification' | 'exclusion' | 'confidence'>('classification')
 
   return (
-    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <AnimatedSection className="mb-8">
-          <h1 className="font-display text-h1 font-semibold text-white mb-2">
-            Classification Rules
-          </h1>
-          <p className="text-body text-slate-300">
-            Understand how transactions are categorised and what patterns we look for
-          </p>
-        </AnimatedSection>
+    <div className="mx-auto max-w-[1360px] px-[20px] sm:px-[32px] pb-[96px] lg:pb-[140px]">
+      <PageHeader
+        index="03"
+        label="Reference"
+        title="Classification Rules"
+        lead="Understand how transactions are categorised and what patterns we look for. This is the exact rule set the engine runs."
+      />
+      <div className="max-w-[980px]">
 
         <div>
           {/* Section Tabs */}
           <div className="mb-8">
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-            <div className="flex space-x-2 sm:space-x-6 border-b border-line-700 min-w-max sm:min-w-0">
+            <div className="flex gap-[24px] sm:gap-[32px] border-b border-bone/[0.12] min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveSection('classification')}
                 className={`
-                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeSection === 'classification'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone'
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Classification Rules
                 {activeSection === 'classification' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
               <button
                 onClick={() => setActiveSection('exclusion')}
                 className={`
-                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeSection === 'exclusion'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone'
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Exclusion Rules
                 {activeSection === 'exclusion' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
               <button
                 onClick={() => setActiveSection('confidence')}
                 className={`
-                  pb-3 sm:pb-4 px-1 text-xs sm:text-small font-medium transition-colors relative whitespace-nowrap
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeSection === 'confidence'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone'
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Confidence Scoring
                 {activeSection === 'confidence' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
             </div>
@@ -210,7 +207,7 @@ export default function Rules() {
                     >
                       <div className="flex items-center space-x-4">
                         <div>
-                          <h3 className="text-h3 font-semibold text-white text-left">
+                          <h3 className="font-display text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-bone text-left">
                             {rule.category}
                           </h3>
                           <p className="text-small text-slate-300 text-left mt-1">
@@ -234,7 +231,7 @@ export default function Rules() {
                       <div className="mt-6 pt-6 border-t border-line-700 space-y-6">
                         {/* Keywords */}
                         <div>
-                          <div className="text-micro font-medium text-slate-500 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                             KEYWORDS
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -246,7 +243,7 @@ export default function Rules() {
 
                         {/* Merchants */}
                         <div>
-                          <div className="text-micro font-medium text-slate-500 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                             KNOWN MERCHANTS
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -258,11 +255,11 @@ export default function Rules() {
 
                         {/* Confidence */}
                         <div>
-                          <div className="text-micro font-medium text-slate-500 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                             BASE CONFIDENCE
                           </div>
                           <div className="flex items-center space-x-3">
-                            <span className="text-small text-white">
+                            <span className="text-small text-bone">
                               {(rule.confidence * 100).toFixed(0)}%
                             </span>
                             <div className="flex-1 max-w-xs h-2 bg-ink-800 rounded-full overflow-hidden">
@@ -276,7 +273,7 @@ export default function Rules() {
 
                         {/* Evidence */}
                         <div>
-                          <div className="text-micro font-medium text-slate-500 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                             REQUIRED EVIDENCE
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -289,7 +286,7 @@ export default function Rules() {
                         {/* Flags */}
                         {rule.flags && rule.flags.length > 0 && (
                           <div>
-                            <div className="text-micro font-medium text-slate-500 mb-2">
+                            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                               SPECIAL REQUIREMENTS
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -302,13 +299,13 @@ export default function Rules() {
 
                         {/* Examples */}
                         <div>
-                          <div className="text-micro font-medium text-slate-500 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                             MATCHING EXAMPLES
                           </div>
                           <div className="space-y-2">
                             {rule.examples.map((example, idx) => (
                               <div key={idx} className="p-3 bg-ink-800 rounded-lg">
-                                <div className="text-small text-white font-mono">
+                                <div className="text-small text-bone font-mono">
                                   {example.description}
                                 </div>
                                 <div className="text-micro text-slate-300 mt-1">
@@ -332,7 +329,7 @@ export default function Rules() {
               <Card>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-h3 font-semibold text-white mb-2">
+                    <h3 className="font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-bone mb-[12px]">
                       About Exclusions
                     </h3>
                     <p className="text-small text-slate-300">
@@ -343,14 +340,14 @@ export default function Rules() {
 
                   {exclusionRules.map((rule, idx) => (
                     <div key={idx} className="pt-6 border-t border-line-700">
-                      <h4 className="text-small font-semibold text-white mb-2">
+                      <h4 className="text-small font-semibold text-bone mb-2">
                         {rule.name}
                       </h4>
                       <p className="text-small text-slate-300 mb-3">
                         {rule.reason}
                       </p>
                       <div>
-                        <div className="text-micro font-medium text-slate-500 mb-2">
+                        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                           PATTERNS
                         </div>
                         <div className="flex flex-wrap gap-2 mb-3">
@@ -360,7 +357,7 @@ export default function Rules() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-micro font-medium text-slate-500 mb-2">
+                        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
                           EXAMPLES
                         </div>
                         <div className="space-y-1">
@@ -384,7 +381,7 @@ export default function Rules() {
               <Card>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-h3 font-semibold text-white mb-2">
+                    <h3 className="font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-bone mb-[12px]">
                       How Confidence is Computed
                     </h3>
                     <p className="text-small text-slate-300">
@@ -394,7 +391,7 @@ export default function Rules() {
                   </div>
 
                   <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-white mb-3">
+                    <h4 className="text-small font-semibold text-bone mb-3">
                       How Confidence is Computed
                     </h4>
                     <p className="text-small text-slate-300 mb-4">
@@ -402,28 +399,28 @@ export default function Rules() {
                     </p>
                     <div className="space-y-3 mb-4">
                       <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-white mb-1">Keyword Score (up to 30%)</div>
+                        <div className="text-small font-semibold text-bone mb-1">Keyword Score (up to 30%)</div>
                         <div className="text-micro text-slate-300">How strongly the transaction description and merchant match work related keywords across deduction categories (travel, home office, equipment, education, memberships, clothing, etc.)</div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-white mb-1">RAG Grounding Score (up to 40%)</div>
+                        <div className="text-small font-semibold text-bone mb-1">RAG Grounding Score (up to 40%)</div>
                         <div className="text-micro text-slate-300">How well the transaction aligns with retrieved ATO knowledge base chunks — including specific rulings on who can claim each category</div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-white mb-1">Claude AI Score (up to 30%)</div>
+                        <div className="text-small font-semibold text-bone mb-1">Claude AI Score (up to 30%)</div>
                         <div className="text-micro text-slate-300">Claude's assessment of deductibility given the ATO context, with PII redacted before any external API call</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-white mb-3">
+                    <h4 className="text-small font-semibold text-bone mb-3">
                       Confidence Levels
                     </h4>
                     <div className="space-y-4">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-white">High (80–100%)</span>
+                          <span className="text-small text-bone">High (80–100%)</span>
                           <span className="text-micro text-slate-500">Strong match</span>
                         </div>
                         <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
@@ -436,7 +433,7 @@ export default function Rules() {
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-white">Medium (60–79%)</span>
+                          <span className="text-small text-bone">Medium (60–79%)</span>
                           <span className="text-micro text-slate-500">Likely but verify</span>
                         </div>
                         <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
@@ -449,7 +446,7 @@ export default function Rules() {
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-white">Low (&lt; 60%)</span>
+                          <span className="text-small text-bone">Low (&lt; 60%)</span>
                           <span className="text-micro text-slate-500">Needs review</span>
                         </div>
                         <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
@@ -463,7 +460,7 @@ export default function Rules() {
                   </div>
 
                   <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-white mb-3">
+                    <h4 className="text-small font-semibold text-bone mb-3">
                       Merchant Normalisation
                     </h4>
                     <p className="text-small text-slate-300 mb-3">
@@ -472,7 +469,7 @@ export default function Rules() {
                     </p>
                     <div className="space-y-2">
                       <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small text-white font-mono mb-1">
+                        <div className="text-small text-bone font-mono mb-1">
                           EFTPOS OFFICEWORKS SYDNEY NSW
                         </div>
                         <div className="text-micro text-slate-300">
@@ -480,7 +477,7 @@ export default function Rules() {
                         </div>
                       </div>
                       <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small text-white font-mono mb-1">
+                        <div className="text-small text-bone font-mono mb-1">
                           DD MICROSOFT CORPORATION 98765
                         </div>
                         <div className="text-micro text-slate-300">
@@ -491,7 +488,7 @@ export default function Rules() {
                   </div>
 
                   <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-white mb-3">
+                    <h4 className="text-small font-semibold text-bone mb-3">
                       Important Disclaimer
                     </h4>
                     <p className="text-small text-slate-300">

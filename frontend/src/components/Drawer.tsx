@@ -59,36 +59,37 @@ export const Drawer: React.FC<DrawerProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-ink-950/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink-950/75"
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
         ref={drawerRef}
-        className={`${panelBase} ${panelPos} glass border-l border-line-700`}
+        className={`${panelBase} ${panelPos} bg-ink-950 border-l border-bone/[0.1]`}
         tabIndex={-1}
+        data-lenis-prevent
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 glass border-b border-line-700 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-ink-950/95 border-b border-bone/[0.1] px-[24px] h-[64px] flex items-center justify-between">
           {title && (
-            <h2 id="drawer-title" className="text-h3 font-semibold text-white">
+            <h2 id="drawer-title" className="font-display text-[24px] leading-none tracking-[-0.02em] text-bone">
               {title}
             </h2>
           )}
           <button
             onClick={onClose}
-            className="ml-auto w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all"
+            className="ml-auto w-[36px] h-[36px] grid place-items-center rounded-full border border-bone/15 text-bone-400 hover:text-bone hover:border-bone/40 transition-colors"
             aria-label="Close drawer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="square" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-[24px]">
           {children}
         </div>
       </div>

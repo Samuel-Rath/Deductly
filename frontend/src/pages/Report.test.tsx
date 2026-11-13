@@ -128,6 +128,26 @@ describe('Report Page', () => {
     expect(screen.getByText('TOTAL ANALYSED')).toBeInTheDocument()
   })
 
+  it('counts excluded rows in TOTAL ANALYSED and uses list lengths for card counts', () => {
+    renderReport()
+
+    // 3 candidates + 1 needs review + 1 excluded. The confidence buckets only
+    // cover the first two groups (2+1+1 = 4), which used to be shown here.
+    const total = screen.getByText('TOTAL ANALYSED').parentElement!
+    expect(total).toHaveTextContent('5')
+
+    const likely = screen.getByText('LIKELY DEDUCTIBLE').parentElement!
+    expect(likely).toHaveTextContent('3 transactions')
+    const review = screen.getByText('NEEDS REVIEW').parentElement!
+    expect(review).toHaveTextContent(/^NEEDS REVIEW.*1 transaction$/)
+  })
+
+  it('shows date-only values on the same calendar day in any timezone', () => {
+    renderReport()
+    // 2024-01-15 must not become 14/01/2024 west of UTC.
+    expect(screen.getAllByText('15/01/2024').length).toBeGreaterThan(0)
+  })
+
   it('renders confidence distribution chart', () => {
     renderReport()
 

@@ -5,9 +5,11 @@ export interface CardProps {
   className?: string;
   elevated?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Brass hairline instead of the neutral one, for the card that matters most. */
   glow?: boolean;
 }
 
+/** The Ledger card: a flat ink panel with a hairline edge. No glass, no glow. */
 export const Card: React.FC<CardProps> = ({
   children,
   className = '',
@@ -25,11 +27,9 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={[
-        'glass rounded-xl border transition-all duration-200',
-        glow
-          ? 'border-accent/30 shadow-glow'
-          : 'border-line-700 hover:border-line-600',
-        elevated ? 'shadow-soft-lg' : 'shadow-card',
+        'relative rounded-[4px] border bg-ink-900 transition-colors duration-300',
+        glow ? 'border-brass/40' : 'border-bone/[0.09] hover:border-bone/[0.16]',
+        elevated ? 'shadow-[0_40px_80px_-40px_rgba(0,0,0,0.9)]' : '',
         paddingStyles[padding],
         className,
       ].join(' ')}

@@ -9,37 +9,52 @@ export default {
       colors: {
         // Warm mahogany-charcoal dark backgrounds
         ink: {
-          950: '#0D0B09',   // near-black, warmest
-          900: '#171512',   // page body
-          800: '#211E1A',   // card surface
-          700: '#2C2824',   // elevated / hover
+          950: '#0B0A08',   // near-black, warmest
+          900: '#12100D',   // page body / card surface
+          800: '#1A1714',   // inset surface (tracks, inputs)
+          700: '#24201C',   // elevated / hover
         },
         // Borders — warm brown-grey
         line: {
-          700: '#363129',   // default
-          600: '#46403A',   // hover / focus
+          700: '#2A2622',   // default hairline (about bone at 10% on ink)
+          600: '#3D3832',   // hover / focus
         },
+        // The Ledger — paper, brass and pen ink
+        bone: {
+          DEFAULT: '#EFE8DC',  // paper / primary text on ink   15:1
+          200:     '#E2D9C9',
+          400:     '#A79D8F',  // secondary text on ink-950     7.4:1
+          600:     '#6E665B',  // tertiary / captions (large)   3.6:1
+        },
+        brass: {
+          DEFAULT: '#D9A441',  // single accent
+          light:   '#EBC57A',
+          deep:    '#9C7124',
+        },
+        highlighter: '#F2D35C',
+        penink:      '#8E2F1C',  // red-brown pen used on the statement
         // Text — warm slate (all pass WCAG AA on ink-900)
         slate: {
-          50:  '#FBF7F2',   // warm white        14:1
-          300: '#C4BAB0',   // secondary          7.2:1
-          400: '#8C8078',   // muted              4.6:1 ✓
-          500: '#605850',   // subtle (large text)
+          50:  '#EFE8DC',   // = bone
+          300: '#D3CABB',   // secondary text   12:1 on ink-950
+          400: '#A79D8F',   // muted            7.4:1
+          500: '#6E665B',   // subtle / captions 3.6:1 (large or decorative)
+          600: '#4A443D',   // low-confidence bar fill
         },
-        // Primary brand — Jewel Gold
+        // Legacy accent keys, re-pointed at brass (The Ledger)
         accent: {
-          DEFAULT: '#C8900A',   // brand gold
-          hover:   '#A67508',   // deeper on hover
-          light:   '#F5C842',   // 10:1 on ink-900 — use for text
+          DEFAULT: '#D9A441',
+          hover:   '#9C7124',
+          light:   '#EBC57A',
         },
         // Gold spectrum — gradients and highlights
         gold: {
           200: '#FEF3C7',
           300: '#FDE68A',
-          400: '#F5C842',   // bright jewel gold (use for text)
-          500: '#D4970A',   // mid gold
-          600: '#C8900A',   // brand gold
-          700: '#A67508',   // deep gold
+          400: '#EBC57A',   // brass light (text)
+          500: '#D9A441',   // brass
+          600: '#C08F35',
+          700: '#9C7124',   // deep brass
           800: '#7C5606',   // darkest (decorative only)
         },
         // Trust / deep — hero gradients, logo shadows
@@ -71,9 +86,9 @@ export default {
         },
       },
       fontFamily: {
-        sans:    ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'Times New Roman', 'serif'],
-        mono:    ['Space Mono', 'Courier New', 'monospace'],
+        sans:    ['Schibsted Grotesk', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Bodoni Moda', 'Didot', 'Georgia', 'serif'],
+        mono:    ['IBM Plex Mono', 'ui-monospace', 'Menlo', 'monospace'],
       },
       fontSize: {
         'display': ['3rem',     { lineHeight: '1.1',  fontWeight: '700', letterSpacing: '-0.02em' }],
@@ -101,7 +116,7 @@ export default {
         'touch': '44px',   // min touch target
       },
       backgroundImage: {
-        'gradient-brand':      'linear-gradient(135deg, #C8900A 0%, #D4970A 55%, #F5C842 100%)',
+        'gradient-brand':      'linear-gradient(90deg, #9C7124 0%, #D9A441 100%)',
         'gradient-brand-soft': 'linear-gradient(135deg, #A67508 0%, #C8900A 50%, #F5C842 100%)',
         'gradient-card':       'linear-gradient(135deg, rgba(200,144,10,0.08) 0%, rgba(212,151,10,0.03) 100%)',
         'gradient-positive':   'linear-gradient(135deg, #166534 0%, #15803D 50%, #4ADE80 100%)',

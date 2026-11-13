@@ -239,6 +239,60 @@ describe('API Client', () => {
     });
   });
 
+  describe('retry behaviour', () => {
+    it('retries a dropped connection (cold start) and then succeeds', async () => {
+      vi.useFakeTimers();
+      try {
+        const networkError = { request: {}, isAxiosError: true };
+        (axios.isAxiosError as any).mockReturnValue(true);
+        mockAxiosInstance.get
+          .mockRejectedValueOnce(networkError)
+          .mockResolvedValueOnce({ data: { job_id: 'j1', status: 'completed' } });
+
+        const pending = getJobStatus('j1');
+        await vi.runAllTimersAsync();
+        const result = await pending;
+
+        expect(result.status).toBe('completed');
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not retry 4xx responses', async () => {
+      (axios.isAxiosError as any).mockReturnValue(true);
+      mockAxiosInstance.get.mockRejectedValue({
+        response: { status: 404, data: { error: 'job_not_found', message: 'Not found' } },
+        isAxiosError: true,
+      });
+
+      await expect(getJobStatus('missing')).rejects.toMatchObject({ statusCode: 404 });
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry timeouts', async () => {
+      (axios.isAxiosError as any).mockReturnValue(true);
+      mockAxiosInstance.get.mockRejectedValue({ code: 'ECONNABORTED', request: {}, isAxiosError: true });
+
+      await expect(getJobStatus('slow')).rejects.toMatchObject({ errorCode: 'timeout' });
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the status code when downloadReportFile re-throws', async () => {
+      (axios.isAxiosError as any).mockReturnValue(true);
+      mockAxiosInstance.get.mockRejectedValue({
+        response: { status: 404, data: { error: 'report_not_found', message: 'Report not found' } },
+        isAxiosError: true,
+      });
+
+      await expect(downloadReportFile('j1', 'pdf')).rejects.toMatchObject({
+        statusCode: 404,
+        errorCode: 'report_not_found',
+      });
+    });
+  });
+
   describe('APIError', () => {
     it('should create APIError with all properties', () => {
       const error = new APIError(

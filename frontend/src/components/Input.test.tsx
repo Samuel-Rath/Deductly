@@ -82,7 +82,7 @@ describe('Input', () => {
     it('shows focus styles when focused', () => {
       render(<Input />);
       const input = screen.getByRole('textbox');
-      expect(input).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-accent-secondary');
+      expect(input).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-brass');
     });
   });
 

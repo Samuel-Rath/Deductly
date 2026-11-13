@@ -64,7 +64,7 @@ export const Modal: React.FC<ModalProps> = ({
   
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -74,28 +74,29 @@ export const Modal: React.FC<ModalProps> = ({
         ref={modalRef}
         className={`
           relative w-full ${sizeStyles[size]}
-          bg-ink-900 border border-line-700 rounded-card
-          shadow-2xl
+          bg-ink-950 border border-bone/[0.1] rounded-[4px]
+          shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)]
           max-h-[90vh] overflow-y-auto
         `}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
+        data-lenis-prevent
       >
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-line-700">
             {title && (
-              <h2 id="modal-title" className="text-h2 font-semibold">
+              <h2 id="modal-title" className="font-display text-[28px] leading-none tracking-[-0.02em] text-bone">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="ml-auto text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-accent-secondary rounded"
+                className="ml-auto w-[36px] h-[36px] grid place-items-center rounded-full border border-bone/15 text-bone-400 hover:text-bone hover:border-bone/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                 aria-label="Close modal"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="square" strokeWidth={1.75} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             )}

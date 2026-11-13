@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Card, Button, Chip, Drawer, Icon } from '../components'
+import { Card, Button, Chip, Drawer, Icon, PageHeader } from '../components'
 import { useJobStatus, useDownloadReportFile } from '../api/hooks'
 import { downloadReport } from '../api/client'
 
@@ -61,6 +61,8 @@ function resolveDisplay(txn: any): { merchant: string; description: string } {
 
   return { merchant, description }
 }
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 // ─── Reason formatter ─────────────────────────────────────────────────────────
 function formatReason(reason: string | undefined): string {
@@ -174,7 +176,11 @@ export default function Report() {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    // `new Date('2024-07-01')` is parsed as UTC midnight, which renders as the
+    // previous day anywhere west of Greenwich. Parse date-only strings as local.
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString ?? '')
+    const date = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(dateString)
+    if (Number.isNaN(date.getTime())) return dateString ?? ''
     return date.toLocaleDateString('en-AU', {
       day: '2-digit',
       month: '2-digit',
@@ -188,9 +194,15 @@ export default function Report() {
     return { label: 'Low', color: 'bg-slate-600' }
   }
 
-  const totalTransactions = (summary?.confidenceDistribution?.high ?? 0) + 
-                           (summary?.confidenceDistribution?.medium ?? 0) + 
-                           (summary?.confidenceDistribution?.low ?? 0)
+  // Confidence buckets only cover candidates + needs-review, so they are the
+  // right denominator for the distribution chart but not for "total analysed".
+  const classifiedTransactions = (summary?.confidenceDistribution?.high ?? 0) +
+                                 (summary?.confidenceDistribution?.medium ?? 0) +
+                                 (summary?.confidenceDistribution?.low ?? 0)
+  const totalTransactions = candidates.length + needsReview.length + excluded.length
+  // Category totals include needs-review items too, so compare bars against their own sum.
+  const categoryGrandTotal = Object.values((summary?.categoryTotals ?? {}) as Record<string, number>)
+    .reduce((acc, v) => acc + (Number(v) || 0), 0)
   
   // Helper to safely calculate percentage for charts
   const safePercentage = (value: number, total: number) => {
@@ -219,10 +231,10 @@ export default function Report() {
   const isLoadingReport = !stateReportData && (isLoading || (jobStatus?.status === 'completed' && !reportData && !reportError))
 
   return (
-    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="mx-auto max-w-[1360px] px-[20px] sm:px-[32px] pb-[96px] lg:pb-[140px]">
       {/* Loading State */}
       {isLoadingReport && (
-        <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+        <div className="flex items-center justify-center pt-[200px] pb-[120px]" role="status" aria-live="polite">
           <div className="text-center">
             <Icon name="Loader2" size={48} className="text-accent mx-auto mb-4 animate-spin" />
             <p className="text-body text-slate-300">Loading report...</p>
@@ -232,11 +244,11 @@ export default function Report() {
 
       {/* Error State */}
       {(jobError || reportError) && (
-        <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
+        <div className="max-w-2xl mx-auto pt-[160px]" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
               <Icon name="AlertCircle" size={64} className="text-red-400 mx-auto mb-4" />
-              <h2 className="text-h2 font-semibold text-white mb-2">
+              <h2 className="font-display text-[36px] leading-[1.05] tracking-[-0.02em] text-bone mb-[12px]">
                 Failed to load report
               </h2>
               <p className="text-body text-slate-300 mb-6">
@@ -252,11 +264,11 @@ export default function Report() {
 
       {/* Processing State - only show if we don't have report data from state */}
       {!stateReportData && jobStatus && (jobStatus.status === 'queued' || jobStatus.status === 'processing') && (
-        <div className="max-w-2xl mx-auto" role="status" aria-live="polite">
+        <div className="max-w-2xl mx-auto pt-[160px]" role="status" aria-live="polite">
           <Card>
             <div className="text-center py-8">
               <Icon name="Loader2" size={48} className="text-accent mx-auto mb-4 animate-spin" />
-              <h2 className="text-h2 font-semibold text-white mb-2">
+              <h2 className="font-display text-[36px] leading-[1.05] tracking-[-0.02em] text-bone mb-[12px]">
                 Processing your file
               </h2>
               <p className="text-body text-slate-300 mb-4">
@@ -290,11 +302,11 @@ export default function Report() {
 
       {/* Failed State - only show if we don't have report data from state */}
       {!stateReportData && jobStatus && jobStatus.status === 'failed' && (
-        <div className="max-w-2xl mx-auto" role="alert" aria-live="assertive">
+        <div className="max-w-2xl mx-auto pt-[160px]" role="alert" aria-live="assertive">
           <Card>
             <div className="text-center py-8">
               <Icon name="AlertCircle" size={64} className="text-red-400 mx-auto mb-4" />
-              <h2 className="text-h2 font-semibold text-white mb-2">
+              <h2 className="font-display text-[36px] leading-[1.05] tracking-[-0.02em] text-bone mb-[12px]">
                 Processing failed
               </h2>
               <p className="text-body text-slate-300 mb-6">
@@ -312,100 +324,59 @@ export default function Report() {
       {reportData && summary && (
       <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="font-display text-h1 font-semibold text-white mb-2">
-              Deduction Report
-            </h1>
-            <p className="text-body text-slate-400">
+      <div>
+        <PageHeader
+          index="02"
+          label="Step 2 of 2 · Report"
+          title="Deduction Report"
+          lead={
+            <>
               Income year {reportData.income_year}
               {reportData.generated_at && (
-                <span className="text-slate-600"> · Generated {new Date(reportData.generated_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                <span className="text-bone-600"> · Generated {new Date(reportData.generated_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
               )}
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="tertiary"
-              onClick={() => navigate('/upload')}
-            >
+            </>
+          }
+          aside={
+            <Button variant="secondary" onClick={() => navigate('/upload')}>
               New Analysis
             </Button>
-          </div>
-        </div>
+          }
+        />
 
-          {/* Export Buttons - Only show if files exist (not in ephemeral mode) */}
+          {/* Export buttons: only when files exist on the server (not in ephemeral mode) */}
           {!stateReportData && jobId && (
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="secondary"
-              onClick={() => handleDownload('pdf')}
-              disabled={downloadMutation.isPending}
-            >
-              {downloadMutation.isPending && downloadMutation.variables?.format === 'pdf' ? (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                  <span>Downloading...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Download" size={16} />
-                  <span>Download PDF</span>
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleDownload('csv')}
-              disabled={downloadMutation.isPending}
-            >
-              {downloadMutation.isPending && downloadMutation.variables?.format === 'csv' ? (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                  <span>Downloading...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Download" size={16} />
-                  <span>Download CSV</span>
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleDownload('json')}
-              disabled={downloadMutation.isPending}
-            >
-              {downloadMutation.isPending && downloadMutation.variables?.format === 'json' ? (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                  <span>Downloading...</span>
-                </span>
-              ) : (
-                <span className="flex items-center space-x-2">
-                  <Icon name="Download" size={16} />
-                  <span>Download JSON</span>
-                </span>
-              )}
-            </Button>
+          <div className="mt-[-16px] mb-[32px] flex flex-wrap items-center gap-[10px]">
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400 mr-[6px]">Download</span>
+            {(['pdf', 'csv', 'json'] as const).map((fmt) => (
+              <Button
+                key={fmt}
+                variant="secondary"
+                size="sm"
+                onClick={() => handleDownload(fmt)}
+                disabled={downloadMutation.isPending}
+              >
+                {downloadMutation.isPending && downloadMutation.variables?.format === fmt
+                  ? 'Downloading...'
+                  : `Download ${fmt.toUpperCase()}`}
+              </Button>
+            ))}
           </div>
           )}
-          
-          {/* Ephemeral Mode — Save as PDF */}
+
+          {/* Ephemeral mode: no stored copy, so offer print-to-PDF */}
           {stateReportData && (
-            <div className="mt-3 flex items-center justify-between gap-3 p-3 bg-ink-800 border border-line-700 rounded-lg no-print">
-              <div className="flex items-center gap-2 text-small text-slate-400">
-                <Icon name="Info" size={16} className="text-slate-500 shrink-0" />
-                <span>No stored copy — save this report before leaving.</span>
-              </div>
+            <div className="mt-[-16px] mb-[32px] flex flex-col sm:flex-row sm:items-center justify-between gap-[12px] border-b border-bone/[0.09] pb-[20px] no-print">
+              <p className="flex items-center gap-[12px] text-[14px] text-bone-400">
+                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-brass">Not stored</span>
+                No copy is kept on our side. Save this report before leaving.
+              </p>
               <Button
                 variant="secondary"
-                size="md"
+                size="sm"
                 onClick={() => window.print()}
                 className="shrink-0 print-keep"
               >
-                <Icon name="Download" size={15} />
                 Save as PDF
               </Button>
             </div>
@@ -413,94 +384,56 @@ export default function Report() {
 
           {/* Download Error */}
           {downloadError && (
-            <div className="mt-3 p-3 bg-red-900 bg-opacity-20 border border-red-700 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <Icon name="AlertCircle" size={20} className="text-red-400 mt-0.5" />
-                <div className="text-small text-red-300">
-                  {downloadError}
-                </div>
-              </div>
+            <div role="alert" className="mb-[32px] border-l-2 border-red-400 bg-red-400/[0.06] px-[16px] py-[12px]">
+              <p className="text-[14px] text-red-400">{downloadError}</p>
             </div>
           )}
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card>
-            <div className="space-y-2">
-              <div className="font-mono text-micro font-medium text-slate-500">
-                LIKELY DEDUCTIBLE
-              </div>
-              <div className="font-mono text-h1 font-semibold text-white">
-                {formatCurrency(summary.totalDeductible)}
-              </div>
-              <div className="text-small text-slate-300">
-                {summary.confidenceDistribution.high + summary.confidenceDistribution.medium} transactions
-              </div>
+        {/* Summary: one ledger strip instead of four boxes */}
+        <dl className="grid grid-cols-2 lg:grid-cols-4 border-y border-bone/[0.12] mb-[48px]">
+          {[
+            { label: 'LIKELY DEDUCTIBLE', value: formatCurrency(summary.totalDeductible), note: plural(candidates.length, 'transaction'), tone: 'text-brass' },
+            { label: 'NEEDS REVIEW', value: formatCurrency(summary.totalNeedsReview), note: plural(needsReview.length, 'transaction'), tone: 'text-bone' },
+            { label: 'EXCLUDED', value: formatCurrency(summary.totalExcluded), note: 'Not deduction candidates', tone: 'text-bone-400' },
+            { label: 'TOTAL ANALYSED', value: String(totalTransactions), note: 'Transactions processed', tone: 'text-bone' },
+          ].map((cell, i) => (
+            <div
+              key={cell.label}
+              className={[
+                'py-[24px] sm:py-[28px] pr-[12px] border-bone/[0.12]',
+                i % 2 === 1 ? 'pl-[16px] sm:pl-[24px] border-l' : '',
+                i >= 2 ? 'border-t lg:border-t-0' : '',
+                i === 2 ? 'lg:pl-[24px] lg:border-l' : '',
+              ].join(' ')}
+            >
+              <dt className="font-mono text-[10px] sm:text-[10.5px] uppercase tracking-[0.16em] text-bone-400">{cell.label}</dt>
+              <dd className={`mt-[14px] font-display text-[30px] sm:text-[44px] leading-none tracking-[-0.03em] tabular-nums ${cell.tone}`}>
+                {cell.value}
+              </dd>
+              <dd className="mt-[10px] text-[13px] text-bone-400">{cell.note}</dd>
             </div>
-          </Card>
-
-          <Card>
-            <div className="space-y-2">
-              <div className="font-mono text-micro font-medium text-slate-500">
-                NEEDS REVIEW
-              </div>
-              <div className="font-mono text-h1 font-semibold text-slate-300">
-                {formatCurrency(summary.totalNeedsReview)}
-              </div>
-              <div className="text-small text-slate-300">
-                {summary.confidenceDistribution.low} transactions
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="space-y-2">
-              <div className="font-mono text-micro font-medium text-slate-500">
-                EXCLUDED
-              </div>
-              <div className="font-mono text-h1 font-semibold text-slate-500">
-                {formatCurrency(summary.totalExcluded)}
-              </div>
-              <div className="text-small text-slate-300">
-                Not deduction candidates
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="space-y-2">
-              <div className="font-mono text-micro font-medium text-slate-500">
-                TOTAL ANALYSED
-              </div>
-              <div className="font-mono text-h1 font-semibold text-white">
-                {totalTransactions}
-              </div>
-              <div className="text-small text-slate-300">
-                Transactions processed
-              </div>
-            </div>
-          </Card>
-        </div>
+          ))}
+        </dl>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Confidence Distribution Chart */}
           <Card>
-            <h3 className="text-h3 font-semibold text-white mb-6">
+            <h3 className="font-display text-[26px] leading-none tracking-[-0.02em] text-bone mb-[28px]">
               Confidence Distribution
             </h3>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
                   <span>High (80–100%)</span>
-                  <span>{summary.confidenceDistribution.high} transactions</span>
+                  <span>{plural(summary.confidenceDistribution.high, 'transaction')}</span>
                 </div>
-                <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
+                <div className="w-full h-[10px] bg-bone/[0.06] rounded-[2px] overflow-hidden">
                   <div
                     className="h-full bg-gradient-brand"
                     style={{
-                      width: `${safePercentage(summary.confidenceDistribution.high, totalTransactions)}%`
+                      width: `${safePercentage(summary.confidenceDistribution.high, classifiedTransactions)}%`
                     }}
                   />
                 </div>
@@ -509,13 +442,13 @@ export default function Report() {
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
                   <span>Medium (60–79%)</span>
-                  <span>{summary.confidenceDistribution.medium} transactions</span>
+                  <span>{plural(summary.confidenceDistribution.medium, 'transaction')}</span>
                 </div>
-                <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
+                <div className="w-full h-[10px] bg-bone/[0.06] rounded-[2px] overflow-hidden">
                   <div
-                    className="h-full bg-accent/50"
+                    className="h-full bg-brass/50"
                     style={{
-                      width: `${safePercentage(summary.confidenceDistribution.medium, totalTransactions)}%`
+                      width: `${safePercentage(summary.confidenceDistribution.medium, classifiedTransactions)}%`
                     }}
                   />
                 </div>
@@ -524,13 +457,13 @@ export default function Report() {
               <div>
                 <div className="flex justify-between text-small text-slate-300 mb-2">
                   <span>Low (below 60%)</span>
-                  <span>{summary.confidenceDistribution.low} transactions</span>
+                  <span>{plural(summary.confidenceDistribution.low, 'transaction')}</span>
                 </div>
-                <div className="w-full h-8 bg-ink-800 rounded-lg overflow-hidden">
+                <div className="w-full h-[10px] bg-bone/[0.06] rounded-[2px] overflow-hidden">
                   <div
                     className="h-full bg-slate-600"
                     style={{
-                      width: `${safePercentage(summary.confidenceDistribution.low, totalTransactions)}%`
+                      width: `${safePercentage(summary.confidenceDistribution.low, classifiedTransactions)}%`
                     }}
                   />
                 </div>
@@ -540,9 +473,10 @@ export default function Report() {
 
           {/* Category Totals Chart */}
           <Card>
-            <h3 className="text-h3 font-semibold text-white mb-6">
+            <h3 className="font-display text-[26px] leading-none tracking-[-0.02em] text-bone mb-[28px]">
               Category Totals
             </h3>
+            <p className="-mt-[16px] mb-[24px] text-[13px] text-bone-600">Candidates and needs-review items</p>
             <div className="space-y-3">
               {summary.categoryTotals && Object.entries(summary.categoryTotals)
                 .sort(([, a], [, b]) => (b as number) - (a as number))
@@ -552,11 +486,11 @@ export default function Report() {
                       <span>{CATEGORY_LABELS[category] ?? category}</span>
                       <span className="font-medium">{formatCurrency(amount as number)}</span>
                     </div>
-                    <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
+                    <div className="w-full h-[4px] bg-bone/[0.06] overflow-hidden">
                       <div
                         className="h-full bg-gradient-brand"
                         style={{
-                          width: `${safePercentage(amount as number, summary.totalDeductible)}%`
+                          width: `${safePercentage(amount as number, categoryGrandTotal)}%`
                         }}
                       />
                     </div>
@@ -569,78 +503,82 @@ export default function Report() {
         {/* Placeholder for tabs and table - will be implemented in next subtask */}
         <Card>
           {/* Tabs */}
-          <div className="border-b border-line-700 mb-6" role="tablist" aria-label="Report sections">
-            <div className="flex space-x-8">
+          <div className="border-b border-bone/[0.12] mb-[28px]" role="tablist" aria-label="Report sections">
+            <div className="flex gap-[28px] overflow-x-auto">
               <button
                 onClick={() => { setActiveTab('candidates'); setCategoryFilter(null) }}
                 role="tab"
+                id="candidates-tab"
                 aria-selected={activeTab === 'candidates'}
                 aria-controls="candidates-panel"
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeTab === 'candidates' 
-                    ? 'text-white' 
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone' 
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Candidates ({candidates.length})
                 {activeTab === 'candidates' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
               <button
                 onClick={() => { setActiveTab('needs-review'); setCategoryFilter(null) }}
                 role="tab"
+                id="needs-review-tab"
                 aria-selected={activeTab === 'needs-review'}
                 aria-controls="needs-review-panel"
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeTab === 'needs-review' 
-                    ? 'text-white' 
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone' 
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Needs Review ({needsReview.length})
                 {activeTab === 'needs-review' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('excluded')}
+                onClick={() => { setActiveTab('excluded'); setCategoryFilter(null) }}
                 role="tab"
+                id="excluded-tab"
                 aria-selected={activeTab === 'excluded'}
                 aria-controls="excluded-panel"
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeTab === 'excluded' 
-                    ? 'text-white' 
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone' 
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Excluded ({excluded.length})
                 {activeTab === 'excluded' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('audit')}
+                onClick={() => { setActiveTab('audit'); setCategoryFilter(null) }}
                 role="tab"
+                id="audit-tab"
                 aria-selected={activeTab === 'audit'}
                 aria-controls="audit-panel"
                 className={`
-                  pb-4 text-small font-medium transition-colors relative
+                  pb-[14px] font-mono text-[11px] uppercase tracking-[0.14em] transition-colors relative whitespace-nowrap
                   ${activeTab === 'audit' 
-                    ? 'text-white' 
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-bone' 
+                    : 'text-bone-600 hover:text-bone-200'
                   }
                 `}
               >
                 Audit Trail
                 {activeTab === 'audit' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brass" />
                 )}
               </button>
             </div>
@@ -657,7 +595,7 @@ export default function Report() {
                   <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-1">
                     <button
                       onClick={() => setCategoryFilter(null)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                      className={`px-[12px] h-[30px] inline-flex items-center rounded-[3px] font-mono text-[10.5px] uppercase tracking-[0.1em] transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-bone text-ink-950' : 'text-bone-400 hover:text-bone border border-bone/[0.14]'}`}
                     >
                       All ({candidates.length})
                     </button>
@@ -667,7 +605,7 @@ export default function Report() {
                         <button
                           key={cat}
                           onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                          className={`px-[12px] h-[30px] inline-flex items-center rounded-[3px] font-mono text-[10.5px] uppercase tracking-[0.1em] transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-bone text-ink-950' : 'text-bone-400 hover:text-bone border border-bone/[0.14]'}`}
                         >
                           {CATEGORY_LABELS[cat] ?? cat} ({count})
                         </button>
@@ -678,7 +616,7 @@ export default function Report() {
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[640px]" aria-label="Deduction candidates">
                     <thead>
-                      <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                      <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
                         <th className="pb-3 pr-4">DATE</th>
                         <th className="pb-3 pr-4">MERCHANT</th>
                         <th className="pb-3 pr-4">DESCRIPTION</th>
@@ -699,9 +637,9 @@ export default function Report() {
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
                             <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
                             <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
-                            <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="py-4 pr-4 text-small text-bone text-right">{formatCurrency(transaction.amount)}</td>
                             <td className="py-4 pr-4">
                               <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="sm" />
                             </td>
@@ -740,7 +678,7 @@ export default function Report() {
                   <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-1">
                     <button
                       onClick={() => setCategoryFilter(null)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                      className={`px-[12px] h-[30px] inline-flex items-center rounded-[3px] font-mono text-[10.5px] uppercase tracking-[0.1em] transition-colors whitespace-nowrap ${!categoryFilter ? 'bg-bone text-ink-950' : 'text-bone-400 hover:text-bone border border-bone/[0.14]'}`}
                     >
                       All ({needsReview.length})
                     </button>
@@ -750,7 +688,7 @@ export default function Report() {
                         <button
                           key={cat}
                           onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-accent text-ink-950' : 'bg-ink-800 text-slate-400 hover:text-white border border-line-700'}`}
+                          className={`px-[12px] h-[30px] inline-flex items-center rounded-[3px] font-mono text-[10.5px] uppercase tracking-[0.1em] transition-colors whitespace-nowrap ${categoryFilter === cat ? 'bg-bone text-ink-950' : 'text-bone-400 hover:text-bone border border-bone/[0.14]'}`}
                         >
                           {CATEGORY_LABELS[cat] ?? cat} ({count})
                         </button>
@@ -761,7 +699,7 @@ export default function Report() {
                 <div className="overflow-x-auto">
                   <table className="w-full" aria-label="Transactions needing review">
                     <thead>
-                      <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                      <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
                         <th className="pb-3 pr-4">DATE</th>
                         <th className="pb-3 pr-4">MERCHANT</th>
                         <th className="pb-3 pr-4">DESCRIPTION</th>
@@ -781,9 +719,9 @@ export default function Report() {
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
                             <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-white max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="py-4 pr-4 text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
                             <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
-                            <td className="py-4 pr-4 text-small text-white text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="py-4 pr-4 text-small text-bone text-right">{formatCurrency(transaction.amount)}</td>
                             <td className="py-4 pr-4">
                               <div className="flex items-center space-x-2">
                                 <span className="text-micro text-slate-300">{confidenceInfo.label}</span>
@@ -813,7 +751,7 @@ export default function Report() {
             >
               <table className="w-full" aria-label="Excluded transactions">
                 <thead>
-                  <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                  <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
                     <th className="pb-3 pr-4">DATE</th>
                     <th className="pb-3 pr-4">MERCHANT</th>
                     <th className="pb-3 pr-4">DESCRIPTION</th>
@@ -865,7 +803,7 @@ export default function Report() {
                 </p>
                 <table className="w-full min-w-[700px]" aria-label="Full audit trail">
                   <thead>
-                    <tr className="text-left text-micro font-medium text-slate-500 border-b border-line-700">
+                    <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
                       <th className="pb-3 pr-4">DATE</th>
                       <th className="pb-3 pr-4">MERCHANT</th>
                       <th className="pb-3 pr-4 text-right">AMOUNT</th>
@@ -878,8 +816,8 @@ export default function Report() {
                     {allRows.map((t: any) => (
                       <tr key={t.id} className="border-b border-line-700">
                         <td className="py-3 pr-4 text-small text-slate-300 whitespace-nowrap">{formatDate(t.date)}</td>
-                        <td className="py-3 pr-4 text-small text-white max-w-[160px] truncate" title={t.merchant}>{t.merchant}</td>
-                        <td className="py-3 pr-4 text-small text-white text-right whitespace-nowrap">{formatCurrency(t.amount)}</td>
+                        <td className="py-3 pr-4 text-small text-bone max-w-[160px] truncate" title={t.merchant}>{t.merchant}</td>
+                        <td className="py-3 pr-4 text-small text-bone text-right whitespace-nowrap">{formatCurrency(t.amount)}</td>
                         <td className="py-3 pr-4">
                           {t._decision === 'candidate' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/30 text-green-400 border border-green-800/40">Candidate</span>
@@ -948,15 +886,15 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       {/* Transaction Summary */}
       <div className="space-y-3">
         <div>
-          <div className="text-micro font-medium text-slate-500 mb-1">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-1">
             MERCHANT
           </div>
-          <div className="text-h3 font-semibold text-white">
+          <div className="font-display text-[30px] leading-[1.05] tracking-[-0.02em] text-bone">
             {display.merchant}
           </div>
         </div>
         <div>
-          <div className="text-micro font-medium text-slate-500 mb-1">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-1">
             DESCRIPTION
           </div>
           <div className="text-small text-slate-300">
@@ -965,18 +903,18 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-micro font-medium text-slate-500 mb-1">
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-1">
               DATE
             </div>
-            <div className="text-small text-white">
+            <div className="text-small text-bone">
               {formatDate(transaction.date)}
             </div>
           </div>
           <div>
-            <div className="text-micro font-medium text-slate-500 mb-1">
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-1">
               AMOUNT
             </div>
-            <div className="text-small text-white">
+            <div className="text-small text-bone">
               {formatCurrency(transaction.amount)}
             </div>
           </div>
@@ -987,7 +925,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       <div className="border-t border-line-700 pt-6 space-y-4">
         {transaction.category && (
           <div>
-            <div className="text-micro font-medium text-slate-500 mb-2">
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
               CATEGORY
             </div>
             <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="md" />
@@ -995,14 +933,14 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
         )}
 
         <div>
-          <div className="text-micro font-medium text-slate-500 mb-2">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
             CONFIDENCE
           </div>
           <div className="flex items-center space-x-3">
-            <span className="text-small text-white">
+            <span className="text-small text-bone">
               {confidenceInfo.label} ({(transaction.confidence * 100).toFixed(0)}%)
             </span>
-            <div className="flex-1 h-2 bg-ink-800 rounded-full overflow-hidden">
+            <div className="flex-1 h-[4px] bg-bone/[0.08] overflow-hidden">
               <div
                 className={`h-full ${confidenceInfo.color}`}
                 style={{ width: `${transaction.confidence * 100}%` }}
@@ -1015,7 +953,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       {/* Matched Rule and Reason */}
       <div className="border-t border-line-700 pt-6 space-y-4">
         <div>
-          <div className="text-micro font-medium text-slate-500 mb-2">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
             CLASSIFICATION REASON
           </div>
           <div className="text-small text-slate-300">
@@ -1027,13 +965,13 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       {/* Evidence Checklist */}
       {transaction.evidence && transaction.evidence.length > 0 && (
         <div className="border-t border-line-700 pt-6">
-          <div className="text-micro font-medium text-slate-500 mb-3">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-3">
             EVIDENCE REQUIRED
           </div>
           <div className="space-y-2">
             {transaction.evidence.map((evidence: string, idx: number) => (
               <div key={idx} className="flex items-start space-x-2">
-                <div className="w-5 h-5 rounded border border-line-700 bg-ink-800 flex items-center justify-center mt-0.5">
+                <div className="w-[18px] h-[18px] rounded-[3px] border border-bone/25 flex items-center justify-center mt-[2px] shrink-0">
                   <Icon name="Check" size={12} className="text-slate-500" />
                 </div>
                 <div className="text-small text-slate-300">
@@ -1048,7 +986,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       {/* Flags */}
       {transaction.flags && transaction.flags.filter((f: string) => FLAG_INFO[f]).length > 0 && (
         <div className="border-t border-line-700 pt-6">
-          <div className="text-micro font-medium text-slate-500 mb-3">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-3">
             WHAT YOU NEED TO DO
           </div>
           <div className="space-y-3">
@@ -1056,11 +994,11 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
               const info = FLAG_INFO[flag]
               return (
                 <div key={idx} className="flex items-start gap-3">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0 ${info.color === 'green' ? 'bg-green-500/20' : 'bg-amber-500/20'}`}>
+                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center mt-[1px] shrink-0 ${info.color === 'green' ? 'bg-green-500/20' : 'bg-amber-500/20'}`}>
                     <Icon name={info.color === 'green' ? 'Check' : 'AlertTriangle'} size={11} className={info.color === 'green' ? 'text-green-400' : 'text-amber-400'} />
                   </div>
                   <div>
-                    <div className="text-small text-white font-medium">{info.label}</div>
+                    <div className="text-small text-bone font-medium">{info.label}</div>
                     <div className="text-micro text-slate-400 mt-0.5 leading-relaxed">{info.description}</div>
                     {info.action && (
                       <div className="text-micro text-amber-400 mt-1">{info.action}</div>
@@ -1077,7 +1015,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
       <div className="border-t border-line-700 pt-6">
         <button
           onClick={() => setShowMoreDetail(!showMoreDetail)}
-          className="flex items-center justify-between w-full text-small font-medium text-white hover:text-accent transition-colors"
+          className="flex items-center justify-between w-full text-small font-medium text-bone hover:text-accent transition-colors"
         >
           <span>More detail</span>
           <Icon
@@ -1090,7 +1028,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
         {showMoreDetail && (
           <div className="mt-4 space-y-4 text-small text-slate-300">
             <div>
-              <div className="font-medium text-white mb-1">About this classification</div>
+              <div className="font-medium text-bone mb-1">About this classification</div>
               <p>
                 This transaction was classified using keyword matching, merchant recognition,
                 and ATO-grounded deduction rules for Australian taxpayers.
@@ -1098,7 +1036,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             </div>
 
             <div>
-              <div className="font-medium text-white mb-1">What you need to do</div>
+              <div className="font-medium text-bone mb-1">What you need to do</div>
               <p>
                 Review this classification and confirm it applies to your situation. Keep the
                 evidence listed above. Deductibility may depend on your occupation — consult a
@@ -1107,7 +1045,7 @@ function TransactionDetail({ transaction, formatDate, formatCurrency, getConfide
             </div>
 
             <div>
-              <div className="font-medium text-white mb-1">Record retention</div>
+              <div className="font-medium text-bone mb-1">Record retention</div>
               <p>
                 Keep records for 5 years from the date you lodge your tax return. The ATO may
                 request evidence at any time during that period.

@@ -1,21 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Landing, Upload, Report, Rules, Privacy, Terms } from './pages'
 import { Navigation, Footer } from './components'
-
-// React Router doesn't reset scroll position between route changes, so without
-// this the user lands mid-page when navigating to a new route.
-function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
-  return null
-}
+import SmoothScroll from './components/SmoothScroll'
 
 function App() {
   return (
     <Router>
-      <ScrollToTop />
-      <div className="min-h-screen bg-ink-950 flex flex-col">
+      {/* Lenis smooth scroll + scroll-to-top on route change */}
+      <SmoothScroll />
+      <div className="grain min-h-screen bg-ink-950 text-bone flex flex-col">
         <a href="#main" className="skip-link">Skip to main content</a>
         <Navigation />
         <main id="main" className="flex-1">

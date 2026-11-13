@@ -22,7 +22,7 @@ export const Chip: React.FC<ChipProps> = ({
   className = '',
   onClick,
 }) => {
-  const baseStyles = 'inline-flex items-center gap-1.5 rounded-full font-medium transition-all duration-200';
+  const baseStyles = 'inline-flex items-center gap-1.5 rounded-[3px] font-medium tracking-[0.01em] transition-colors duration-200';
 
   const sizeStyles = {
     sm:    'px-2.5 py-0.5 text-micro',
@@ -32,15 +32,15 @@ export const Chip: React.FC<ChipProps> = ({
 
   const variantStyles = {
     category: selected
-      ? 'bg-accent/20 text-accent-light border border-accent/50'
-      : 'bg-ink-700/60 text-slate-300 border border-line-700 hover:border-line-600',
-    confidence: 'bg-ink-700/60 text-slate-300 border border-line-700',
-    flag:    'bg-ink-700/60 text-slate-400 border border-line-700',
-    neutral: 'bg-ink-700/60 text-slate-300 border border-line-700',
+      ? 'bg-accent/15 text-accent-light border border-accent/45'
+      : 'bg-transparent text-slate-300 border border-line-700 hover:border-line-600',
+    confidence: 'bg-transparent text-slate-300 border border-line-700',
+    flag:    'bg-transparent text-slate-400 border border-line-700',
+    neutral: 'bg-transparent text-slate-300 border border-line-700 font-mono text-[11px]',
     accent:  'bg-accent/10 text-accent-light border border-accent/30',
   };
 
-  const interactiveStyles = onClick ? 'cursor-pointer hover:bg-ink-700' : '';
+  const interactiveStyles = onClick ? 'cursor-pointer hover:bg-bone/[0.04]' : '';
 
   return (
     <span
@@ -60,7 +60,7 @@ export const Chip: React.FC<ChipProps> = ({
         <span className="flex items-center gap-1">
           <span className="w-10 h-1.5 bg-ink-700 rounded-full overflow-hidden">
             <span
-              className="block h-full bg-gradient-to-r from-gold-700 to-gold-400 transition-all duration-300"
+              className="block h-full bg-brass transition-all duration-300"
               style={{ width: `${confidence * 100}%` }}
             />
           </span>

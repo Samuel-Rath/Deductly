@@ -1,26 +1,30 @@
-import { AnimatedSection, Card } from '../components'
+import { PageHeader } from '../components'
+import { LegalToc, slugify } from '../components/LegalToc'
 import { Link } from 'react-router-dom'
 
 const EFFECTIVE_DATE = '8 April 2025'
 
 function Section({
-  delay,
   title,
   children,
 }: {
-  delay: number
+  delay?: number
   title: string
   children: React.ReactNode
 }) {
+  // Titles are written "1. Overview"; the layout numbers sections itself.
+  const clean = title.replace(/^\d+\.\s*/, '')
   return (
-    <AnimatedSection delay={delay}>
-      <Card className="mb-6">
-        <div className="space-y-3">
-          <h2 className="text-h2 font-semibold text-white">{title}</h2>
-          {children}
-        </div>
-      </Card>
-    </AnimatedSection>
+    <section
+      id={slugify(clean)}
+      data-legal-section
+      className="scroll-mt-[96px] py-[40px] sm:py-[48px] border-t border-bone/[0.09] [counter-increment:legal]"
+    >
+      <h2 className="font-display text-[30px] sm:text-[36px] leading-[1.08] tracking-[-0.02em] text-bone before:block before:mb-[14px] before:font-mono before:text-[11px] before:tracking-[0.16em] before:text-brass before:content-[counter(legal,decimal-leading-zero)]">
+        {clean}
+      </h2>
+      <div className="mt-[20px] space-y-[14px] max-w-[66ch]">{children}</div>
+    </section>
   )
 }
 
@@ -38,7 +42,7 @@ function Ul({ items }: { items: string[] }) {
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 p-4 bg-ink-800 border border-line-700 rounded-lg">
+    <div className="mt-3 border-l-2 border-bone/20 px-[16px] py-[12px]">
       <p className="text-small text-slate-300">{children}</p>
     </div>
   )
@@ -46,18 +50,13 @@ function Note({ children }: { children: React.ReactNode }) {
 
 export default function Terms() {
   return (
-    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Header */}
-        <AnimatedSection className="mb-8">
-          <h1 className="font-display text-h1 font-semibold text-white mb-2">
-            Terms of Service
-          </h1>
-          <p className="text-body text-slate-400">
-            Effective {EFFECTIVE_DATE} &nbsp;&mdash;&nbsp; Please read these terms carefully before using Deductly.
-          </p>
-        </AnimatedSection>
+    <div className="mx-auto max-w-[1360px] px-[20px] sm:px-[32px] pb-[96px] lg:pb-[140px]">
+      <PageHeader index="§" label="Legal" title="Terms of Service" lead={<>Effective {EFFECTIVE_DATE} · Please read these terms carefully before using Deductly.</>} />
+      <div className="grid lg:grid-cols-12 gap-[32px] [counter-reset:legal]">
+        <aside className="hidden lg:block lg:col-span-3">
+          <LegalToc />
+        </aside>
+        <div className="lg:col-span-8 lg:col-start-5 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
 
         {/* 1. Acceptance */}
         <Section delay={0.05} title="1. Acceptance of Terms">
@@ -134,7 +133,7 @@ export default function Terms() {
         <Section delay={0.25} title="5. Data and Privacy">
           <P>
             Your use of the Service is also governed by our{' '}
-            <Link to="/privacy" className="text-gold-400 hover:text-gold-300 underline underline-offset-2 transition-colors">
+            <Link to="/privacy" className="text-bone underline decoration-bone/30 hover:decoration-brass underline underline-offset-2 transition-colors">
               Privacy Policy
             </Link>
             , which is incorporated into these Terms by reference.
@@ -209,7 +208,7 @@ export default function Terms() {
             'Any other losses resulting from use of or inability to use the Service.',
           ]} />
           <Note>
-            <span className="font-semibold text-white">Australian Consumer Law:</span> Nothing in
+            <span className="font-semibold text-bone">Australian Consumer Law:</span> Nothing in
             these Terms excludes, restricts, or modifies any right or remedy, or any guarantee,
             warranty, or other term or condition, implied or imposed by the Australian Consumer
             Law that cannot be lawfully excluded or limited.
@@ -249,6 +248,7 @@ export default function Terms() {
           </div>
         </Section>
 
+        </div>
       </div>
     </div>
   )

@@ -5,68 +5,57 @@ import { Button } from './Button'
 
 describe('Button', () => {
   describe('variants', () => {
-    it('renders primary variant with dark text on gold background', () => {
+    it('renders primary variant as an ink-on-paper pill', () => {
       render(<Button variant="primary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button).toHaveClass('text-ink-950')
+      expect(button).toHaveClass('bg-bone', 'text-ink-950', 'rounded-full')
     })
 
-    it('renders primary variant with gradient background', () => {
-      render(<Button variant="primary">Click me</Button>)
-      const button = screen.getByRole('button', { name: /click me/i })
-      expect(button.className).toMatch(/bg-gradient-brand/)
-    })
-
-    it('renders secondary variant with border', () => {
+    it('renders secondary variant with a hairline border', () => {
       render(<Button variant="secondary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button).toHaveClass('border', 'border-line-700')
-    })
-
-    it('renders secondary variant with frosted glass styling', () => {
-      render(<Button variant="secondary">Click me</Button>)
-      const button = screen.getByRole('button', { name: /click me/i })
-      // Glass look is delivered via backdrop-blur + translucent bg, not a .glass class
-      expect(button.className).toMatch(/backdrop-blur/)
-      expect(button.className).toMatch(/bg-white/)
+      expect(button).toHaveClass('border', 'border-bone/20', 'text-bone')
     })
 
     it('renders tertiary variant with muted text', () => {
       render(<Button variant="tertiary">Click me</Button>)
       const button = screen.getByRole('button', { name: /click me/i })
-      expect(button).toHaveClass('text-slate-400')
+      expect(button).toHaveClass('text-bone-400')
     })
 
     it('defaults to primary variant when no variant specified', () => {
       render(<Button>Default</Button>)
       const button = screen.getByRole('button', { name: /default/i })
-      expect(button).toHaveClass('text-ink-950')
+      expect(button).toHaveClass('bg-bone', 'text-ink-950')
+    })
+
+    it('adds a decorative arrow chip without changing the accessible name', () => {
+      render(<Button withArrow>Continue</Button>)
+      const button = screen.getByRole('button', { name: 'Continue' })
+      expect(button.querySelector('[aria-hidden="true"] svg')).not.toBeNull()
+      expect(button).toHaveClass('pr-[6px]')
     })
   })
 
   describe('sizes', () => {
-    it('renders small size with correct padding', () => {
+    it('renders small size', () => {
       render(<Button size="sm">Small</Button>)
-      const button = screen.getByRole('button', { name: /small/i })
-      expect(button).toHaveClass('px-4', 'py-2')
+      expect(screen.getByRole('button', { name: /small/i })).toHaveClass('h-[36px]', 'px-[16px]')
     })
 
-    it('renders medium size with correct padding', () => {
+    it('renders medium size', () => {
       render(<Button size="md">Medium</Button>)
-      const button = screen.getByRole('button', { name: /medium/i })
-      expect(button).toHaveClass('px-5', 'py-2.5')
+      expect(screen.getByRole('button', { name: /medium/i })).toHaveClass('h-[44px]', 'px-[20px]')
     })
 
-    it('renders large size with correct padding', () => {
+    it('renders large size', () => {
       render(<Button size="lg">Large</Button>)
-      const button = screen.getByRole('button', { name: /large/i })
-      expect(button).toHaveClass('px-8', 'py-3.5')
+      expect(screen.getByRole('button', { name: /large/i })).toHaveClass('h-[56px]', 'px-[28px]')
     })
 
     it('defaults to medium size when no size specified', () => {
       render(<Button>Default size</Button>)
-      const button = screen.getByRole('button', { name: /default size/i })
-      expect(button).toHaveClass('px-5', 'py-2.5')
+      expect(screen.getByRole('button', { name: /default size/i })).toHaveClass('h-[44px]')
     })
   })
 

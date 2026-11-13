@@ -1,26 +1,30 @@
-import { AnimatedSection, Card, Icon } from '../components'
+import { PageHeader, Icon } from '../components'
+import { LegalToc, slugify } from '../components/LegalToc'
 import { Link } from 'react-router-dom'
 
 const EFFECTIVE_DATE = '8 April 2025'
 
 function Section({
-  delay,
   title,
   children,
 }: {
-  delay: number
+  delay?: number
   title: string
   children: React.ReactNode
 }) {
+  // Titles are written "1. Overview"; the layout numbers sections itself.
+  const clean = title.replace(/^\d+\.\s*/, '')
   return (
-    <AnimatedSection delay={delay}>
-      <Card className="mb-6">
-        <div className="space-y-3">
-          <h2 className="text-h2 font-semibold text-white">{title}</h2>
-          {children}
-        </div>
-      </Card>
-    </AnimatedSection>
+    <section
+      id={slugify(clean)}
+      data-legal-section
+      className="scroll-mt-[96px] py-[40px] sm:py-[48px] border-t border-bone/[0.09] [counter-increment:legal]"
+    >
+      <h2 className="font-display text-[30px] sm:text-[36px] leading-[1.08] tracking-[-0.02em] text-bone before:block before:mb-[14px] before:font-mono before:text-[11px] before:tracking-[0.16em] before:text-brass before:content-[counter(legal,decimal-leading-zero)]">
+        {clean}
+      </h2>
+      <div className="mt-[20px] space-y-[14px] max-w-[66ch]">{children}</div>
+    </section>
   )
 }
 
@@ -44,11 +48,11 @@ function Note({
   highlight?: boolean
 }) {
   return highlight ? (
-    <div className="mt-3 p-4 bg-accent bg-opacity-10 border border-accent rounded-lg">
-      <p className="text-small text-white">{children}</p>
+    <div className="mt-3 border-l-2 border-brass bg-brass/[0.05] px-[16px] py-[14px]">
+      <p className="text-small text-bone">{children}</p>
     </div>
   ) : (
-    <div className="mt-3 p-4 bg-ink-800 border border-line-700 rounded-lg">
+    <div className="mt-3 border-l-2 border-bone/20 px-[16px] py-[12px]">
       <p className="text-small text-slate-300">{children}</p>
     </div>
   )
@@ -61,7 +65,7 @@ function CheckItem({ title, body }: { title: string; body: string }) {
         <Icon name="Check" size={14} className="text-accent" />
       </div>
       <div>
-        <div className="text-small font-semibold text-white">{title}</div>
+        <div className="text-small font-semibold text-bone">{title}</div>
         <div className="text-small text-slate-300">{body}</div>
       </div>
     </div>
@@ -72,10 +76,10 @@ function Step({ n, title, body }: { n: number; title: string; body: string }) {
   return (
     <div className="flex items-start space-x-4">
       <div className="w-8 h-8 rounded-full bg-ink-800 border border-line-700 flex items-center justify-center flex-shrink-0">
-        <span className="text-small font-semibold text-white">{n}</span>
+        <span className="text-small font-semibold text-bone">{n}</span>
       </div>
       <div>
-        <div className="text-small font-semibold text-white">{title}</div>
+        <div className="text-small font-semibold text-bone">{title}</div>
         <div className="text-small text-slate-300">{body}</div>
       </div>
     </div>
@@ -84,19 +88,13 @@ function Step({ n, title, body }: { n: number; title: string; body: string }) {
 
 export default function Privacy() {
   return (
-    <div className="pt-20 sm:pt-24 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Header */}
-        <AnimatedSection className="mb-8">
-          <h1 className="font-display text-h1 font-semibold text-white mb-2">
-            Privacy Policy
-          </h1>
-          <p className="text-body text-slate-400">
-            Effective {EFFECTIVE_DATE} &nbsp;&mdash;&nbsp; How Deductly collects, uses, and
-            protects your information.
-          </p>
-        </AnimatedSection>
+    <div className="mx-auto max-w-[1360px] px-[20px] sm:px-[32px] pb-[96px] lg:pb-[140px]">
+      <PageHeader index="§" label="Legal" title="Privacy Policy" lead={<>Effective {EFFECTIVE_DATE} · How Deductly collects, uses, and protects your information.</>} />
+      <div className="grid lg:grid-cols-12 gap-[32px] [counter-reset:legal]">
+        <aside className="hidden lg:block lg:col-span-3">
+          <LegalToc />
+        </aside>
+        <div className="lg:col-span-8 lg:col-start-5 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
 
         {/* 1. Overview */}
         <Section delay={0.05} title="1. Overview">
@@ -109,7 +107,7 @@ export default function Privacy() {
             This policy applies to all users of the Deductly web application. By using the
             Service you agree to the practices described here. Our use of data is also subject
             to our{' '}
-            <Link to="/terms" className="text-gold-400 hover:text-gold-300 underline underline-offset-2 transition-colors">
+            <Link to="/terms" className="text-bone underline decoration-bone/30 hover:decoration-brass underline underline-offset-2 transition-colors">
               Terms of Service
             </Link>
             .
@@ -134,7 +132,7 @@ export default function Privacy() {
             'Merchant names derived from descriptions',
           ]} />
           <Note>
-            <span className="font-semibold text-white">What we do not process:</span> We do not
+            <span className="font-semibold text-bone">What we do not process:</span> We do not
             process or store your name, address, email address, account numbers, BSB codes, or
             any tax file number (TFN). If any of these appear in a transaction description, they
             are automatically redacted before any further processing.
@@ -144,7 +142,7 @@ export default function Privacy() {
         {/* 3. Ephemeral mode */}
         <Section delay={0.15} title="3. Ephemeral Mode — No Data Retention">
           <P>
-            The Service operates exclusively in <strong className="text-white">ephemeral mode</strong>.
+            The Service operates exclusively in <strong className="text-bone">ephemeral mode</strong>.
             This is not an option you toggle — it is the only mode of operation.
           </P>
           <div className="space-y-3 mt-2">
@@ -189,7 +187,7 @@ export default function Privacy() {
               body="All in-memory data, including the generated report files, is discarded after your download window closes." />
           </div>
           <Note>
-            <span className="font-semibold text-white">Audit trail:</span> The JSON audit trail
+            <span className="font-semibold text-bone">Audit trail:</span> The JSON audit trail
             download documents every classification decision so you can verify how each
             transaction was handled.
           </Note>
@@ -207,8 +205,8 @@ export default function Privacy() {
               { title: 'Card numbers', body: 'Partial or full card number patterns (e.g. **** 1234) are masked.' },
               { title: 'Reference numbers', body: 'Long numeric reference strings that may identify your account are truncated.' },
             ].map(({ title, body }) => (
-              <div key={title} className="p-3 bg-ink-800 rounded-lg">
-                <div className="text-small font-semibold text-white mb-0.5">{title}</div>
+              <div key={title} className="py-[12px] border-b border-bone/[0.08]">
+                <div className="text-small font-semibold text-bone mb-0.5">{title}</div>
                 <div className="text-small text-slate-300">{body}</div>
               </div>
             ))}
@@ -318,6 +316,7 @@ export default function Privacy() {
           </div>
         </Section>
 
+        </div>
       </div>
     </div>
   )

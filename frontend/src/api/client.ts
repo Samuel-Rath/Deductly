@@ -87,44 +87,64 @@ const apiClient: AxiosInstance = axios.create({
 // Error Handler
 // ============================================================================
 
-function handleAPIError(error: unknown): never {
+/**
+ * Normalise any thrown value into an APIError.
+ *
+ * Already-normalised APIErrors pass through untouched so that wrapping
+ * (e.g. downloadReportFile → downloadReport) never loses the status code.
+ */
+export function toAPIError(error: unknown): APIError {
+  if (error instanceof APIError) return error;
+
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    
+
     if (axiosError.response) {
       // Server responded with error status
       const { status, data } = axiosError.response;
-      const errorData = data || {};
-      
-      throw new APIError(
+      const errorData = data || ({} as ErrorResponse);
+
+      return new APIError(
         errorData.message || axiosError.message || 'An error occurred',
         status,
         errorData.error,
         errorData.details
       );
-    } else if (axiosError.request) {
+    }
+    if (axiosError.code === 'ECONNABORTED' || axiosError.code === 'ETIMEDOUT') {
+      // The server was reached but took too long. Retrying would just repeat the wait.
+      return new APIError(
+        'The server took too long to respond. Please try again.',
+        0,
+        'timeout'
+      );
+    }
+    if (axiosError.request) {
       // Request made but no response received
-      throw new APIError(
+      return new APIError(
         'No response from server. Please check your connection.',
         0,
         'network_error'
       );
-    } else {
-      // Error setting up request
-      throw new APIError(
-        axiosError.message || 'Failed to make request',
-        0,
-        'request_error'
-      );
     }
+    // Error setting up request
+    return new APIError(
+      axiosError.message || 'Failed to make request',
+      0,
+      'request_error'
+    );
   }
-  
+
   // Unknown error type
-  throw new APIError(
+  return new APIError(
     error instanceof Error ? error.message : 'An unknown error occurred',
     0,
     'unknown_error'
   );
+}
+
+function handleAPIError(error: unknown): never {
+  throw toAPIError(error);
 }
 
 // ============================================================================
@@ -139,7 +159,10 @@ async function withRetry<T>(
 ): Promise<T> {
   try {
     return await fn();
-  } catch (error) {
+  } catch (rawError) {
+    // Normalise before deciding: fn() rejects with raw AxiosErrors, so checking
+    // `instanceof APIError` on the raw value meant retries never ran.
+    const error = toAPIError(rawError);
     if (retries > 0 && shouldRetry(error)) {
       const attempt = MAX_RETRIES - retries + 1;
       onRetry?.(attempt);
@@ -155,8 +178,9 @@ async function withRetry<T>(
 
 function shouldRetry(error: unknown): boolean {
   if (error instanceof APIError) {
-    // Retry on network errors and 5xx server errors
-    return error.statusCode === 0 || error.statusCode >= 500;
+    // Retry on dropped connections (cold starts) and 5xx server errors.
+    // Timeouts and request-setup errors would fail the same way again.
+    return error.errorCode === 'network_error' || error.statusCode >= 500;
   }
   return false;
 }

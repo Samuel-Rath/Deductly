@@ -24,7 +24,7 @@ export const Input: React.FC<InputProps> = ({
       {label && (
         <label 
           htmlFor={inputId}
-          className="block text-small text-slate-300 mb-2"
+          className="block font-mono text-[11px] uppercase tracking-[0.14em] text-bone-400 mb-[8px]"
         >
           {label}
         </label>
@@ -32,11 +32,11 @@ export const Input: React.FC<InputProps> = ({
       <input
         id={inputId}
         className={`
-          w-full px-4 py-2 
-          bg-ink-900 text-white 
-          border ${error ? 'border-red-500' : 'border-line-700'}
-          rounded-input
-          focus:outline-none focus:ring-2 focus:ring-accent-secondary focus:border-transparent
+          w-full h-[48px] px-[16px]
+          bg-transparent text-bone
+          border ${error ? 'border-red-500' : 'border-bone/[0.15] hover:border-bone/30'}
+          rounded-[4px]
+          focus:outline-none focus:ring-2 focus:ring-brass focus:border-transparent
           disabled:opacity-50 disabled:cursor-not-allowed
           placeholder:text-slate-500
           transition-all duration-200
