@@ -32,19 +32,16 @@ jobs:
           cd backend
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pip-audit safety
-      
+          pip install pip-audit
+
+      # Fails the job on any known vulnerability in the installed packages
+      # (PyPI/OSV advisory data). Safety was removed: its `safety check`
+      # command is deprecated, it crashed before scanning anything, and it
+      # pinned filelock<4, which carries 13 advisories of its own.
       - name: Run pip-audit (vulnerability scan)
         run: |
           cd backend
           pip-audit --desc
-        continue-on-error: true
-      
-      - name: Run Safety check
-        run: |
-          cd backend
-          safety check --json
-        continue-on-error: true
 
   secret-scan:
     name: Secret Scan

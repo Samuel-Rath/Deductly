@@ -16,7 +16,7 @@ Bank Statement (CSV or PDF)
           ▼
 ┌───────────────────┐
 │  2. Parsing       │  CSV: auto-detect column layout
-│                   │  PDF: pdfplumber primary, PyPDF2 fallback
+│                   │  PDF: pdfplumber primary, pypdf fallback
 └─────────┬─────────┘
           │  List[RawTransaction]
           ▼
@@ -92,7 +92,7 @@ Amount parsing handles `$89.95`, `89.95`, `-89.95`, `(89.95)`, `89,950.00`.
 
 Two-engine strategy:
 1. **pdfplumber** (primary) — extracts tables and text with high fidelity on machine-generated PDFs
-2. **PyPDF2** (fallback) — raw text extraction when pdfplumber fails to identify a layout
+2. **pypdf** (fallback) — raw text extraction when pdfplumber fails to identify a layout
 
 The parser drives a **state machine** from date-pattern detection: a date at the start of a line begins a new transaction; subsequent lines (no leading date) accumulate into the description. The amount is extracted from the accumulated text.
 
@@ -421,7 +421,7 @@ backend/
 ├── processing/
 │   ├── pipeline.py           # Parse → exclude → classify → RAG → report
 │   ├── csv_parser.py         # Column-detection CSV parser
-│   ├── pdf_parser.py         # pdfplumber + PyPDF2 dual-engine
+│   ├── pdf_parser.py         # pdfplumber + pypdf dual-engine
 │   ├── classification_engine.py
 │   ├── exclusion_engine.py
 │   ├── rules_engine.py

@@ -54,7 +54,7 @@ This document provides comprehensive documentation for the Tax Deduction Analyze
 - Python 3.11+
 - FastAPI (web framework)
 - Pydantic (data validation)
-- PyPDF2/pdfplumber (PDF parsing)
+- pypdf/pdfplumber (PDF parsing)
 - Pandas (data processing)
 - ReportLab (PDF generation)
 
@@ -160,7 +160,7 @@ class PDFParser:
 
 **Features**:
 - State machine for multi-line transactions
-- Dual parser (pdfplumber + PyPDF2 fallback)
+- Dual parser (pdfplumber + pypdf fallback)
 - Amount extraction with heuristics
 - Date pattern matching
 

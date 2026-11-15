@@ -63,12 +63,15 @@ def test_merchant_extraction_fallback(description):
     original_upper = original_normalized.upper()
     merchant_upper = merchant_normalized.upper()
     
-    # Check if merchant is in original, or if they're equal (fallback case)
-    is_substring = merchant_upper in original_upper
+    # Extraction may only *remove* text (prefixes, store numbers like "#123"
+    # from the middle), so the merchant must be an in-order subsequence of the
+    # original. A plain substring check wrongly failed on e.g. "0#1:" -> "0:".
+    remaining = iter(original_upper)
+    is_subsequence = all(ch in remaining for ch in merchant_upper)
     is_fallback = merchant_normalized == original_normalized
-    
-    assert is_substring or is_fallback, (
-        f"Extracted merchant must be substring of original or equal to original (after normalization). "
+
+    assert is_subsequence or is_fallback, (
+        f"Extracted merchant must only contain text from the original, in order (after normalization). "
         f"Original: '{description}' (normalized: '{original_normalized}'), "
         f"Merchant: '{merchant}' (normalized: '{merchant_normalized}')"
     )
@@ -95,7 +98,11 @@ def test_merchant_extraction_removes_prefixes(prefix, merchant_name):
     # Skip if merchant name is too short after stripping
     assume(merchant_name.strip() != "")
     assume(len(merchant_name.strip()) >= 2)
-    
+    # A merchant whose own name starts with the prefix word ("EFTPOS EFTPOS",
+    # "VISA VISAGE") legitimately keeps that word after the prefix is removed,
+    # so it can't be checked with startswith below.
+    assume(not merchant_name.upper().startswith(prefix.strip(" *").upper()))
+
     description = f"{prefix}{merchant_name}"
     
     parser = CSVParser()

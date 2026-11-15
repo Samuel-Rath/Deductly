@@ -11,7 +11,7 @@ import io
 import uuid
 from typing import List, Optional
 from datetime import datetime
-import PyPDF2
+from pypdf import PdfReader
 import pdfplumber
 
 from backend.models.schemas import NormalisedTransaction, TransactionDirection
@@ -50,7 +50,7 @@ class PDFParser:
 
             if not transactions:
                 pdf_file.seek(0)
-                transactions = self._parse_with_pypdf2(pdf_file)
+                transactions = self._parse_with_pypdf(pdf_file)
 
             if not transactions:
                 raise ValueError("No transactions found in PDF")
@@ -76,10 +76,10 @@ class PDFParser:
             logger.debug("pdfplumber parsing failed, will try fallback", extra={"error": str(e)})
         return transactions
 
-    def _parse_with_pypdf2(self, pdf_file: io.BytesIO) -> List[NormalisedTransaction]:
+    def _parse_with_pypdf(self, pdf_file: io.BytesIO) -> List[NormalisedTransaction]:
         transactions = []
         try:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            pdf_reader = PdfReader(pdf_file)
             pages_text = []
             for page in pdf_reader.pages:
                 text = page.extract_text()
@@ -88,7 +88,7 @@ class PDFParser:
             full_text = '\n'.join(pages_text)
             transactions = self._parse_with_state_machine(full_text)
         except Exception as e:
-            logger.debug("PyPDF2 parsing failed", extra={"error": str(e)})
+            logger.debug("pypdf parsing failed", extra={"error": str(e)})
         return transactions
 
     # Phrases that identify bank footer/disclaimer lines — two or more triggers the guard

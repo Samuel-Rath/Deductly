@@ -94,7 +94,7 @@ Digital banks typically export ISO dates (`YYYY-MM-DD`) with standard `Descripti
 
 ## PDF statements
 
-PDF support uses pdfplumber (primary) with PyPDF2 as fallback. Machine-generated PDFs from internet banking parse much more reliably than scanned images or print-to-PDF documents.
+PDF support uses pdfplumber (primary) with pypdf as fallback. Machine-generated PDFs from internet banking parse much more reliably than scanned images or print-to-PDF documents.
 
 Tips for better PDF results:
 
