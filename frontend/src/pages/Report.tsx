@@ -367,8 +367,8 @@ export default function Report() {
           {/* Ephemeral mode: no stored copy, so offer print-to-PDF */}
           {stateReportData && (
             <div className="mt-[-16px] mb-[32px] flex flex-col sm:flex-row sm:items-center justify-between gap-[12px] border-b border-bone/[0.09] pb-[20px] no-print">
-              <p className="flex items-center gap-[12px] text-[14px] text-bone-400">
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-brass">Not stored</span>
+              <p className="flex flex-col sm:flex-row sm:items-center gap-[6px] sm:gap-[12px] text-[14px] text-bone-400">
+                <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.16em] text-brass">Not stored</span>
                 No copy is kept on our side. Save this report before leaving.
               </p>
               <Button
@@ -419,7 +419,7 @@ export default function Report() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Confidence Distribution Chart */}
-          <Card>
+          <Card padding="none" className="p-[20px] sm:p-[36px]">
             <h3 className="font-display text-[26px] leading-none tracking-[-0.02em] text-bone mb-[28px]">
               Confidence Distribution
             </h3>
@@ -472,7 +472,7 @@ export default function Report() {
           </Card>
 
           {/* Category Totals Chart */}
-          <Card>
+          <Card padding="none" className="p-[20px] sm:p-[36px]">
             <h3 className="font-display text-[26px] leading-none tracking-[-0.02em] text-bone mb-[28px]">
               Category Totals
             </h3>
@@ -501,7 +501,7 @@ export default function Report() {
         </div>
 
         {/* Placeholder for tabs and table - will be implemented in next subtask */}
-        <Card>
+        <Card padding="none" className="p-[20px] sm:p-[36px]">
           {/* Tabs */}
           <div className="border-b border-bone/[0.12] mb-[28px]" role="tablist" aria-label="Report sections">
             <div className="flex gap-[28px] overflow-x-auto">
@@ -614,16 +614,16 @@ export default function Report() {
                   </div>
                 )}
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px]" aria-label="Deduction candidates">
+                  <table className="w-full" aria-label="Deduction candidates">
                     <thead>
                       <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
-                        <th className="pb-3 pr-4">DATE</th>
-                        <th className="pb-3 pr-4">MERCHANT</th>
-                        <th className="pb-3 pr-4">DESCRIPTION</th>
-                        <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                        <th className="pb-3 pr-4">CATEGORY</th>
-                        <th className="pb-3 pr-4">CONFIDENCE</th>
-                        <th className="pb-3">EVIDENCE</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">DATE</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">MERCHANT</th>
+                        <th className="hidden sm:table-cell pb-[12px] pr-[12px] sm:pr-[24px]">DESCRIPTION</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px] text-right">AMOUNT</th>
+                        <th className="hidden md:table-cell pb-[12px] pr-[12px] sm:pr-[24px]">CATEGORY</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">CONFIDENCE</th>
+                        <th className="hidden lg:table-cell pb-[12px]">EVIDENCE</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -636,22 +636,22 @@ export default function Report() {
                             onClick={() => setSelectedTransaction(transaction.id)}
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
-                            <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
-                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
-                            <td className="py-4 pr-4 text-small text-bone text-right">{formatCurrency(transaction.amount)}</td>
-                            <td className="py-4 pr-4">
-                              <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="sm" />
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[12px] tabular-nums whitespace-nowrap text-slate-300">{formatDate(transaction.date)}</td>
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="hidden sm:table-cell py-[14px] pr-[12px] sm:pr-[24px] text-small text-slate-300 max-w-xs truncate">{display.description}</td>
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[13px] tabular-nums whitespace-nowrap text-bone text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="hidden md:table-cell py-[14px] pr-[12px] sm:pr-[24px]">
+                              <Chip label={CATEGORY_LABELS[transaction.category] ?? transaction.category} variant="category" size="sm" className="whitespace-nowrap" />
                             </td>
-                            <td className="py-4 pr-4">
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px]">
                               <div className="flex items-center space-x-2">
                                 <span className="text-micro text-slate-300">{confidenceInfo.label}</span>
-                                <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
+                                <div className="hidden sm:block w-[64px] h-[3px] bg-bone/[0.08] overflow-hidden">
                                   <div className={`h-full ${confidenceInfo.color}`} style={{ width: `${transaction.confidence * 100}%` }} />
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4">
+                            <td className="hidden lg:table-cell py-[14px]">
                               <div className="flex flex-wrap gap-1">
                                 {transaction.evidence && transaction.evidence.map((ev: string, idx: number) => (
                                   <Chip key={idx} label={ev} variant="category" size="sm" />
@@ -700,12 +700,12 @@ export default function Report() {
                   <table className="w-full" aria-label="Transactions needing review">
                     <thead>
                       <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
-                        <th className="pb-3 pr-4">DATE</th>
-                        <th className="pb-3 pr-4">MERCHANT</th>
-                        <th className="pb-3 pr-4">DESCRIPTION</th>
-                        <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                        <th className="pb-3 pr-4">CONFIDENCE</th>
-                        <th className="pb-3">WHY FLAGGED</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">DATE</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">MERCHANT</th>
+                        <th className="hidden sm:table-cell pb-[12px] pr-[12px] sm:pr-[24px]">DESCRIPTION</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px] text-right">AMOUNT</th>
+                        <th className="pb-[12px] pr-[12px] sm:pr-[24px]">CONFIDENCE</th>
+                        <th className="hidden md:table-cell pb-[12px]">WHY FLAGGED</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -718,19 +718,19 @@ export default function Report() {
                             onClick={() => setSelectedTransaction(transaction.id)}
                             className={`border-b border-line-700 cursor-pointer transition-colors ${selectedTransaction === transaction.id ? 'bg-ink-800' : 'hover:bg-ink-800'}`}
                           >
-                            <td className="py-4 pr-4 text-small text-slate-300">{formatDate(transaction.date)}</td>
-                            <td className="py-4 pr-4 text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
-                            <td className="py-4 pr-4 text-small text-slate-300 max-w-xs truncate">{display.description}</td>
-                            <td className="py-4 pr-4 text-small text-bone text-right">{formatCurrency(transaction.amount)}</td>
-                            <td className="py-4 pr-4">
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[12px] tabular-nums whitespace-nowrap text-slate-300">{formatDate(transaction.date)}</td>
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] text-small text-bone max-w-[180px] truncate" title={transaction.merchant}>{display.merchant}</td>
+                            <td className="hidden sm:table-cell py-[14px] pr-[12px] sm:pr-[24px] text-small text-slate-300 max-w-xs truncate">{display.description}</td>
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[13px] tabular-nums whitespace-nowrap text-bone text-right">{formatCurrency(transaction.amount)}</td>
+                            <td className="py-[14px] pr-[12px] sm:pr-[24px]">
                               <div className="flex items-center space-x-2">
                                 <span className="text-micro text-slate-300">{confidenceInfo.label}</span>
-                                <div className="w-16 h-1.5 bg-ink-800 rounded-full overflow-hidden">
+                                <div className="hidden sm:block w-[64px] h-[3px] bg-bone/[0.08] overflow-hidden">
                                   <div className={`h-full ${confidenceInfo.color}`} style={{ width: `${transaction.confidence * 100}%` }} />
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 text-small text-slate-300">{formatReason(transaction.reason)}</td>
+                            <td className="hidden md:table-cell py-[14px] text-small text-slate-300">{formatReason(transaction.reason)}</td>
                           </tr>
                         )
                       })}
@@ -752,11 +752,11 @@ export default function Report() {
               <table className="w-full" aria-label="Excluded transactions">
                 <thead>
                   <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
-                    <th className="pb-3 pr-4">DATE</th>
-                    <th className="pb-3 pr-4">MERCHANT</th>
-                    <th className="pb-3 pr-4">DESCRIPTION</th>
-                    <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                    <th className="pb-3">REASON</th>
+                    <th className="pb-[12px] pr-[12px] sm:pr-[24px]">DATE</th>
+                    <th className="pb-[12px] pr-[12px] sm:pr-[24px]">MERCHANT</th>
+                    <th className="hidden sm:table-cell pb-[12px] pr-[12px] sm:pr-[24px]">DESCRIPTION</th>
+                    <th className="pb-[12px] pr-[12px] sm:pr-[24px] text-right">AMOUNT</th>
+                    <th className="pb-[12px]">REASON</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -767,19 +767,19 @@ export default function Report() {
                       key={transaction.id}
                       className="border-b border-line-700"
                     >
-                      <td className="py-4 pr-4 text-small text-slate-500">
+                      <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[12px] tabular-nums whitespace-nowrap text-slate-500">
                         {formatDate(transaction.date)}
                       </td>
-                      <td className="py-4 pr-4 text-small text-slate-500 max-w-[180px] truncate" title={transaction.merchant}>
+                      <td className="py-[14px] pr-[12px] sm:pr-[24px] text-small text-slate-500 max-w-[180px] truncate" title={transaction.merchant}>
                         {display.merchant}
                       </td>
-                      <td className="py-4 pr-4 text-small text-slate-500 max-w-xs truncate">
+                      <td className="hidden sm:table-cell py-[14px] pr-[12px] sm:pr-[24px] text-small text-slate-500 max-w-xs truncate">
                         {display.description}
                       </td>
-                      <td className="py-4 pr-4 text-small text-slate-500 text-right">
+                      <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[13px] tabular-nums whitespace-nowrap text-slate-500 text-right">
                         {formatCurrency(transaction.amount)}
                       </td>
-                      <td className="py-4 text-small text-slate-300">
+                      <td className="py-[14px] text-small text-slate-300">
                         {transaction.explanation}
                       </td>
                     </tr>
@@ -801,24 +801,24 @@ export default function Report() {
                 <p className="text-small text-slate-500 mb-4">
                   Every transaction analysed — showing the final decision and reason for each.
                 </p>
-                <table className="w-full min-w-[700px]" aria-label="Full audit trail">
+                <table className="w-full" aria-label="Full audit trail">
                   <thead>
                     <tr className="text-left font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-bone-600 border-b border-bone/[0.12]">
-                      <th className="pb-3 pr-4">DATE</th>
-                      <th className="pb-3 pr-4">MERCHANT</th>
-                      <th className="pb-3 pr-4 text-right">AMOUNT</th>
-                      <th className="pb-3 pr-4">DECISION</th>
-                      <th className="pb-3 pr-4">CATEGORY / REASON</th>
-                      <th className="pb-3">CONFIDENCE</th>
+                      <th className="pb-[12px] pr-[12px] sm:pr-[24px]">DATE</th>
+                      <th className="pb-[12px] pr-[12px] sm:pr-[24px]">MERCHANT</th>
+                      <th className="pb-[12px] pr-[12px] sm:pr-[24px] text-right">AMOUNT</th>
+                      <th className="pb-[12px] pr-[12px] sm:pr-[24px]">DECISION</th>
+                      <th className="hidden md:table-cell pb-[12px] pr-[12px] sm:pr-[24px]">CATEGORY / REASON</th>
+                      <th className="pb-[12px]">CONFIDENCE</th>
                     </tr>
                   </thead>
                   <tbody>
                     {allRows.map((t: any) => (
                       <tr key={t.id} className="border-b border-line-700">
-                        <td className="py-3 pr-4 text-small text-slate-300 whitespace-nowrap">{formatDate(t.date)}</td>
-                        <td className="py-3 pr-4 text-small text-bone max-w-[160px] truncate" title={t.merchant}>{t.merchant}</td>
-                        <td className="py-3 pr-4 text-small text-bone text-right whitespace-nowrap">{formatCurrency(t.amount)}</td>
-                        <td className="py-3 pr-4">
+                        <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[12px] tabular-nums whitespace-nowrap text-slate-300">{formatDate(t.date)}</td>
+                        <td className="py-[14px] pr-[12px] sm:pr-[24px] text-small text-bone max-w-[160px] truncate" title={t.merchant}>{t.merchant}</td>
+                        <td className="py-[14px] pr-[12px] sm:pr-[24px] font-mono text-[13px] tabular-nums whitespace-nowrap text-bone text-right">{formatCurrency(t.amount)}</td>
+                        <td className="py-[14px] pr-[12px] sm:pr-[24px]">
                           {t._decision === 'candidate' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/30 text-green-400 border border-green-800/40">Candidate</span>
                           )}
@@ -829,12 +829,12 @@ export default function Report() {
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-ink-800 text-slate-500 border border-line-700">Excluded</span>
                           )}
                         </td>
-                        <td className="py-3 pr-4 text-small text-slate-400 max-w-xs truncate">
+                        <td className="hidden md:table-cell py-[14px] pr-[12px] sm:pr-[24px] text-small text-slate-400 max-w-xs truncate">
                           {t._decision === 'excluded'
                             ? (t.explanation ?? t.reason ?? '')
                             : (t.category ? `${CATEGORY_LABELS[t.category] ?? t.category} · ${formatReason(t.reason)}` : formatReason(t.reason))}
                         </td>
-                        <td className="py-3 text-small text-slate-400">
+                        <td className="py-[14px] text-small text-slate-400">
                           {t.confidence != null ? `${Math.round(t.confidence * 100)}%` : '—'}
                         </td>
                       </tr>

@@ -22,6 +22,7 @@ Read `references/lenis-gsap.md` before writing motion code and `references/logic
 6. **Leave the rest calm.** Pick at most 2–3 more scroll moments (a counter, a horizontal reveal, a progress line). Everything else gets a plain reveal or nothing.
 7. **Respect reduced motion** with `gsap.matchMedia()`. Lenis already disables smoothing when `prefers-reduced-motion: reduce`.
 8. **Verify**: type-check, run the unit tests (mock GSAP/Lenis in jsdom if needed), and look at the page in a browser at desktop and 375px widths.
+9. **Update the e2e suite** with the redesign. Copy, landmarks and menus change; stale Playwright specs are what fail CI after a visual overhaul. Check every page's `scrollWidth` equals the viewport at 390px.
 
 ## Slop tells to remove
 
@@ -32,6 +33,9 @@ Read `references/lenis-gsap.md` before writing motion code and `references/logic
 - Tilt cards with no purpose; three stacked radial "orbs".
 - Animating `filter: blur()` on large elements (janky) or `width` (layout thrash). Animate `transform` and `opacity`, or `clip-path`.
 - Fake precision: invented stats, mock numbers that don't sum, claims the product doesn't make.
+- Disabled primary buttons shown as a 40%-opacity fill. On dark UIs that reads as a muddy grey slab; use an empty outline with dimmed text.
+- Stacks of identical boxed cards for reference content (rules, FAQs, settings). Use numbered hairline rows with an accordion.
+- Data tables that only work at desktop width. Drop secondary columns at `sm`/`md`, set figures in mono with tabular numbers, and keep rows near 48px tall.
 
 ## What good looks like
 

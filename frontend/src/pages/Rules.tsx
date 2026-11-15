@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Chip, Icon, PageHeader } from '../components'
+import { Chip, PageHeader } from '../components'
 
 const ruleCategories = [
   {
@@ -137,12 +137,14 @@ export default function Rules() {
         title="Classification Rules"
         lead="Understand how transactions are categorised and what patterns we look for. This is the exact rule set the engine runs."
       />
-      <div className="max-w-[980px]">
+      <div className="grid lg:grid-cols-12 gap-[56px] lg:gap-[32px]">
+      {/* min-w-0: lets the tab strip scroll instead of widening the grid column */}
+      <div className="lg:col-span-8 min-w-0">
 
         <div>
           {/* Section Tabs */}
-          <div className="mb-8">
-            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <div className="mb-[8px]">
+            <div className="overflow-x-auto">
             <div className="flex gap-[24px] sm:gap-[32px] border-b border-bone/[0.12] min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveSection('classification')}
@@ -195,46 +197,49 @@ export default function Rules() {
 
           {/* Classification Rules */}
           {activeSection === 'classification' && (
-            <div className="space-y-4">
-              {ruleCategories.map((rule) => (
-                <Card key={rule.category}>
+            <div className="border-b border-bone/[0.1]">
+              {ruleCategories.map((rule, i) => (
+                <div key={rule.category} className="border-t border-bone/[0.1]">
                   <div>
                     <button
                       onClick={() => setExpandedCategory(
                         expandedCategory === rule.category ? null : rule.category
                       )}
-                      className="w-full flex items-center justify-between"
+                      aria-expanded={expandedCategory === rule.category}
+                      className="group w-full flex items-start justify-between gap-[16px] py-[24px] sm:py-[28px] text-left"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="grid grid-cols-[32px_1fr] sm:grid-cols-[56px_1fr] gap-x-[8px]">
+                        <span aria-hidden="true" className="font-mono text-[11px] text-brass pt-[9px]">{String(i + 1).padStart(2, '0')}</span>
                         <div>
-                          <h3 className="font-display text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-bone text-left">
+                          <h3 className="font-display text-[24px] sm:text-[30px] leading-[1.1] tracking-[-0.02em] text-bone text-left transition-transform duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)] group-hover:translate-x-[6px]">
                             {rule.category}
                           </h3>
-                          <p className="text-small text-slate-300 text-left mt-1">
+                          <p className="mt-[10px] max-w-[62ch] text-[14.5px] leading-[1.6] text-bone-400 text-left">
                             {rule.description}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <Chip variant="neutral" size="small" label={`v${rule.version}`} />
-                        <Icon 
-                          name="ChevronDown" 
-                          size={20} 
-                          className={`text-slate-500 transition-transform ${
-                            expandedCategory === rule.category ? 'rotate-180' : ''
+                      <div className="flex items-center gap-[14px] pt-[6px] shrink-0">
+                        <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600">{`v${rule.version}`}</span>
+                        <span
+                          aria-hidden="true"
+                          className={`grid place-items-center w-[32px] h-[32px] rounded-full border border-bone/15 text-bone-400 font-mono text-[14px] leading-none transition-[transform,border-color,color] duration-300 group-hover:border-bone/40 group-hover:text-bone ${
+                            expandedCategory === rule.category ? 'rotate-45' : ''
                           }`}
-                        />
+                        >
+                          +
+                        </span>
                       </div>
                     </button>
 
                     {expandedCategory === rule.category && (
-                      <div className="mt-6 pt-6 border-t border-line-700 space-y-6">
+                      <div className="pb-[36px] pl-[40px] sm:pl-[64px] space-y-[28px]">
                         {/* Keywords */}
                         <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                             KEYWORDS
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-[6px]">
                             {rule.keywords.map((keyword, idx) => (
                               <Chip key={idx} variant="neutral" size="small" label={keyword} />
                             ))}
@@ -243,10 +248,10 @@ export default function Rules() {
 
                         {/* Merchants */}
                         <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                             KNOWN MERCHANTS
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-[6px]">
                             {rule.merchants.map((merchant, idx) => (
                               <Chip key={idx} variant="neutral" size="small" label={merchant} />
                             ))}
@@ -255,16 +260,16 @@ export default function Rules() {
 
                         {/* Confidence */}
                         <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                             BASE CONFIDENCE
                           </div>
-                          <div className="flex items-center space-x-3">
-                            <span className="text-small text-bone">
+                          <div className="flex items-center gap-[16px]">
+                            <span className="font-display text-[26px] leading-none text-brass tabular-nums">
                               {(rule.confidence * 100).toFixed(0)}%
                             </span>
-                            <div className="flex-1 max-w-xs h-2 bg-ink-800 rounded-full overflow-hidden">
+                            <div className="flex-1 max-w-[280px] h-[4px] bg-bone/[0.08] overflow-hidden">
                               <div
-                                className="h-full bg-accent"
+                                className="h-full bg-brass"
                                 style={{ width: `${rule.confidence * 100}%` }}
                               />
                             </div>
@@ -273,10 +278,10 @@ export default function Rules() {
 
                         {/* Evidence */}
                         <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                             REQUIRED EVIDENCE
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-[6px]">
                             {rule.evidence.map((ev, idx) => (
                               <Chip key={idx} variant="neutral" size="small" label={ev} />
                             ))}
@@ -286,12 +291,12 @@ export default function Rules() {
                         {/* Flags */}
                         {rule.flags && rule.flags.length > 0 && (
                           <div>
-                            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                               SPECIAL REQUIREMENTS
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-[6px]">
                               {rule.flags.map((flag, idx) => (
-                                <Chip key={idx} variant="accent" size="small" label={flag} />
+                                <Chip key={idx} variant="accent" size="small" label={flagLabel(flag)} />
                               ))}
                             </div>
                           </div>
@@ -299,16 +304,16 @@ export default function Rules() {
 
                         {/* Examples */}
                         <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">
                             MATCHING EXAMPLES
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-[12px]">
                             {rule.examples.map((example, idx) => (
-                              <div key={idx} className="p-3 bg-ink-800 rounded-lg">
-                                <div className="text-small text-bone font-mono">
+                              <div key={idx} className="border-l-2 border-brass/50 pl-[14px] py-[4px]">
+                                <div className="font-mono text-[12.5px] text-bone">
                                   {example.description}
                                 </div>
-                                <div className="text-micro text-slate-300 mt-1">
+                                <div className="mt-[4px] text-[13px] text-bone-400">
                                   Matched: {example.matched}
                                 </div>
                               </div>
@@ -318,192 +323,178 @@ export default function Rules() {
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
 
           {/* Exclusion Rules */}
           {activeSection === 'exclusion' && (
-            <div className="space-y-6">
-              <Card>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-bone mb-[12px]">
-                      About Exclusions
-                    </h3>
-                    <p className="text-small text-slate-300">
-                      Before classification, transactions are checked against exclusion rules. 
-                      Excluded transactions are clearly not deduction candidates and are filtered out early.
-                    </p>
-                  </div>
-
-                  {exclusionRules.map((rule, idx) => (
-                    <div key={idx} className="pt-6 border-t border-line-700">
-                      <h4 className="text-small font-semibold text-bone mb-2">
-                        {rule.name}
-                      </h4>
-                      <p className="text-small text-slate-300 mb-3">
-                        {rule.reason}
-                      </p>
-                      <div>
-                        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
-                          PATTERNS
+            <div>
+              <div className="pb-[32px]">
+                <h3 className="font-display text-[28px] sm:text-[32px] leading-[1.1] tracking-[-0.02em] text-bone">About Exclusions</h3>
+                <p className="mt-[14px] max-w-[62ch] text-[15px] leading-[1.65] text-bone-400">
+                  Before classification, transactions are checked against exclusion rules.
+                  Excluded transactions are clearly not deduction candidates and are filtered out early.
+                </p>
+              </div>
+              <div className="border-b border-bone/[0.1]">
+                {exclusionRules.map((rule, idx) => (
+                  <div key={idx} className="grid grid-cols-[32px_1fr] sm:grid-cols-[56px_1fr] gap-x-[8px] py-[28px] border-t border-bone/[0.1]">
+                    <span aria-hidden="true" className="font-mono text-[11px] text-brass pt-[6px]">{String(idx + 1).padStart(2, '0')}</span>
+                    <div>
+                      <h4 className="font-display text-[22px] sm:text-[24px] leading-[1.15] tracking-[-0.01em] text-bone">{rule.name}</h4>
+                      <p className="mt-[8px] max-w-[62ch] text-[14.5px] leading-[1.6] text-bone-400">{rule.reason}</p>
+                      <div className="mt-[18px] grid sm:grid-cols-2 gap-[20px]">
+                        <div>
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">PATTERNS</div>
+                          <div className="flex flex-wrap gap-[6px]">
+                            {rule.patterns.map((pattern, pidx) => (
+                              <Chip key={pidx} variant="neutral" size="small" label={pattern} />
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {rule.patterns.map((pattern, pidx) => (
-                            <Chip key={pidx} variant="neutral" size="small" label={pattern} />
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-2">
-                          EXAMPLES
-                        </div>
-                        <div className="space-y-1">
-                          {rule.examples.map((example, eidx) => (
-                            <div key={eidx} className="text-small text-slate-300 font-mono">
-                              {example}
-                            </div>
-                          ))}
+                        <div>
+                          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600 mb-[10px]">EXAMPLES</div>
+                          <div className="space-y-[4px]">
+                            {rule.examples.map((example, eidx) => (
+                              <div key={eidx} className="font-mono text-[12.5px] text-bone-200">{example}</div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </Card>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Confidence Scoring */}
+          {/* Confidence Scoring: describes what classification_engine.py actually does */}
           {activeSection === 'confidence' && (
-            <div className="space-y-6">
-              <Card>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-display text-[28px] leading-[1.1] tracking-[-0.02em] text-bone mb-[12px]">
-                      How Confidence is Computed
-                    </h3>
-                    <p className="text-small text-slate-300">
-                      Each classification rule has a base confidence score. The final confidence 
-                      depends on the match quality and merchant recognition.
-                    </p>
-                  </div>
-
-                  <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-bone mb-3">
-                      How Confidence is Computed
-                    </h4>
-                    <p className="text-small text-slate-300 mb-4">
-                      Confidence is a composite score (0–100%) built from three signals:
-                    </p>
-                    <div className="space-y-3 mb-4">
-                      <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-bone mb-1">Keyword Score (up to 30%)</div>
-                        <div className="text-micro text-slate-300">How strongly the transaction description and merchant match work related keywords across deduction categories (travel, home office, equipment, education, memberships, clothing, etc.)</div>
-                      </div>
-                      <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-bone mb-1">RAG Grounding Score (up to 40%)</div>
-                        <div className="text-micro text-slate-300">How well the transaction aligns with retrieved ATO knowledge base chunks — including specific rulings on who can claim each category</div>
-                      </div>
-                      <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small font-semibold text-bone mb-1">Claude AI Score (up to 30%)</div>
-                        <div className="text-micro text-slate-300">Claude's assessment of deductibility given the ATO context, with PII redacted before any external API call</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-bone mb-3">
-                      Confidence Levels
-                    </h4>
-                    <div className="space-y-4">
+            <div className="space-y-[56px]">
+              <section>
+                <h3 className="font-display text-[28px] sm:text-[32px] leading-[1.1] tracking-[-0.02em] text-bone">How Confidence is Computed</h3>
+                <p className="mt-[14px] max-w-[62ch] text-[15px] leading-[1.65] text-bone-400">
+                  Confidence comes from the rules engine alone. No language model or external service is involved.
+                  A matched transaction starts at its rule&apos;s base score, then two signals adjust it.
+                </p>
+                <ol className="mt-[24px] border-b border-bone/[0.1]">
+                  {CONFIDENCE_SIGNALS.map(([title, effect, body], i) => (
+                    <li key={title} className="grid grid-cols-[32px_1fr_auto] sm:grid-cols-[56px_1fr_auto] gap-x-[8px] sm:gap-x-[16px] py-[20px] border-t border-bone/[0.1]">
+                      <span aria-hidden="true" className="font-mono text-[11px] text-brass pt-[5px]">{String(i + 1).padStart(2, '0')}</span>
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-bone">High (80–100%)</span>
-                          <span className="text-micro text-slate-500">Strong match</span>
-                        </div>
-                        <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-accent" style={{ width: '90%' }} />
-                        </div>
-                        <p className="text-micro text-slate-300 mt-2">
-                          Clear occupational requirement — e.g. professional body membership, a self education course directly tied to your current role
-                        </p>
+                        <h4 className="text-[16px] font-medium text-bone">{title}</h4>
+                        <p className="mt-[6px] max-w-[54ch] text-[14px] leading-[1.6] text-bone-400">{body}</p>
                       </div>
+                      <span className="font-mono text-[12px] text-bone-200 whitespace-nowrap pt-[3px]">{effect}</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-[16px] text-[13px] text-bone-600">
+                  The result is kept between 0 and 100%. Anything under your chosen threshold (60% by default) goes to Needs Review.
+                </p>
+              </section>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-bone">Medium (60–79%)</span>
-                          <span className="text-micro text-slate-500">Likely but verify</span>
-                        </div>
-                        <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-slate-500" style={{ width: '70%' }} />
-                        </div>
-                        <p className="text-micro text-slate-300 mt-2">
-                          Probable work expense — confirm the work use proportion or occupational nexus with your tax agent
-                        </p>
+              <section>
+                <h3 className="font-display text-[28px] sm:text-[32px] leading-[1.1] tracking-[-0.02em] text-bone">Confidence Levels</h3>
+                <div className="mt-[24px] border-b border-bone/[0.1]">
+                  {CONFIDENCE_LEVELS.map(([label, tag, width, tone, body]) => (
+                    <div key={label} className="py-[20px] border-t border-bone/[0.1]">
+                      <div className="flex items-baseline justify-between gap-[16px]">
+                        <span className="text-[16px] text-bone">{label}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600">{tag}</span>
                       </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-small text-bone">Low (&lt; 60%)</span>
-                          <span className="text-micro text-slate-500">Needs review</span>
-                        </div>
-                        <div className="w-full h-2 bg-ink-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-slate-700" style={{ width: '45%' }} />
-                        </div>
-                        <p className="text-micro text-slate-300 mt-2">
-                          Ambiguous — likely mixed personal and work use; requires substantiation and advice from a registered tax agent
-                        </p>
+                      <div className="mt-[12px] h-[4px] bg-bone/[0.08] overflow-hidden">
+                        <div className={`h-full ${tone}`} style={{ width }} />
                       </div>
+                      <p className="mt-[10px] max-w-[62ch] text-[14px] leading-[1.6] text-bone-400">{body}</p>
                     </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-bone mb-3">
-                      Merchant Normalisation
-                    </h4>
-                    <p className="text-small text-slate-300 mb-3">
-                      Bank descriptions often include prefixes, reference numbers, and location codes.
-                      These are stripped before matching:
-                    </p>
-                    <div className="space-y-2">
-                      <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small text-bone font-mono mb-1">
-                          EFTPOS OFFICEWORKS SYDNEY NSW
-                        </div>
-                        <div className="text-micro text-slate-300">
-                          → Normalised to "Officeworks" (removes EFTPOS prefix and location)
-                        </div>
-                      </div>
-                      <div className="p-3 bg-ink-800 rounded-lg">
-                        <div className="text-small text-bone font-mono mb-1">
-                          DD MICROSOFT CORPORATION 98765
-                        </div>
-                        <div className="text-micro text-slate-300">
-                          → Normalised to "Microsoft" (removes DD prefix and reference number)
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-line-700">
-                    <h4 className="text-small font-semibold text-bone mb-3">
-                      Important Disclaimer
-                    </h4>
-                    <p className="text-small text-slate-300">
-                      Deductibility depends on the direct nexus between the expense and your income-earning activity under Australian tax law.
-                      This tool provides indicative analysis only — always confirm with a registered tax agent
-                      before claiming deductions. The ATO may disallow claims that lack sufficient substantiation
-                      or a clear connection to your specific role.
-                    </p>
-                  </div>
+                  ))}
                 </div>
-              </Card>
+              </section>
+
+              <section>
+                <h3 className="font-display text-[28px] sm:text-[32px] leading-[1.1] tracking-[-0.02em] text-bone">Merchant Normalisation</h3>
+                <p className="mt-[14px] max-w-[62ch] text-[15px] leading-[1.65] text-bone-400">
+                  Bank descriptions often include prefixes, reference numbers, and location codes.
+                  These are stripped before matching:
+                </p>
+                <div className="mt-[20px] space-y-[14px]">
+                  {NORMALISATION_EXAMPLES.map(([raw, result]) => (
+                    <div key={raw} className="border-l-2 border-brass/50 pl-[14px] py-[4px]">
+                      <div className="font-mono text-[12.5px] text-bone">{raw}</div>
+                      <div className="mt-[4px] text-[13px] text-bone-400">{result}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="border-l-2 border-bone/20 pl-[16px]">
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.14em] text-bone-600">Important Disclaimer</h3>
+                <p className="mt-[10px] max-w-[66ch] text-[14px] leading-[1.65] text-bone-400">
+                  Deductibility depends on the direct nexus between the expense and your income-earning activity under Australian tax law.
+                  This tool provides indicative analysis only. Always confirm with a registered tax agent before claiming deductions.
+                  The ATO may disallow claims that lack sufficient substantiation or a clear connection to your specific role.
+                </p>
+              </section>
             </div>
           )}
         </div>
       </div>
+
+        <aside className="lg:col-span-3 lg:col-start-10">
+          <div className="lg:sticky lg:top-[112px]">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400">How to read a rule</h2>
+            <dl className="mt-[16px]">
+              {LEGEND.map(([term, meaning]) => (
+                <div key={term} className="py-[16px] border-t border-bone/[0.09]">
+                  <dt className="font-display text-[20px] leading-none tracking-[-0.01em] text-bone">{term}</dt>
+                  <dd className="mt-[8px] text-[14px] leading-[1.6] text-bone-400">{meaning}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
+
+const LEGEND: Array<[string, string]> = [
+  ['Keywords', 'Words looked for in the transaction description.'],
+  ['Known merchants', 'Merchant names the engine recognises for this category.'],
+  ['Base confidence', 'The starting score for a match, before other signals raise or lower it.'],
+  ['Required evidence', 'What to keep so the claim can be substantiated.'],
+]
+
+const FLAG_LABELS: Record<string, string> = {
+  needs_review: 'Needs review',
+  occupation_dependent: 'Occupation dependent',
+  method_required: 'Calculation method required',
+  percentage_required: 'Work percentage required',
+  instant_deduction_eligible: 'Instant deduction eligible',
+  depreciation_check: 'Check depreciation rules',
+}
+
+function flagLabel(flag: string): string {
+  return FLAG_LABELS[flag] ?? flag.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
+}
+
+// Mirrors classification_engine.py: base score from the rule, then two adjustments.
+const CONFIDENCE_SIGNALS: Array<[string, string, string]> = [
+  ['Rule base score', 'Starting point', 'Each rule has its own base confidence, shown on the rule under Classification Rules. It reflects how reliably that rule\'s keywords and merchants point to a work expense.'],
+  ['Recurring subscription', '+8 points', 'Software, phone and internet, and membership charges that recur across the statement are more likely to be ongoing work costs.'],
+  ['Merchant match quality', '+5 / \u22125 points', 'A near-exact merchant name match (95% similarity or more) adds 5 points. A loose match (under 88%) takes 5 away.'],
+]
+
+const CONFIDENCE_LEVELS: Array<[string, string, string, string, string]> = [
+  ['High (80\u2013100%)', 'Strong match', '90%', 'bg-brass', 'Clear occupational requirement, e.g. a professional body membership or a course directly tied to your current role.'],
+  ['Medium (60\u201379%)', 'Likely but verify', '70%', 'bg-brass/50', 'Probable work expense. Confirm the work-use proportion or occupational nexus with your tax agent.'],
+  ['Low (< 60%)', 'Needs review', '45%', 'bg-bone/25', 'Ambiguous, likely mixed personal and work use. Needs substantiation and advice from a registered tax agent.'],
+]
+
+const NORMALISATION_EXAMPLES: Array<[string, string]> = [
+  ['EFTPOS OFFICEWORKS SYDNEY NSW', '\u2192 Normalised to "Officeworks" (removes EFTPOS prefix and location)'],
+  ['DD MICROSOFT CORPORATION 98765', '\u2192 Normalised to "Microsoft" (removes DD prefix and reference number)'],
+]

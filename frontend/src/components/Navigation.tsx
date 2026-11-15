@@ -132,7 +132,7 @@ export default function Navigation() {
                     <span className={`font-display text-[34px] leading-none tracking-[-0.02em] ${isActive(path) ? 'italic text-brass' : 'text-bone'}`}>
                       {label}
                     </span>
-                    <span className="font-mono text-[11px] text-bone-600">0{i + 1}</span>
+                    <span aria-hidden="true" className="font-mono text-[11px] text-bone-600">0{i + 1}</span>
                   </Link>
                 </motion.li>
               ))}

@@ -3,6 +3,7 @@
 Go through each item against the actual code, not the copy. Report every finding as `file:line — what is wrong — what it causes`, fix it, and add or update a test when the fix is in logic (not copy).
 
 ## Claims vs. reality
+- Check **every** page that explains the product, not just the hero. Reference, FAQ and "how scoring works" pages drift the most (e.g. a rules page describing AI/RAG scoring the engine never runs).
 - Marketing copy says "AI", "no data stored", "instant", "N categories", "supports banks X/Y/Z": grep the backend/config to confirm each one. Count categories from the rules file, not the copy.
 - Two sections describing the same mechanism differently (e.g. "AI-powered" in the hero, "rules engine" in How It Works).
 - Mock/demo numbers inside illustrations: do the line items sum to the total shown? Do percentages match bar widths?
@@ -31,5 +32,7 @@ Go through each item against the actual code, not the copy. Report every finding
 - Scroll restoration with smooth scroll libraries: `window.scrollTo(0,0)` fights Lenis.
 
 ## Tailwind/CSS
+- A `min-w-max` / `whitespace-nowrap` child inside a CSS grid column widens the whole column on phones. Give the grid item `min-w-0` so inner scrollers can scroll.
+- Negative margins from a custom spacing scale (`-mx-4` = -32px) silently push pages wider than the viewport.
 - Opacity modifiers not in the scale (`/08` instead of `/[0.08]`) silently generate no class.
 - Classes built by string concatenation that the JIT can't see.

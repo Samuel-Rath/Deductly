@@ -3,14 +3,16 @@ import { test, expect } from '@playwright/test'
 test.describe('Navigation', () => {
   test('all nav links are reachable', async ({ page }) => {
     await page.goto('/')
+    // The footer has its own navigation landmarks; scope to the main one.
+    const nav = page.getByRole('navigation', { name: 'Main' })
 
-    await page.getByRole('navigation').getByRole('link', { name: 'Rules' }).click()
+    await nav.getByRole('link', { name: 'Rules', exact: true }).click()
     await expect(page).toHaveURL(/\/rules/)
 
-    await page.getByRole('navigation').getByRole('link', { name: 'Privacy', exact: true }).click()
+    await nav.getByRole('link', { name: 'Privacy', exact: true }).click()
     await expect(page).toHaveURL(/\/privacy/)
 
-    await page.getByRole('navigation').getByRole('link', { name: 'Home' }).click()
+    await nav.getByRole('link', { name: 'Home', exact: true }).click()
     await expect(page).toHaveURL('/')
   })
 
@@ -41,18 +43,21 @@ test.describe('Navigation — Mobile', () => {
     await expect(hamburger).toBeVisible()
     await hamburger.click()
 
-    // Nav links should appear in dropdown
-    await expect(page.getByRole('link', { name: 'Rules' }).last()).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Privacy' }).last()).toBeVisible()
+    // Nav links should appear in the full-screen menu
+    const menu = page.locator('#mobile-menu')
+    await expect(menu.getByRole('link', { name: 'Rules', exact: true })).toBeVisible()
+    await expect(menu.getByRole('link', { name: 'Privacy', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: /close menu/i })).toBeVisible()
   })
 
   test('hamburger menu closes after navigation', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /open menu/i }).click()
-    await page.getByRole('link', { name: 'Rules' }).last().click()
+    await page.locator('#mobile-menu').getByRole('link', { name: 'Rules', exact: true }).click()
 
     await expect(page).toHaveURL(/\/rules/)
     // Menu should be closed — hamburger button back to open state
     await expect(page.getByRole('button', { name: /open menu/i })).toBeVisible()
+    await expect(page.locator('#mobile-menu')).toHaveCount(0)
   })
 })

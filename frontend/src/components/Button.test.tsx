@@ -117,7 +117,7 @@ describe('Button', () => {
     it('applies opacity and cursor classes when disabled', () => {
       render(<Button disabled>Disabled</Button>)
       const button = screen.getByRole('button', { name: /disabled/i })
-      expect(button).toHaveClass('disabled:opacity-40', 'disabled:cursor-not-allowed')
+      expect(button).toHaveClass('disabled:bg-transparent', 'disabled:text-bone-600', 'disabled:cursor-not-allowed')
     })
   })
 

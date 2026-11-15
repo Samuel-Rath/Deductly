@@ -12,7 +12,7 @@ export class LandingPage {
   constructor(page: Page) {
     this.page = page
     this.heading    = page.getByRole('heading', { level: 1 })
-    this.subheading = page.getByText(/instantly uncover every tax deduction/i)
+    this.subheading = page.getByText(/checked against ATO rules/i)
     // Landing has two "Find My Deductions" buttons (hero + bottom CTA);
     // pin the page-object locator to the first (the hero) to avoid strict-mode
     // matches — individual tests can still target the second when needed.
@@ -33,7 +33,7 @@ export class LandingPage {
   }
 
   async expectVisible() {
-    await expect(this.heading).toContainText('Find Every Tax Deduction')
+    await expect(this.heading).toContainText(/find every tax deduction/i)
     await expect(this.ctaButton).toBeVisible()
   }
 }

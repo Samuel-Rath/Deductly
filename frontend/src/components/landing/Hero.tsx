@@ -237,7 +237,7 @@ export function Hero() {
                 id="hero-title"
                 className="font-display font-normal text-bone leading-[0.94] tracking-[-0.032em] text-[46px] sm:text-[68px] lg:text-[80px] xl:text-[96px]"
               >
-                <span data-hero-line className="block">Find every tax deduction</span>
+                <span data-hero-line className="block">Find every tax deduction</span>{' '}
                 <span data-hero-line className="block italic text-brass pr-[0.05em]">you're missing.</span>
               </h1>
 

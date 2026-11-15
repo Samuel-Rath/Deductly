@@ -37,7 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
     'font-sans font-medium tracking-[-0.005em] touch-manipulation',
     'transition-[background-color,border-color,color,transform] duration-300 ease-[cubic-bezier(0.2,0.7,0.2,1)]',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950',
-    'disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none',
+    'disabled:cursor-not-allowed disabled:pointer-events-none',
   ].join(' ');
 
   const variantStyles: Record<ButtonVariant, string> = {
@@ -45,12 +45,15 @@ export const Button: React.FC<ButtonProps> = ({
       'rounded-full bg-bone text-ink-950',
       'shadow-[inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(0,0,0,0.18),0_10px_30px_-12px_rgba(0,0,0,0.8)]',
       'hover:bg-white active:scale-[0.98]',
+      // Disabled: an empty outline, not a faded fill (a 40%-opacity bone pill reads as muddy grey on ink).
+      'disabled:bg-transparent disabled:text-bone-600 disabled:shadow-none disabled:ring-1 disabled:ring-inset disabled:ring-bone/15',
     ].join(' '),
     secondary: [
       'rounded-full text-bone border border-bone/20',
       'hover:border-bone/60 hover:bg-bone/[0.04] active:scale-[0.98]',
+      'disabled:text-bone-600 disabled:border-bone/10',
     ].join(' '),
-    tertiary: 'rounded-full text-bone-400 hover:text-bone hover:bg-bone/[0.05]',
+    tertiary: 'rounded-full text-bone-400 hover:text-bone hover:bg-bone/[0.05] disabled:text-bone-600',
   };
 
   const sizeStyles: Record<ButtonSize, string> = {
@@ -70,7 +73,9 @@ export const Button: React.FC<ButtonProps> = ({
     md: 'w-[32px] h-[32px]',
     lg: 'w-[40px] h-[40px]',
   };
-  const chipTone = variant === 'primary' ? 'bg-ink-950 text-bone' : 'bg-bone text-ink-950';
+  const chipTone = disabled
+    ? 'bg-bone/[0.08] text-bone-600'
+    : variant === 'primary' ? 'bg-ink-950 text-bone' : 'bg-bone text-ink-950';
 
   return (
     <button

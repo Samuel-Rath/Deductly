@@ -355,7 +355,7 @@ export default function Upload() {
         </div>
 
         {/* ── Aside ────────────────────────────────────────────────────── */}
-        <aside className="lg:col-span-4 lg:col-start-9 lg:pt-[30px]">
+        <aside className="lg:col-span-4 lg:col-start-9">
           <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone-400">What happens next</h2>
           <ol className="mt-[16px]">
             {NEXT_STEPS.map(([t, b], i) => (

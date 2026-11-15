@@ -78,7 +78,9 @@ export default function Landing() {
   }, [])
 
   // Below-the-fold motion. Content is fully visible without JS / with reduced
-  // motion; these only add entrances when motion is allowed. All fromTo(),
+  // motion; these only add entrances when motion is allowed. Reveals animate
+  // opacity (not autoAlpha/visibility) so unrevealed content stays in the
+  // accessibility tree for screen readers. All fromTo(),
   // see the note in Hero about ScrollTrigger refreshes and from().
   useLayoutEffect(() => {
     const q = gsap.utils.selector(root)
@@ -105,8 +107,8 @@ export default function Landing() {
       )
 
       q('[data-reveal]').forEach((el) => {
-        gsap.fromTo(el, { y: 20, autoAlpha: 0 }, {
-          y: 0, autoAlpha: 1, duration: 1, ease: 'power3.out',
+        gsap.fromTo(el, { y: 20, opacity: 0 }, {
+          y: 0, opacity: 1, duration: 1, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 90%', once: true },
         })
       })
@@ -115,7 +117,7 @@ export default function Landing() {
       q('[data-feature]').forEach((row) => {
         gsap.timeline({ scrollTrigger: { trigger: row, start: 'top 85%', once: true } })
           .fromTo(row.querySelector('[data-feature-rule]'), { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: 'expo.inOut' })
-          .fromTo(row.querySelectorAll('[data-feature-part]'), { y: 24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out', stagger: 0.07 }, 0.25)
+          .fromTo(row.querySelectorAll('[data-feature-part]'), { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out', stagger: 0.07 }, 0.25)
       })
 
       // Process: a pen line draws across the paper as you scroll; numerals rise.
@@ -127,7 +129,7 @@ export default function Landing() {
       q('[data-step]').forEach((step, i) => {
         gsap.timeline({ scrollTrigger: { trigger: steps, start: 'top 70%', once: true }, delay: i * 0.15 })
           .fromTo(step.querySelector('[data-step-num]'), { yPercent: 100 }, { yPercent: 0, duration: 1.2, ease: 'expo.out' })
-          .fromTo(step.querySelectorAll('[data-step-part]'), { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: 'power3.out', stagger: 0.07 }, 0.3)
+          .fromTo(step.querySelectorAll('[data-step-part]'), { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.07 }, 0.3)
       })
 
       // Figures count up once.
@@ -181,7 +183,7 @@ export default function Landing() {
             {FEATURES.map((f, i) => (
               <li key={f.title} data-feature className="group relative py-[32px] lg:py-[40px]">
                 <div data-feature-rule aria-hidden="true" className="rule absolute top-0 left-0 right-0 origin-left" />
-                <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[72px_1fr] gap-x-[16px] gap-y-[12px]">
+                <div className="grid grid-cols-[32px_1fr] sm:grid-cols-[72px_1fr] gap-x-[12px] sm:gap-x-[16px] gap-y-[12px]">
                   <span data-feature-part className="font-mono text-[12px] text-brass pt-[10px]">0{i + 1}</span>
                   <div>
                     <div className="flex items-baseline justify-between gap-[16px]">
@@ -261,7 +263,7 @@ export default function Landing() {
               >
                 <dt className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-bone-400 max-w-[22ch]">{f.label}</dt>
                 <dd
-                  className="font-display text-[64px] sm:text-[80px] leading-[0.9] tracking-[-0.04em] text-bone tabular-nums"
+                  className="font-display whitespace-nowrap text-[46px] sm:text-[80px] leading-[0.9] tracking-[-0.04em] text-bone tabular-nums"
                   {...(f.count !== undefined ? { 'data-count': f.count } : {})}
                 >
                   {f.value}

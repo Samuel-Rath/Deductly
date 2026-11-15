@@ -12,10 +12,8 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Opt the JS-based actions (checkout, setup-*, upload-artifact) into the
-# Node 24 runtime now. Node 20 is deprecated on GitHub-hosted runners
-# (forced to Node 24 from 2026-06-02, removed 2026-09-16) and emits a
-# warning on every run otherwise.
+# All actions below are on versions that target Node 24 natively. This flag
+# stays as a safety net for any action added later that still targets Node 20.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -29,10 +27,10 @@ jobs:
     # Run from the workspace root so `from backend.xxx import ...` resolves
     # against the repo layout (the `backend` package is a subdirectory here).
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: pip
@@ -61,10 +59,10 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -83,7 +81,7 @@ jobs:
         run: npm run build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: frontend-dist
           path: frontend/dist
@@ -94,16 +92,20 @@ jobs:
   # ----------------------------------------------------------------------------
   e2e:
     name: Playwright e2e
-    runs-on: ubuntu-latest
+    # Pinned: `playwright install --with-deps` only knows the system packages
+    # of Ubuntu releases its version supports. When ubuntu-latest moved to
+    # Ubuntu 26 the install step failed before any test ran. Bump this
+    # together with @playwright/test.
+    runs-on: ubuntu-24.04
     needs: frontend
     defaults:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -120,16 +122,18 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report
+          if-no-files-found: ignore
           path: frontend/playwright-report/
           retention-days: 14
 
       - name: Upload test traces/screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-artifacts
+          if-no-files-found: ignore
           path: frontend/test-results/
           retention-days: 14

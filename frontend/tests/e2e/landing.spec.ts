@@ -6,7 +6,7 @@ test.describe('Landing Page', () => {
     const landing = new LandingPage(page)
     await landing.goto()
 
-    await expect(landing.heading).toContainText('Find Every Tax Deduction')
+    await expect(landing.heading).toContainText(/find every tax deduction/i)
     await expect(landing.ctaButton).toBeVisible()
     await expect(page.getByText(/no data stored/i)).toBeVisible()
     await expect(page.getByText(/ato aligned/i)).toBeVisible()
@@ -35,13 +35,17 @@ test.describe('Landing Page', () => {
 
   test('features section is visible after scroll', async ({ page }) => {
     await page.goto('/')
-    await page.getByText(/everything you need for tax time/i).scrollIntoViewIfNeeded()
-    // Target card titles via heading role — some of these terms also appear
+    await page.getByRole('heading', { name: /built like an accountant/i }).scrollIntoViewIfNeeded()
+    // Target feature titles via heading role — some of these terms also appear
     // inline in hero copy, so a plain getByText would hit strict-mode conflicts.
-    await expect(page.getByRole('heading', { name: /privacy first/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /ato rule engine/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /confidence scores/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /evidence checklists/i })).toBeVisible()
+    for (const name of [/privacy first/i, /ato rule engine/i, /confidence scores/i, /evidence checklists/i]) {
+      const heading = page.getByRole('heading', { name })
+      // Centre it: rows reveal once they are 15% up the viewport, and
+      // scrollIntoViewIfNeeded is a no-op for a row peeking in at the bottom edge.
+      await heading.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+      // Rows fade in on scroll; wait for the reveal to finish, not just for layout.
+      await expect(heading).toHaveCSS('opacity', '1')
+    }
   })
 
   test('how it works steps are visible', async ({ page }) => {
@@ -54,7 +58,10 @@ test.describe('Landing Page', () => {
 
   test('bottom CTA section is reachable', async ({ page }) => {
     await page.goto('/')
-    await page.getByText(/ready to find your deductions/i).scrollIntoViewIfNeeded()
-    await expect(page.getByText(/ready to find your deductions/i)).toBeVisible()
+    const closing = page.getByRole('heading', { name: /your statement already knows/i })
+    await closing.scrollIntoViewIfNeeded()
+    await expect(closing).toBeVisible()
+    // The closing section has its own CTA (second on the page)
+    await expect(page.getByRole('button', { name: /find my deductions/i }).last()).toBeVisible()
   })
 })
