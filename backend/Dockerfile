@@ -18,6 +18,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Production stage
 FROM python:3.11-slim
 
+# The base image's bundled setuptools/pip carry known advisories; upgrade them.
+RUN pip install --no-cache-dir --upgrade pip setuptools
+
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 

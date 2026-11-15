@@ -27,21 +27,23 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Install pip-audit
         run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          # Python 3.11's bundled setuptools (65.5.0) has known advisories.
+          python -m pip install --upgrade pip setuptools
           pip install pip-audit
 
-      # Fails the job on any known vulnerability in the installed packages
-      # (PyPI/OSV advisory data). Safety was removed: its `safety check`
-      # command is deprecated, it crashed before scanning anything, and it
-      # pinned filelock<4, which carries 13 advisories of its own.
+      # Audits what the app ships: requirements.txt and everything it pulls in,
+      # resolved in an isolated environment for this platform. (Auditing the
+      # runner's own environment flagged packages that aren't Deductly's.)
+      # Fails the job on any known vulnerability (PyPI/OSV advisory data).
+      # Safety was removed: its `safety check` command is deprecated, it
+      # crashed before scanning anything, and it pinned filelock<4, which
+      # carries 13 advisories of its own.
       - name: Run pip-audit (vulnerability scan)
         run: |
           cd backend
-          pip-audit --desc
+          pip-audit -r requirements.txt --desc
 
   secret-scan:
     name: Secret Scan
